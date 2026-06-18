@@ -1,0 +1,29 @@
+/.claude/
+/.gradle/
+/.idea/
+/build/
+/classes/
+/eclipse/
+
+*.iml
+*.ipr
+*.iws
+
+# Gradleのビルド成果物やキャッシュを除外
+
+# IDE（IntelliJ IDEA や Eclipse）の設定ファイルを除外
+/out/
+/bin/
+/.metadata/
+.classpath
+.project
+/.settings/
+
+# KaizPatchX 本体のソースコードを除外（自分のパッチ以外すべて）
+/src/main/
+/src/api/
+/src/test/
+
+# ログファイルや一時ファイルを除外
+*.log
+

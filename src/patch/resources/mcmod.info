@@ -1,0 +1,28 @@
+[
+  {
+    "modid": "RTMKaisatsuPatch",
+    "name": "RTM Kaisatsu Patch",
+    "description": "A patch mod for RealTrainMod to fix or improve ticket gates.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "logoFile": "",
+    "url": "",
+    "updateUrl": "",
+    "authorList": [
+      "SakuraMochi (Patch Developer)",
+      "ngt5479 (Original RTM Developer)",
+      "jp.kaiz (KaizPatchX Developer)"
+    ],
+    "credits": "ngt5479 (Original RTM Developer), jp.kaiz (KaizPatchX Developer)",
+    "parent": "",
+    "screenshottList": [],
+    "requiredMods": [
+      "Forge",
+      "NGTLib",
+      "RTM"
+    ],
+    "dependencies": [
+      "RTM"
+    ]
+  }
+]
