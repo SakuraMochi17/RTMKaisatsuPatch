@@ -11,8 +11,7 @@ import cpw.mods.fml.relauncher.Side
 import cpw.mods.fml.relauncher.SideOnly
 import jp.ngt.rtm.block.tileentity.RenderMachine
 import jp.sakuramochi.kaisatsupatch.block.*
-import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTicketVendor
-import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTurnstile
+import jp.sakuramochi.kaisatsupatch.block.tileentity.*
 import jp.sakuramochi.kaisatsupatch.item.*
 import jp.sakuramochi.kaisatsupatch.network.KaizPatchNetwork
 import net.minecraft.creativetab.CreativeTabs
@@ -39,9 +38,13 @@ class RTMKaisatsuPatchCore {
             override fun getTabIconItem(): Item = net.minecraft.init.Items.iron_ingot
         }
 
-        // このmodインスタンスへの参照（openGui に必要）
         @Mod.Instance(MODID)
         lateinit var instance: RTMKaisatsuPatchCore
+
+        const val GUI_VENDOR = 1
+
+        /** PacketPurchaseTicket から参照するためのアイテムレジストリ */
+        val registeredItems: MutableMap<String, Item> = mutableMapOf()
     }
 
     @Mod.EventHandler
@@ -52,26 +55,35 @@ class RTMKaisatsuPatchCore {
 
         val myTab = tabKaisatsuPatch
 
-        val itemTicket      = ItemCustomTicket()
-        val itemICCard      = ItemCustomICCard()
+        // アイテム
+        val itemTicket       = ItemCustomTicket()
+        val itemICCard       = ItemCustomICCard()
         val itemSettingsTool = ItemSettingsTool()
-        val blockTurnstile  = BlockCustomTurnstile()
-        val blockVendor     = BlockCustomTicketVendor()
 
-        itemTicket.creativeTab       = myTab
-        itemICCard.creativeTab       = myTab
-        itemSettingsTool.creativeTab = myTab
-        blockTurnstile.setCreativeTab(myTab)
-        blockVendor.setCreativeTab(myTab)
+        // ブロック
+        val blockTurnstile      = BlockCustomTurnstile()
+        val blockVendor         = BlockCustomTicketVendor()
+        val blockStationManager = BlockStationManager()
+        val blockLineManager    = BlockLineManager()
+
+        listOf(itemTicket, itemICCard, itemSettingsTool).forEach { it.creativeTab = myTab }
+        listOf(blockTurnstile, blockVendor, blockStationManager, blockLineManager).forEach { it.setCreativeTab(myTab) }
 
         GameRegistry.registerItem(itemTicket,       "custom_ticket")
         GameRegistry.registerItem(itemICCard,       "custom_ic_card")
         GameRegistry.registerItem(itemSettingsTool, "settings_tool")
-        GameRegistry.registerBlock(blockTurnstile, ItemBlockCustomTurnstile::class.java, "custom_turnstile")
-        GameRegistry.registerBlock(blockVendor,    ItemBlockCustomTicketVendor::class.java, "custom_ticket_vendor")
+
+        GameRegistry.registerBlock(blockTurnstile,      ItemBlockCustomTurnstile::class.java,  "custom_turnstile")
+        GameRegistry.registerBlock(blockVendor,         ItemBlockCustomTicketVendor::class.java,"custom_ticket_vendor")
+        GameRegistry.registerBlock(blockStationManager, ItemBlockStationManager::class.java,   "station_manager")
+        GameRegistry.registerBlock(blockLineManager,    ItemBlockLineManager::class.java,       "line_manager")
 
         GameRegistry.registerTileEntity(TileEntityCustomTurnstile::class.java,   "TileEntityCustomTurnstile")
         GameRegistry.registerTileEntity(TileEntityCustomTicketVendor::class.java, "TileEntityCustomTicketVendor")
+        GameRegistry.registerTileEntity(TileEntityStationManager::class.java,    "TileEntityStationManager")
+        GameRegistry.registerTileEntity(TileEntityLineManager::class.java,       "TileEntityLineManager")
+
+        registeredItems["custom_ticket"] = itemTicket
 
         if (event.side.isClient) {
             registerRenderer()

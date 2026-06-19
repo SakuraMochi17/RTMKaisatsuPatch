@@ -1,30 +1,28 @@
 package jp.sakuramochi.kaisatsupatch
 
 import cpw.mods.fml.common.network.IGuiHandler
-import cpw.mods.fml.relauncher.Side
-import cpw.mods.fml.relauncher.SideOnly
-import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTurnstile
-import jp.sakuramochi.kaisatsupatch.client.GuiTurnstileConfig
+import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTicketVendor
+import jp.sakuramochi.kaisatsupatch.client.GuiCustomTicketVendor
+import jp.sakuramochi.kaisatsupatch.gui.ContainerCustomVendor
+import jp.sakuramochi.kaisatsupatch.network.FaresCache
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.world.World
 
 class KaizPatchGuiHandler : IGuiHandler {
 
-    companion object {
-        const val GUI_TURNSTILE_CONFIG = 1
+    override fun getServerGuiElement(id: Int, player: EntityPlayer, world: World, x: Int, y: Int, z: Int): Any? {
+        if (id == RTMKaisatsuPatchCore.GUI_VENDOR) {
+            val tile = world.getTileEntity(x, y, z) as? TileEntityCustomTicketVendor ?: return null
+            return ContainerCustomVendor(player.inventory, tile)
+        }
+        return null
     }
 
-    // サーバー側はコンテナ不要（設定はパケットで送る）
-    override fun getServerGuiElement(id: Int, player: EntityPlayer, world: World, x: Int, y: Int, z: Int): Any? = null
-
-    @SideOnly(Side.CLIENT)
     override fun getClientGuiElement(id: Int, player: EntityPlayer, world: World, x: Int, y: Int, z: Int): Any? {
-        return when (id) {
-            GUI_TURNSTILE_CONFIG -> {
-                val tile = world.getTileEntity(x, y, z) as? TileEntityCustomTurnstile ?: return null
-                GuiTurnstileConfig(tile)
-            }
-            else -> null
+        if (id == RTMKaisatsuPatchCore.GUI_VENDOR) {
+            val tile = world.getTileEntity(x, y, z) as? TileEntityCustomTicketVendor ?: return null
+            return GuiCustomTicketVendor(player.inventory, tile, FaresCache.station, FaresCache.fares)
         }
+        return null
     }
 }

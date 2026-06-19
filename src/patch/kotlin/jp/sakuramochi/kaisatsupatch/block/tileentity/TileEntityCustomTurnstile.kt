@@ -6,7 +6,7 @@ import net.minecraft.nbt.NBTTagCompound
 
 class TileEntityCustomTurnstile : TileEntityTurnstile() {
 
-    enum class GateMode { ENTRY, EXIT }
+    enum class GateMode { ENTRY, EXIT, BOTH }
 
     var stationCode: String = "STATION_A"
     var gateMode: GateMode = GateMode.ENTRY

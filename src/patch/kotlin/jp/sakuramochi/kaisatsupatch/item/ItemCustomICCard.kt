@@ -1,6 +1,7 @@
 package jp.sakuramochi.kaisatsupatch.item
 
 import net.minecraft.creativetab.CreativeTabs
+import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
@@ -68,8 +69,13 @@ class ItemCustomICCard : Item() {
         maxStackSize = 1
     }
 
-    override fun getItemStackDisplayName(stack: ItemStack): String {
-        val balance = getBalance(stack)
-        return "ICカード（残高: ${balance}円）"
+    override fun getItemStackDisplayName(stack: ItemStack): String = "ICカード"
+
+    @Suppress("UNCHECKED_CAST")
+    override fun addInformation(stack: ItemStack, player: EntityPlayer, tooltip: MutableList<*>, advanced: Boolean) {
+        val list = tooltip as MutableList<String>
+        list.add("残高: ${getBalance(stack)}円")
+        val entry = getEntryStation(stack)
+        if (entry.isNotEmpty()) list.add("入場中: $entry")
     }
 }
