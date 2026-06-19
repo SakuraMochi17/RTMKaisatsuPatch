@@ -1,0 +1,7 @@
+tile.custom_turnstile.name=カスタム改札機
+tile.custom_ticket_vendor.name=カスタム券売機
+
+item.custom_ticket.name=カスタム切符
+item.custom_ic_card.name=カスタムICカード
+
+itemGroup.tabKaisatsuPatch=改札パッチ
