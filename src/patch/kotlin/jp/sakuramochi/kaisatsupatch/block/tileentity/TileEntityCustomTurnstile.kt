@@ -2,20 +2,26 @@ package jp.sakuramochi.kaisatsupatch.block.tileentity
 
 import jp.ngt.rtm.block.tileentity.TileEntityTurnstile
 import net.minecraft.block.Block
+import net.minecraft.nbt.NBTTagCompound
 
-// ★親クラスを TileEntityMachineBase ではなく、本家の TileEntityTurnstile に変更します！
 class TileEntityCustomTurnstile : TileEntityTurnstile() {
 
-    // 🌟 魔法の裏技コード 🌟
-    // RTMの描画システムに「自分はRTM本家の改札機だぞ」と錯覚させます。
-    // これにより、本家のフラップ開閉アニメーションがあなたのブロックでも強制的に動くようになります！
-    override fun getBlockType(): Block {
-        return jp.ngt.rtm.RTMBlock.turnstile
+    enum class GateMode { ENTRY, EXIT }
+
+    var stationCode: String = "STATION_A"
+    var gateMode: GateMode = GateMode.ENTRY
+
+    override fun getBlockType(): Block = jp.ngt.rtm.RTMBlock.turnstile
+
+    override fun readFromNBT(tag: NBTTagCompound) {
+        super.readFromNBT(tag)
+        stationCode = tag.getString("StationCode").ifEmpty { "STATION_A" }
+        gateMode = if (tag.getString("GateMode") == "EXIT") GateMode.EXIT else GateMode.ENTRY
     }
 
-    // -------------------------------------------------------------
-    // getMachineType() や NBTへの保存、count の処理などは
-    // 全て親クラス（本家のTileEntityTurnstile）が自動でやってくれるため、
-    // 前回書いたコードはごっそり消してしまってOKです！超スッキリします。
-    // -------------------------------------------------------------
+    override fun writeToNBT(tag: NBTTagCompound) {
+        super.writeToNBT(tag)
+        tag.setString("StationCode", stationCode)
+        tag.setString("GateMode", gateMode.name)
+    }
 }

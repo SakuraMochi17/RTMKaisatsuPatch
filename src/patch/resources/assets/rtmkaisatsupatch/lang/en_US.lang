@@ -1,0 +1,7 @@
+tile.custom_turnstile.name=Custom Turnstile
+tile.custom_ticket_vendor.name=Custom Ticket Vendor
+
+item.custom_ticket.name=Custom Ticket
+item.custom_ic_card.name=Custom IC Card
+
+itemGroup.tabKaisatsuPatch=Kaisatsu Patch
