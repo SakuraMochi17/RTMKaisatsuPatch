@@ -11,9 +11,9 @@ import java.net.InetAddress
 
 class CommandKaizWeb : CommandBase() {
 
-    override fun getCommandName() = "kaizweb"
+    override fun getCommandName() = "kaisatsuweb"
 
-    override fun getCommandUsage(sender: ICommandSender) = "/kaizweb — 空席情報ページのURLを表示"
+    override fun getCommandUsage(sender: ICommandSender) = "/kaisatsuweb — 空席情報ページのURLを表示"
 
     override fun getRequiredPermissionLevel() = 0   // 全プレイヤーが使える
 
