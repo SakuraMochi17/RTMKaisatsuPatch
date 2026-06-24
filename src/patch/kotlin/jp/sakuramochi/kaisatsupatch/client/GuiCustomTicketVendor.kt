@@ -32,6 +32,8 @@ class GuiCustomTicketVendor(
     private val chargeOptions = listOf(1000, 2000, 3000, 5000, 10000)
     private val passDurations = listOf(7 to 0.90, 30 to 0.75, 90 to 0.60)
     private var tab = 0
+    // ICタブのサブモード: 0=チャージ, 1=新規購入, 2=返却
+    private var icMode = 0
 
     // スクロール
     private var ticketScrollOffset = 0
@@ -52,7 +54,7 @@ class GuiCustomTicketVendor(
         val tabW = (xSize - 4) / 3
 
         add(GuiButton(200, lx + 2,          ty + 4, tabW, 18, if (tab == 0) "▶ 切符購入"  else "  切符購入"))
-        add(GuiButton(201, lx + 2 + tabW,   ty + 4, tabW, 18, if (tab == 1) "▶ ICチャージ" else "  ICチャージ"))
+        add(GuiButton(201, lx + 2 + tabW,   ty + 4, tabW, 18, if (tab == 1) "▶ ICカード"  else "  ICカード"))
         add(GuiButton(202, lx + 2 + tabW*2, ty + 4, tabW, 18, if (tab == 2) "▶ 定期券"    else "  定期券"))
 
         val btnW = 82; val btnH = 20; val col0 = lx + 4; val col1 = lx + 90
@@ -73,9 +75,33 @@ class GuiCustomTicketVendor(
                 add(GuiButton(150, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "購入"))
             }
             1 -> {
-                for ((i, amount) in chargeOptions.withIndex())
-                    add(GuiButton(300 + i, if (i % 2 == 0) col0 else col1, ty + 28 + (i / 2) * 24, btnW, btnH, "${amount}円"))
-                add(GuiButton(350, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "チャージ"))
+                // サブモード切り替えボタン
+                val smW = (RIGHT_PANEL_X - 6) / 3
+                add(GuiButton(360, lx + 2,          ty + 25, smW, 14, "チャージ").also { it.enabled = icMode != 0 })
+                add(GuiButton(361, lx + 2 + smW,    ty + 25, smW, 14, "新規購入").also { it.enabled = icMode != 1 })
+                add(GuiButton(362, lx + 2 + smW*2,  ty + 25, smW, 14, "返却").also   { it.enabled = icMode != 2 })
+
+                when (icMode) {
+                    0 -> { // チャージ
+                        for ((i, amount) in chargeOptions.withIndex())
+                            add(GuiButton(300 + i, if (i % 2 == 0) col0 else col1, ty + 44 + (i / 2) * 24, btnW, btnH, "${amount}円"))
+                        add(GuiButton(350, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "チャージ")
+                            .also { it.enabled = selectedFare > 0 })
+                    }
+                    1 -> { // 新規購入
+                        for ((i, amount) in chargeOptions.withIndex()) {
+                            val balance = amount - 500
+                            add(GuiButton(700 + i, if (i % 2 == 0) col0 else col1, ty + 44 + (i / 2) * 24, btnW, btnH, "${amount}円→残高${balance}円"))
+                        }
+                        add(GuiButton(350, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "発行")
+                            .also { it.enabled = selectedFare > 0 })
+                    }
+                    2 -> { // 返却
+                        val hasCard = container.vendorInv.getICBalance() != null
+                        add(GuiButton(350, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "返却する")
+                            .also { it.enabled = hasCard })
+                    }
+                }
             }
             2 -> {
                 val visible = fares.drop(passScrollOffset).take(PASS_VISIBLE)
@@ -129,8 +155,13 @@ class GuiCustomTicketVendor(
     override fun actionPerformed(button: GuiButton) {
         when {
             button.id == 200 -> { tab = 0; ticketScrollOffset = 0; resetSelection(); buildButtons() }
-            button.id == 201 -> { tab = 1; resetSelection(); buildButtons() }
+            button.id == 201 -> { tab = 1; icMode = 0; resetSelection(); buildButtons() }
             button.id == 202 -> { tab = 2; passScrollOffset = 0; resetSelection(); buildButtons() }
+
+            // ICサブモード切り替え
+            button.id == 360 -> { icMode = 0; resetSelection(); buildButtons() }
+            button.id == 361 -> { icMode = 1; resetSelection(); buildButtons() }
+            button.id == 362 -> { icMode = 2; resetSelection(); buildButtons() }
 
             button.id == 600 -> { ticketScrollOffset = maxOf(0, ticketScrollOffset - 1); resetSelection(); buildButtons() }
             button.id == 601 -> { ticketScrollOffset = minOf(maxOf(0, fares.size - TICKET_VISIBLE), ticketScrollOffset + 1); resetSelection(); buildButtons() }
@@ -145,7 +176,11 @@ class GuiCustomTicketVendor(
                 }
             }
 
-            button.id in 300..304 -> { selectedFare = chargeOptions[button.id - 300]; dimOthers(button, 300..304) }
+            // ICチャージ金額選択
+            button.id in 300..304 -> { selectedFare = chargeOptions[button.id - 300]; dimOthers(button, 300..304); buildButtons() }
+
+            // IC新規購入金額選択
+            button.id in 700..704 -> { selectedFare = chargeOptions[button.id - 700]; dimOthers(button, 700..704); buildButtons() }
 
             button.id == 602 -> { passScrollOffset = maxOf(0, passScrollOffset - 1); resetSelection(); buildButtons() }
             button.id == 603 -> { passScrollOffset = minOf(maxOf(0, fares.size - PASS_VISIBLE), passScrollOffset + 1); resetSelection(); buildButtons() }
@@ -170,9 +205,23 @@ class GuiCustomTicketVendor(
                         if (isEntry) stationName else selectedDest,
                         if (isEntry) -1 else selectedFare, false))
             }
-            button.id == 350 -> {
-                if (selectedFare > 0) KaizPatchNetwork.CHANNEL.sendToServer(
-                    PacketPurchaseTicket(tile.xCoord, tile.yCoord, tile.zCoord, "", selectedFare, true))
+            // ICタブの実行ボタン（チャージ/発行/返却）
+            button.id == 350 -> when (icMode) {
+                0 -> if (selectedFare > 0) KaizPatchNetwork.CHANNEL.sendToServer(
+                        PacketPurchaseTicket(tile.xCoord, tile.yCoord, tile.zCoord, "", selectedFare, true))
+                1 -> if (selectedFare > 0) {
+                        val pkt = PacketPurchaseTicket()
+                        pkt.x = tile.xCoord; pkt.y = tile.yCoord; pkt.z = tile.zCoord
+                        pkt.mode = PacketPurchaseTicket.Mode.BUY_IC
+                        pkt.fare = selectedFare
+                        KaizPatchNetwork.CHANNEL.sendToServer(pkt)
+                    }
+                2 -> {
+                    val pkt = PacketPurchaseTicket()
+                    pkt.x = tile.xCoord; pkt.y = tile.yCoord; pkt.z = tile.zCoord
+                    pkt.mode = PacketPurchaseTicket.Mode.RETURN_IC
+                    KaizPatchNetwork.CHANNEL.sendToServer(pkt)
+                }
             }
             button.id == 550 -> {
                 if (selectedPassFare > 0 && selectedPassDays > 0 && selectedPassDest.isNotEmpty())
@@ -231,10 +280,10 @@ class GuiCustomTicketVendor(
         fontRendererObj.drawString("合計: ${moneyYen}円", rpx, MONEY_POSITIONS[2].second + 20, 0x006600)
 
         fontRendererObj.drawString("ICカード", rpx, CARD_Y - 12, 0x404040)
-        val balance = container.vendorInv.getICBalance()
+        val icBalance = container.vendorInv.getICBalance()
         fontRendererObj.drawString(
-            if (balance != null) "残高:${balance}円" else "未挿入",
-            rpx, CARD_Y + 20, if (balance != null) 0x0000AA else 0x888888)
+            if (icBalance != null) "残高:${icBalance}円" else "未挿入",
+            rpx, CARD_Y + 20, if (icBalance != null) 0x0000AA else 0x888888)
 
         // スクロールインジケーター
         if (tab == 0 && fares.size > TICKET_VISIBLE) {
@@ -251,9 +300,23 @@ class GuiCustomTicketVendor(
             0 -> if (selectedFare > 0)
                     fontRendererObj.drawString(if (isEntry) "入場券 140円" else "$selectedDest ${selectedFare}円", rpx, selY, 0x0000CC)
                  else fontRendererObj.drawString("行き先を選択", rpx, selY, 0x888888)
-            1 -> if (selectedFare > 0)
-                    fontRendererObj.drawString("${selectedFare}円", rpx, selY, 0x0000CC)
-                 else fontRendererObj.drawString("金額を選択", rpx, selY, 0x888888)
+            1 -> when (icMode) {
+                0 -> if (selectedFare > 0)
+                        fontRendererObj.drawString("${selectedFare}円チャージ", rpx, selY, 0x0000CC)
+                     else fontRendererObj.drawString("金額を選択", rpx, selY, 0x888888)
+                1 -> if (selectedFare > 0) {
+                        fontRendererObj.drawString("${selectedFare}円（残高${selectedFare - 500}円）", rpx, selY - 8, 0x0000CC)
+                        fontRendererObj.drawString("預り金500円含む", rpx, selY + 4, 0x555555)
+                    } else fontRendererObj.drawString("購入額を選択", rpx, selY, 0x888888)
+                2 -> if (icBalance != null) {
+                        val refund = maxOf(0, icBalance - 220) + 500
+                        fontRendererObj.drawString("返却額: ${refund}円", rpx, selY - 8, 0x55AA00)
+                        if (icBalance > 0)
+                            fontRendererObj.drawString("残高${icBalance}-手数料220+預り金500", rpx, selY + 4, 0x555555)
+                        else
+                            fontRendererObj.drawString("預り金 500円", rpx, selY + 4, 0x555555)
+                    } else fontRendererObj.drawString("ICカードをスロットへ", rpx, selY, 0x888888)
+            }
             2 -> {
                 if (selectedPassFare > 0)
                     fontRendererObj.drawString("${selectedPassDest} ${selectedPassDays}日 ${selectedPassFare}円", rpx, selY - 8, 0x0000CC)

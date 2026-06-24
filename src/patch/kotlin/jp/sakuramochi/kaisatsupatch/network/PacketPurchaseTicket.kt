@@ -9,6 +9,7 @@ import jp.sakuramochi.kaisatsupatch.RTMKaisatsuPatchCore
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTicketVendor
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
 import jp.sakuramochi.kaisatsupatch.gui.ContainerCustomVendor
+import jp.ngt.rtm.RTMItem
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomICCard
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomPass
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomTicket
@@ -24,7 +25,7 @@ import net.minecraft.util.EnumChatFormatting
  */
 class PacketPurchaseTicket() : IMessage {
 
-    enum class Mode { TICKET, CHARGE, PASS }
+    enum class Mode { TICKET, CHARGE, PASS, BUY_IC, RETURN_IC }
 
     var x = 0; var y = 0; var z = 0
     var mode = Mode.TICKET
@@ -117,6 +118,63 @@ class PacketPurchaseTicket() : IMessage {
                     val destLabel = if (isEntry) "入場券" else msg.destStation
                     player.addChatMessage(ChatComponentText(
                         "${EnumChatFormatting.GREEN}${destLabel}の切符を購入しました（${cost}円）"))
+                }
+
+                PacketPurchaseTicket.Mode.BUY_IC -> {
+                    // ── ICカード新規発行 ───────────────────────────
+                    val cost = msg.fare
+                    val initBalance = cost - 500  // 預り金500円を除いた残高
+                    if (initBalance < 0) return null
+                    if (!vendorInv.payAndChange(cost, player)) {
+                        player.addChatMessage(ChatComponentText(
+                            "${EnumChatFormatting.RED}お金が不足しています（必要: ${cost}円 / 所持: ${vendorInv.getMoneyYen()}円）"))
+                        return null
+                    }
+                    val icItem = RTMKaisatsuPatchCore.registeredItems["custom_ic_card"] as? ItemCustomICCard ?: return null
+                    val icStack = ItemStack(icItem)
+                    ItemCustomICCard.charge(icStack, initBalance)
+                    if (!player.inventory.addItemStackToInventory(icStack))
+                        player.dropPlayerItemWithRandomChoice(icStack, false)
+                    addSales(world, fromStation, cost.toLong())
+                    player.addChatMessage(ChatComponentText(
+                        "${EnumChatFormatting.GREEN}ICカードを発行しました（残高: ${initBalance}円 / 預り金: 500円）"))
+                }
+
+                PacketPurchaseTicket.Mode.RETURN_IC -> {
+                    // ── ICカード返却 ──────────────────────────────
+                    val cardStack = vendorInv.getICCardStack() ?: run {
+                        player.addChatMessage(ChatComponentText(
+                            "${EnumChatFormatting.RED}スロットにICカードを入れてください"))
+                        return null
+                    }
+                    if (ItemCustomICCard.getEntryStation(cardStack).isNotEmpty()) {
+                        player.addChatMessage(ChatComponentText(
+                            "${EnumChatFormatting.RED}入場中のICカードは返却できません（先に出場してください）"))
+                        return null
+                    }
+                    val balance = ItemCustomICCard.getBalance(cardStack)
+                    val refund = maxOf(0, balance - 220) + 500
+
+                    // カードを回収
+                    vendorInv.setInventorySlotContents(jp.sakuramochi.kaisatsupatch.gui.InventoryCustomVendor.SLOT_ICCARD, null)
+
+                    // 返却金を払い出し
+                    var remaining = refund
+                    for ((id, value) in jp.sakuramochi.kaisatsupatch.gui.InventoryCustomVendor.DENOMINATIONS) {
+                        val count = remaining / value
+                        if (count > 0) {
+                            val s = ItemStack(RTMItem.money, count, id)
+                            if (!player.inventory.addItemStackToInventory(s))
+                                player.dropPlayerItemWithRandomChoice(s, false)
+                            remaining -= count * value
+                        }
+                    }
+                    val msg2 = if (balance > 0)
+                        "残高${balance}円 - 手数料220円 + 預り金500円 = ${refund}円"
+                    else
+                        "預り金 500円"
+                    player.addChatMessage(ChatComponentText(
+                        "${EnumChatFormatting.GREEN}ICカードを返却しました（${msg2}）"))
                 }
 
                 PacketPurchaseTicket.Mode.PASS -> {
