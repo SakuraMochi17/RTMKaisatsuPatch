@@ -102,7 +102,8 @@ class RTMKaisatsuPatchCore {
         GameRegistry.registerTileEntity(TileEntityTrainManager::class.java,      "TileEntityTrainManager")
         GameRegistry.registerTileEntity(TileEntityReservedVendor::class.java,    "TileEntityReservedVendor")
 
-        registeredItems["custom_ticket"]  = itemTicket
+        registeredItems["custom_ticket"]   = itemTicket
+        registeredItems["custom_ic_card"] = itemICCard
         registeredItems["custom_pass"]    = itemPass
         registeredItems["express_ticket"] = itemExpressTicket
 
