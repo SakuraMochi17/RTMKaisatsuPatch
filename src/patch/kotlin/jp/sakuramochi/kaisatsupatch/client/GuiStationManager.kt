@@ -3,6 +3,7 @@ package jp.sakuramochi.kaisatsupatch.client
 import cpw.mods.fml.relauncher.Side
 import cpw.mods.fml.relauncher.SideOnly
 import jp.sakuramochi.kaisatsupatch.network.KaizPatchNetwork
+import jp.sakuramochi.kaisatsupatch.network.PacketResetSales
 import jp.sakuramochi.kaisatsupatch.network.PacketStationUpdate
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -12,7 +13,8 @@ import org.lwjgl.input.Keyboard
 @SideOnly(Side.CLIENT)
 class GuiStationManager(
     private val x: Int, private val y: Int, private val z: Int,
-    private val originalName: String   // サーバーから受け取った現在の駅名
+    private val originalName: String,
+    private val salesTotal: Long = 0L
 ) : GuiScreen() {
 
     private lateinit var nameField: GuiTextField
@@ -23,15 +25,14 @@ class GuiStationManager(
         nameField = GuiTextField(fontRendererObj, cx - 75, cy - 10, 150, 20)
         nameField.maxStringLength = 30
         nameField.setFocused(true)
-        // 未設定のときは空欄、それ以外は現在値を表示（再オープン時も維持）
         nameField.text = if (originalName == "未設定") "" else originalName
 
         @Suppress("UNCHECKED_CAST")
         val buttons = buttonList as MutableList<GuiButton>
         buttons.add(GuiButton(0, cx - 55, cy + 20, 110, 20, "ネットワークに登録"))
-        // 既登録駅のみ削除ボタンを表示
         if (originalName != "未設定") {
             buttons.add(GuiButton(1, cx - 55, cy + 44, 110, 20, "ネットワークから削除"))
+            buttons.add(GuiButton(2, cx - 55, cy + 68, 110, 20, "売上をリセット"))
         }
     }
 
@@ -52,6 +53,7 @@ class GuiStationManager(
         when (button.id) {
             0 -> register()
             1 -> deleteStation()
+            2 -> resetSales()
         }
     }
 
@@ -62,17 +64,27 @@ class GuiStationManager(
     }
 
     private fun deleteStation() {
-        // newName = "" で削除モード
         KaizPatchNetwork.CHANNEL.sendToServer(PacketStationUpdate(x, y, z, originalName, ""))
+        mc.thePlayer.closeScreen()
+    }
+
+    private fun resetSales() {
+        KaizPatchNetwork.CHANNEL.sendToServer(PacketResetSales(originalName))
         mc.thePlayer.closeScreen()
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawDefaultBackground()
         val cx = width / 2; val cy = height / 2
-        drawCenteredString(fontRendererObj, "駅管理ブロック 設定", cx, cy - 35, 0xFFFFFF)
+        drawCenteredString(fontRendererObj, "駅管理ブロック 設定", cx, cy - 50, 0xFFFFFF)
         drawString(fontRendererObj, "駅名を入力:", cx - 75, cy - 22, 0xAAAAAA)
         nameField.drawTextBox()
+
+        if (originalName != "未設定") {
+            val salesStr = "累計売上: ${"%,d".format(salesTotal)}円"
+            drawCenteredString(fontRendererObj, salesStr, cx, cy - 36, 0x55FF55)
+        }
+
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 

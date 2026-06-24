@@ -58,6 +58,7 @@ class RTMKaisatsuPatchCore {
         // アイテム
         val itemTicket       = ItemCustomTicket()
         val itemICCard       = ItemCustomICCard()
+        val itemPass         = ItemCustomPass()
         val itemSettingsTool = ItemSettingsTool()
 
         // ブロック
@@ -66,11 +67,12 @@ class RTMKaisatsuPatchCore {
         val blockStationManager = BlockStationManager()
         val blockLineManager    = BlockLineManager()
 
-        listOf(itemTicket, itemICCard, itemSettingsTool).forEach { it.creativeTab = myTab }
+        listOf(itemTicket, itemICCard, itemPass, itemSettingsTool).forEach { it.creativeTab = myTab }
         listOf(blockTurnstile, blockVendor, blockStationManager, blockLineManager).forEach { it.setCreativeTab(myTab) }
 
         GameRegistry.registerItem(itemTicket,       "custom_ticket")
         GameRegistry.registerItem(itemICCard,       "custom_ic_card")
+        GameRegistry.registerItem(itemPass,         "custom_pass")
         GameRegistry.registerItem(itemSettingsTool, "settings_tool")
 
         GameRegistry.registerBlock(blockTurnstile,      ItemBlockCustomTurnstile::class.java,  "custom_turnstile")
@@ -84,6 +86,7 @@ class RTMKaisatsuPatchCore {
         GameRegistry.registerTileEntity(TileEntityLineManager::class.java,       "TileEntityLineManager")
 
         registeredItems["custom_ticket"] = itemTicket
+        registeredItems["custom_pass"]   = itemPass
 
         if (event.side.isClient) {
             registerRenderer()

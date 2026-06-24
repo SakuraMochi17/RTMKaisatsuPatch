@@ -13,6 +13,8 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
     val globalStations: MutableMap<String, StationCoords> = mutableMapOf()
     // 路線ID → 路線データ
     val companyLines: MutableMap<String, LineData> = mutableMapOf()
+    // 駅名 → 累計売上（円）
+    val stationSales: MutableMap<String, Long> = mutableMapOf()
 
     data class StationCoords(val x: Int, val y: Int, val z: Int)
 
@@ -49,6 +51,13 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
             globalStations[s.getString("Name")] = StationCoords(s.getInteger("X"), s.getInteger("Y"), s.getInteger("Z"))
         }
 
+        stationSales.clear()
+        val salesList = nbt.getTagList("StationSales", Constants.NBT.TAG_COMPOUND)
+        for (i in 0 until salesList.tagCount()) {
+            val s = salesList.getCompoundTagAt(i)
+            stationSales[s.getString("Name")] = s.getLong("Sales")
+        }
+
         companyLines.clear()
         val lineList = nbt.getTagList("CompanyLines", Constants.NBT.TAG_COMPOUND)
         for (i in 0 until lineList.tagCount()) {
@@ -79,6 +88,16 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
             }
         }
         nbt.setTag("GlobalStations", stationList)
+
+        val salesList = NBTTagList()
+        stationSales.forEach { (name, sales) ->
+            NBTTagCompound().also {
+                it.setString("Name", name)
+                it.setLong("Sales", sales)
+                salesList.appendTag(it)
+            }
+        }
+        nbt.setTag("StationSales", salesList)
 
         val lineList = NBTTagList()
         companyLines.values.forEach { line ->
