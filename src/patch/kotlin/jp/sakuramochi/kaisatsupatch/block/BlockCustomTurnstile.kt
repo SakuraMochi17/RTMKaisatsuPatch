@@ -121,7 +121,8 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
                 return
             }
             if (!ItemCustomICCard.deduct(stack, fare)) {
-                deny(world, player, "残高不足です（残高: ${ItemCustomICCard.getBalance(stack)}円 / 運賃: ${fare}円）")
+                val balance = ItemCustomICCard.getBalance(stack)
+                deny(world, player, "残高不足です（運賃: ${fare}円 / 残高: ${balance}円 / 不足: ${fare - balance}円）")
                 return
             }
             ItemCustomICCard.clearEntryStation(stack)
@@ -188,7 +189,7 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
     ) {
         if (world.isRemote) return
         val currentDay = ItemCustomPass.currentDay(world)
-        if (!ItemCustomPass.isValid(stack, tile.stationCode, currentDay)) {
+        if (!ItemCustomPass.isValid(stack, tile.stationCode, currentDay, world)) {
             val remaining = ItemCustomPass.remainingDays(stack, currentDay)
             if (remaining <= 0) {
                 deny(world, player, "定期券の有効期限が切れています")

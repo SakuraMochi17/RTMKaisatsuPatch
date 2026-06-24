@@ -17,6 +17,7 @@ import jp.sakuramochi.kaisatsupatch.network.PacketPurchaseTicket
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.entity.player.InventoryPlayer
+import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
 
 @SideOnly(Side.CLIENT)
@@ -29,9 +30,14 @@ class GuiCustomTicketVendor(
 
     private val container get() = inventorySlots as ContainerCustomVendor
     private val chargeOptions = listOf(1000, 2000, 3000, 5000, 10000)
-    // 定期券 (日数 to 割引率)  料金 = 片道運賃 × 日数 × 割引率
     private val passDurations = listOf(7 to 0.90, 30 to 0.75, 90 to 0.60)
-    private var tab = 0   // 0=切符, 1=ICチャージ, 2=定期券
+    private var tab = 0
+
+    // スクロール
+    private var ticketScrollOffset = 0
+    private var passScrollOffset   = 0
+    private val TICKET_VISIBLE = 8
+    private val PASS_VISIBLE   = 6
 
     private val rightPanelWidth get() = xSize - RIGHT_PANEL_X - 4
 
@@ -45,7 +51,6 @@ class GuiCustomTicketVendor(
         val lx = guiLeft; val ty = guiTop
         val tabW = (xSize - 4) / 3
 
-        // タブ（3分割）
         add(GuiButton(200, lx + 2,          ty + 4, tabW, 18, if (tab == 0) "▶ 切符購入"  else "  切符購入"))
         add(GuiButton(201, lx + 2 + tabW,   ty + 4, tabW, 18, if (tab == 1) "▶ ICチャージ" else "  ICチャージ"))
         add(GuiButton(202, lx + 2 + tabW*2, ty + 4, tabW, 18, if (tab == 2) "▶ 定期券"    else "  定期券"))
@@ -54,35 +59,61 @@ class GuiCustomTicketVendor(
 
         when (tab) {
             0 -> {
-                // 切符購入ボタン（2列）
-                val maxFare = minOf(8, fares.size)
-                for (i in 0 until maxFare) {
-                    val (dest, fare) = fares[i]
+                val visible = fares.drop(ticketScrollOffset).take(TICKET_VISIBLE)
+                for (i in visible.indices) {
+                    val (dest, fare) = visible[i]
                     add(GuiButton(i, if (i % 2 == 0) col0 else col1, ty + 28 + (i / 2) * 24, btnW, btnH, "$dest  ${fare}円"))
                 }
-                val entryRow = maxFare / 2
-                add(GuiButton(100, if (maxFare % 2 == 0) col0 else col1, ty + 28 + entryRow * 24, btnW, btnH, "入場券  140円"))
+                val entryRow = (visible.size + 1) / 2
+                add(GuiButton(100, col0, ty + 28 + entryRow * 24, btnW, btnH, "入場券  140円"))
+                if (fares.size > TICKET_VISIBLE) {
+                    add(GuiButton(600, lx + 172, ty + 28, 10, 18, "▲").also { it.enabled = ticketScrollOffset > 0 })
+                    add(GuiButton(601, lx + 172, ty + 50, 10, 18, "▼").also { it.enabled = ticketScrollOffset + TICKET_VISIBLE < fares.size })
+                }
                 add(GuiButton(150, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "購入"))
             }
             1 -> {
-                // ICチャージ金額ボタン（2列）
                 for ((i, amount) in chargeOptions.withIndex())
                     add(GuiButton(300 + i, if (i % 2 == 0) col0 else col1, ty + 28 + (i / 2) * 24, btnW, btnH, "${amount}円"))
                 add(GuiButton(350, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "チャージ"))
             }
             2 -> {
-                // 定期券：行き先選択（左）× 期間選択（右下）
-                val maxFare = minOf(6, fares.size)
-                for (i in 0 until maxFare) {
-                    val (dest, _) = fares[i]
+                val visible = fares.drop(passScrollOffset).take(PASS_VISIBLE)
+                for (i in visible.indices) {
+                    val (dest, _) = visible[i]
                     add(GuiButton(400 + i, if (i % 2 == 0) col0 else col1, ty + 28 + (i / 2) * 24, btnW, btnH, dest))
                 }
-                // 期間ボタン
+                if (fares.size > PASS_VISIBLE) {
+                    add(GuiButton(602, lx + 172, ty + 28, 10, 18, "▲").also { it.enabled = passScrollOffset > 0 })
+                    add(GuiButton(603, lx + 172, ty + 50, 10, 18, "▼").also { it.enabled = passScrollOffset + PASS_VISIBLE < fares.size })
+                }
                 for ((i, pair) in passDurations.withIndex()) {
                     val (days, _) = pair
                     add(GuiButton(500 + i, col0 + i * 56, ty + 106, 52, btnH, "${days}日"))
                 }
                 add(GuiButton(550, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "定期購入"))
+            }
+        }
+    }
+
+    override fun handleMouseInput() {
+        super.handleMouseInput()
+        val wheel = Mouse.getEventDWheel()
+        if (wheel == 0) return
+        when (tab) {
+            0 -> {
+                ticketScrollOffset = if (wheel > 0)
+                    maxOf(0, ticketScrollOffset - 1)
+                else
+                    minOf(maxOf(0, fares.size - TICKET_VISIBLE), ticketScrollOffset + 1)
+                resetSelection(); buildButtons()
+            }
+            2 -> {
+                passScrollOffset = if (wheel > 0)
+                    maxOf(0, passScrollOffset - 1)
+                else
+                    minOf(maxOf(0, fares.size - PASS_VISIBLE), passScrollOffset + 1)
+                resetSelection(); buildButtons()
             }
         }
     }
@@ -97,38 +128,42 @@ class GuiCustomTicketVendor(
     @Suppress("UNCHECKED_CAST")
     override fun actionPerformed(button: GuiButton) {
         when {
-            button.id == 200 -> { tab = 0; resetSelection(); buildButtons() }
+            button.id == 200 -> { tab = 0; ticketScrollOffset = 0; resetSelection(); buildButtons() }
             button.id == 201 -> { tab = 1; resetSelection(); buildButtons() }
-            button.id == 202 -> { tab = 2; resetSelection(); buildButtons() }
+            button.id == 202 -> { tab = 2; passScrollOffset = 0; resetSelection(); buildButtons() }
 
-            // 切符選択
-            button.id == 100 -> { isEntry = true; selectedFare = 140; selectedDest = stationName; dimOthers(button, 0..100) }
-            button.id < fares.size -> {
-                val (dest, fare) = fares[button.id]
-                selectedFare = fare; selectedDest = dest; isEntry = false; dimOthers(button, 0..100)
+            button.id == 600 -> { ticketScrollOffset = maxOf(0, ticketScrollOffset - 1); resetSelection(); buildButtons() }
+            button.id == 601 -> { ticketScrollOffset = minOf(maxOf(0, fares.size - TICKET_VISIBLE), ticketScrollOffset + 1); resetSelection(); buildButtons() }
+
+            button.id == 100 -> { isEntry = true; selectedFare = 140; selectedDest = stationName; dimOthers(button, 0 until TICKET_VISIBLE) }
+            button.id in 0 until TICKET_VISIBLE -> {
+                val actualIdx = ticketScrollOffset + button.id
+                if (actualIdx < fares.size) {
+                    val (dest, fare) = fares[actualIdx]
+                    selectedFare = fare; selectedDest = dest; isEntry = false
+                    dimOthers(button, 0 until TICKET_VISIBLE)
+                }
             }
 
-            // ICチャージ選択
             button.id in 300..304 -> { selectedFare = chargeOptions[button.id - 300]; dimOthers(button, 300..304) }
 
-            // 定期券 行き先選択
+            button.id == 602 -> { passScrollOffset = maxOf(0, passScrollOffset - 1); resetSelection(); buildButtons() }
+            button.id == 603 -> { passScrollOffset = minOf(maxOf(0, fares.size - PASS_VISIBLE), passScrollOffset + 1); resetSelection(); buildButtons() }
+
             button.id in 400..405 -> {
-                val idx = button.id - 400
-                if (idx < fares.size) {
-                    selectedPassDest = fares[idx].first
+                val actualIdx = passScrollOffset + (button.id - 400)
+                if (actualIdx < fares.size) {
+                    selectedPassDest = fares[actualIdx].first
                     updatePassFare()
                     dimOthers(button, 400..405)
                 }
             }
-            // 定期券 期間選択
             button.id in 500..502 -> {
-                val idx = button.id - 500
-                selectedPassDays = passDurations[idx].first
+                selectedPassDays = passDurations[button.id - 500].first
                 updatePassFare()
                 dimOthers(button, 500..502)
             }
 
-            // 購入実行
             button.id == 150 -> {
                 if (selectedFare > 0) KaizPatchNetwork.CHANNEL.sendToServer(
                     PacketPurchaseTicket(tile.xCoord, tile.yCoord, tile.zCoord,
@@ -161,7 +196,7 @@ class GuiCustomTicketVendor(
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun dimOthers(selected: GuiButton, range: IntRange) {
+    private fun dimOthers(selected: GuiButton, range: Iterable<Int>) {
         (buttonList as MutableList<GuiButton>)
             .filter { it.id in range }
             .forEach { it.enabled = it.id != selected.id }
@@ -201,7 +236,16 @@ class GuiCustomTicketVendor(
             if (balance != null) "残高:${balance}円" else "未挿入",
             rpx, CARD_Y + 20, if (balance != null) 0x0000AA else 0x888888)
 
-        // 選択状態
+        // スクロールインジケーター
+        if (tab == 0 && fares.size > TICKET_VISIBLE) {
+            val end = minOf(ticketScrollOffset + TICKET_VISIBLE, fares.size)
+            fontRendererObj.drawString("${ticketScrollOffset + 1}-${end} / ${fares.size}", 4, 22, 0x888888)
+        }
+        if (tab == 2 && fares.size > PASS_VISIBLE) {
+            val end = minOf(passScrollOffset + PASS_VISIBLE, fares.size)
+            fontRendererObj.drawString("${passScrollOffset + 1}-${end} / ${fares.size}", 4, 22, 0x888888)
+        }
+
         val selY = INV_Y - 14
         when (tab) {
             0 -> if (selectedFare > 0)
@@ -218,7 +262,6 @@ class GuiCustomTicketVendor(
                     val dayStr  = if (selectedPassDays == 0) "期間を選択" else "${selectedPassDays}日"
                     fontRendererObj.drawString("$destStr  $dayStr", rpx, selY - 8, 0x888888)
                 }
-                // 割引表示
                 fontRendererObj.drawString("7日:10%割引", rpx, selY + 4, 0x555555)
                 fontRendererObj.drawString("30日:25%  90日:40%", rpx, selY + 14, 0x555555)
             }

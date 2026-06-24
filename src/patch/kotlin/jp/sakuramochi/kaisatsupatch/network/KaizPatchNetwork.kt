@@ -25,6 +25,11 @@ object KaizPatchNetwork {
         CHANNEL.registerMessage(PacketOpenTurnstileConfig.Handler::class.java, PacketOpenTurnstileConfig::class.java, id++, Side.CLIENT)
         // 券売機設置駅設定
         CHANNEL.registerMessage(PacketOpenVendorConfig.Handler::class.java,    PacketOpenVendorConfig::class.java,    id++, Side.CLIENT)
-        CHANNEL.registerMessage(PacketVendorStationSave.Handler::class.java,   PacketVendorStationSave::class.java,   id,   Side.SERVER)
+        CHANNEL.registerMessage(PacketVendorStationSave.Handler::class.java,   PacketVendorStationSave::class.java,   id++, Side.SERVER)
+        // 指定席券売機・列車管理
+        CHANNEL.registerMessage(PacketTrainUpdate.Handler::class.java,              PacketTrainUpdate::class.java,              id++, Side.SERVER)
+        CHANNEL.registerMessage(PacketPurchaseExpressTicket.Handler::class.java,    PacketPurchaseExpressTicket::class.java,    id++, Side.SERVER)
+        CHANNEL.registerMessage(PacketOpenTrainManager.Handler::class.java,         PacketOpenTrainManager::class.java,         id++, Side.CLIENT)
+        CHANNEL.registerMessage(PacketOpenReservedVendor.Handler::class.java,       PacketOpenReservedVendor::class.java,       id,   Side.CLIENT)
     }
 }
