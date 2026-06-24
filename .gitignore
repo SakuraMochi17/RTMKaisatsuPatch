@@ -27,10 +27,6 @@
 # ログファイルや一時ファイルを除外
 *.log
 
-README.md
-README.en.md
-README.ko.md
-README.ru.md
 
 /src/patch/resources/assets/mcte/
 /src/patch/resources/assets/minecraft/
