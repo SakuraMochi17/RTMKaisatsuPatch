@@ -30,7 +30,7 @@ class RTMKaisatsuPatchCore {
     companion object {
         const val MODID = "RTMKaisatsuPatch"
         const val MODNAME = "RTM Kaisatsu Patch"
-        const val VERSION = "0.0.1"
+        const val VERSION = "0.1.0-pre1"
 
         val logger: Logger = LogManager.getLogger(MODID)
 
