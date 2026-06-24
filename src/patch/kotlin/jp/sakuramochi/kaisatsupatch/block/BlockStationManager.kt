@@ -30,7 +30,7 @@ class BlockStationManager : BlockContainer(Material.iron) {
 
         if (player.currentEquippedItem?.item is ItemSettingsTool) {
             if (!world.isRemote) {
-                val sales = KaisatsuNetworkData.get(world).stationSales[tile.stationName] ?: 0L
+                val sales = KaisatsuNetworkData.get(world)?.stationSales?.get(tile.stationName) ?: 0L
                 KaizPatchNetwork.CHANNEL.sendTo(
                     PacketOpenStationGui(x, y, z, tile.stationName, sales),
                     player as EntityPlayerMP

@@ -21,7 +21,7 @@ class PacketResetSales() : IMessage {
         override fun onMessage(msg: PacketResetSales, ctx: MessageContext): IMessage? {
             val player = ctx.serverHandler.playerEntity
             val world = player.worldObj
-            val data = KaisatsuNetworkData.get(world)
+            val data = KaisatsuNetworkData.get(world) ?: return null
             data.stationSales.remove(msg.stationName)
             data.markDirty()
             return null

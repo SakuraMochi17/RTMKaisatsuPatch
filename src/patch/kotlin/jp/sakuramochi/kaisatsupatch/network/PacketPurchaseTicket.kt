@@ -144,7 +144,7 @@ class PacketPurchaseTicket() : IMessage {
         }
 
         private fun addSales(world: net.minecraft.world.World, stationName: String, amount: Long) {
-            val data = KaisatsuNetworkData.get(world)
+            val data = KaisatsuNetworkData.get(world) ?: return
             data.stationSales[stationName] = (data.stationSales[stationName] ?: 0L) + amount
             data.markDirty()
         }
