@@ -15,8 +15,25 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
     val companyLines: MutableMap<String, LineData> = mutableMapOf()
     // 駅名 → 累計売上（円）
     val stationSales: MutableMap<String, Long> = mutableMapOf()
+    // 列車ID → 列車データ
+    val trainData: MutableMap<String, TrainData> = mutableMapOf()
+    // "trainID:carNum:seatNum" → playerName
+    val reservations: MutableMap<String, String> = mutableMapOf()
 
     data class StationCoords(val x: Int, val y: Int, val z: Int)
+
+    data class CarData(val carNumber: Int, val seatCount: Int, val carClass: String)
+
+    data class TrainData(
+        val trainID: String,
+        val trainName: String,
+        val trainType: String,
+        val lineID: String,
+        val stopStations: List<String>,
+        val reservedFare: Int,
+        val unreservedFare: Int,
+        val cars: List<CarData>
+    )
 
     data class LineData(
         var lineID: String,
@@ -56,6 +73,37 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
         for (i in 0 until salesList.tagCount()) {
             val s = salesList.getCompoundTagAt(i)
             stationSales[s.getString("Name")] = s.getLong("Sales")
+        }
+
+        trainData.clear()
+        val trainList = nbt.getTagList("TrainData", Constants.NBT.TAG_COMPOUND)
+        for (i in 0 until trainList.tagCount()) {
+            val t = trainList.getCompoundTagAt(i)
+            val stopList = t.getTagList("StopStations", Constants.NBT.TAG_STRING)
+            val stops = (0 until stopList.tagCount()).map { stopList.getStringTagAt(it) }
+            val carList = t.getTagList("Cars", Constants.NBT.TAG_COMPOUND)
+            val cars = (0 until carList.tagCount()).map { ci ->
+                val c = carList.getCompoundTagAt(ci)
+                CarData(c.getInteger("CarNumber"), c.getInteger("SeatCount"), c.getString("CarClass"))
+            }
+            val train = TrainData(
+                trainID = t.getString("TrainID"),
+                trainName = t.getString("TrainName"),
+                trainType = t.getString("TrainType"),
+                lineID = t.getString("LineID"),
+                stopStations = stops,
+                reservedFare = t.getInteger("ReservedFare"),
+                unreservedFare = t.getInteger("UnreservedFare"),
+                cars = cars
+            )
+            trainData[train.trainID] = train
+        }
+
+        reservations.clear()
+        val resvList = nbt.getTagList("Reservations", Constants.NBT.TAG_COMPOUND)
+        for (i in 0 until resvList.tagCount()) {
+            val r = resvList.getCompoundTagAt(i)
+            reservations[r.getString("Key")] = r.getString("Player")
         }
 
         companyLines.clear()
@@ -115,5 +163,42 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
             }
         }
         nbt.setTag("CompanyLines", lineList)
+
+        val trainNBTList = NBTTagList()
+        trainData.values.forEach { train ->
+            NBTTagCompound().also { t ->
+                t.setString("TrainID", train.trainID)
+                t.setString("TrainName", train.trainName)
+                t.setString("TrainType", train.trainType)
+                t.setString("LineID", train.lineID)
+                t.setInteger("ReservedFare", train.reservedFare)
+                t.setInteger("UnreservedFare", train.unreservedFare)
+                val stopList = NBTTagList()
+                train.stopStations.forEach { st -> stopList.appendTag(NBTTagString(st)) }
+                t.setTag("StopStations", stopList)
+                val carList = NBTTagList()
+                train.cars.forEach { car ->
+                    NBTTagCompound().also { c ->
+                        c.setInteger("CarNumber", car.carNumber)
+                        c.setInteger("SeatCount", car.seatCount)
+                        c.setString("CarClass", car.carClass)
+                        carList.appendTag(c)
+                    }
+                }
+                t.setTag("Cars", carList)
+                trainNBTList.appendTag(t)
+            }
+        }
+        nbt.setTag("TrainData", trainNBTList)
+
+        val resvNBTList = NBTTagList()
+        reservations.forEach { (key, player) ->
+            NBTTagCompound().also {
+                it.setString("Key", key)
+                it.setString("Player", player)
+                resvNBTList.appendTag(it)
+            }
+        }
+        nbt.setTag("Reservations", resvNBTList)
     }
 }

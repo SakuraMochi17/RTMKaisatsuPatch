@@ -6,6 +6,7 @@ import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import io.netty.buffer.ByteBuf
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTicketVendor
+import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityReservedVendor
 
 /** C→S: 券売機の設置駅を保存する */
 class PacketVendorStationSave() : IMessage {
@@ -29,9 +30,11 @@ class PacketVendorStationSave() : IMessage {
     class Handler : IMessageHandler<PacketVendorStationSave, IMessage> {
         override fun onMessage(msg: PacketVendorStationSave, ctx: MessageContext): IMessage? {
             val player = ctx.serverHandler.playerEntity
-            val tile = player.worldObj.getTileEntity(msg.x, msg.y, msg.z) as? TileEntityCustomTicketVendor ?: return null
-            tile.stationName = msg.stationName
-            tile.markDirty()
+            val tile = player.worldObj.getTileEntity(msg.x, msg.y, msg.z)
+            when (tile) {
+                is TileEntityCustomTicketVendor -> { tile.stationName = msg.stationName; tile.markDirty() }
+                is TileEntityReservedVendor     -> { tile.stationName = msg.stationName; tile.markDirty() }
+            }
             return null
         }
     }

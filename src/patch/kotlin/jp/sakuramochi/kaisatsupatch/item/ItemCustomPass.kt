@@ -1,19 +1,20 @@
 package jp.sakuramochi.kaisatsupatch.item
 
+import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
+import net.minecraft.world.World
 
 class ItemCustomPass : Item() {
 
     companion object {
         private const val TAG_FROM   = "FromStation"
         private const val TAG_TO     = "ToStation"
-        private const val TAG_EXPIRY = "ExpiryDay"   // ワールド時間（日数）で管理
+        private const val TAG_EXPIRY = "ExpiryDay"
 
-        /** 1MCday = 24000 ticks */
         const val TICKS_PER_DAY = 24000L
 
         fun init(stack: ItemStack, fromStation: String, toStation: String, currentDay: Long, durationDays: Int) {
@@ -27,23 +28,35 @@ class ItemCustomPass : Item() {
         fun getToStation(stack: ItemStack): String   { ensureTag(stack); return stack.tagCompound.getString(TAG_TO) }
         fun getExpiryDay(stack: ItemStack): Long     { ensureTag(stack); return stack.tagCompound.getLong(TAG_EXPIRY) }
 
-        /** fromStation/toStation のどちらかが現在駅で、かつ期限内なら有効 */
-        fun isValid(stack: ItemStack, currentStation: String, currentDay: Long): Boolean {
+        /**
+         * 現在駅が定期券の有効区間内かつ期限内なら有効。
+         * world を渡すと路線データを参照して途中駅も判定する。
+         */
+        fun isValid(stack: ItemStack, currentStation: String, currentDay: Long, world: World? = null): Boolean {
             ensureTag(stack)
             if (currentDay > getExpiryDay(stack)) return false
             val from = getFromStation(stack)
             val to   = getToStation(stack)
-            return currentStation == from || currentStation == to
+            if (currentStation == from || currentStation == to) return true
+            if (world != null) return isIntermediateStation(world, from, to, currentStation)
+            return false
         }
 
-        /** 乗車区間が一致するか（from↔to 双方向） */
-        fun coversRoute(stack: ItemStack, stationA: String, stationB: String): Boolean {
-            val from = getFromStation(stack)
-            val to   = getToStation(stack)
-            return (from == stationA && to == stationB) || (from == stationB && to == stationA)
+        /** from〜to 間の路線上に station が含まれるか判定 */
+        private fun isIntermediateStation(world: World, from: String, to: String, station: String): Boolean {
+            val data = KaisatsuNetworkData.get(world) ?: return false
+            for (line in data.companyLines.values) {
+                val order = line.stationOrder
+                val fromIdx = order.indexOf(from)
+                val toIdx   = order.indexOf(to)
+                val stIdx   = order.indexOf(station)
+                if (fromIdx < 0 || toIdx < 0 || stIdx < 0) continue
+                if (stIdx in minOf(fromIdx, toIdx)..maxOf(fromIdx, toIdx)) return true
+            }
+            return false
         }
 
-        fun currentDay(world: net.minecraft.world.World): Long = world.totalWorldTime / TICKS_PER_DAY
+        fun currentDay(world: World): Long = world.totalWorldTime / TICKS_PER_DAY
 
         fun remainingDays(stack: ItemStack, currentDay: Long): Long = maxOf(0L, getExpiryDay(stack) - currentDay)
 
@@ -54,7 +67,7 @@ class ItemCustomPass : Item() {
 
     init {
         unlocalizedName = "custom_pass"
-        setTextureName("rtm:ticket")   // 暫定テクスチャ
+        setTextureName("rtm:ticket")
         creativeTab = CreativeTabs.tabTransport
         maxStackSize = 1
     }
