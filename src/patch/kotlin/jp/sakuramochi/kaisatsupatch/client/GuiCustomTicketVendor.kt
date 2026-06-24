@@ -34,6 +34,8 @@ class GuiCustomTicketVendor(
     private var tab = 0
     // ICタブのサブモード: 0=チャージ, 1=新規購入, 2=返却
     private var icMode = 0
+    // 切符タブのサブモード: false=普通切符, true=回数券
+    private var couponMode = false
 
     // スクロール
     private var ticketScrollOffset = 0
@@ -61,18 +63,27 @@ class GuiCustomTicketVendor(
 
         when (tab) {
             0 -> {
+                // 普通切符/回数券 トグル
+                val smW2 = (RIGHT_PANEL_X - 6) / 2
+                add(GuiButton(155, lx + 2,        ty + 25, smW2, 14, "普通切符").also { it.enabled = couponMode })
+                add(GuiButton(156, lx + 2 + smW2, ty + 25, smW2, 14, "回数券").also { it.enabled = !couponMode })
+
                 val visible = fares.drop(ticketScrollOffset).take(TICKET_VISIBLE)
                 for (i in visible.indices) {
                     val (dest, fare) = visible[i]
-                    add(GuiButton(i, if (i % 2 == 0) col0 else col1, ty + 28 + (i / 2) * 24, btnW, btnH, "$dest  ${fare}円"))
+                    val label = if (couponMode) "$dest  ${calcCouponPrice(fare)}円" else "$dest  ${fare}円"
+                    add(GuiButton(i, if (i % 2 == 0) col0 else col1, ty + 40 + (i / 2) * 22, btnW, 18, label))
                 }
-                val entryRow = (visible.size + 1) / 2
-                add(GuiButton(100, col0, ty + 28 + entryRow * 24, btnW, btnH, "入場券  140円"))
+                if (!couponMode) {
+                    val entryRow = (visible.size + 1) / 2
+                    add(GuiButton(100, col0, ty + 40 + entryRow * 22, btnW, 18, "入場券  140円"))
+                }
                 if (fares.size > TICKET_VISIBLE) {
-                    add(GuiButton(600, lx + 172, ty + 28, 10, 18, "▲").also { it.enabled = ticketScrollOffset > 0 })
-                    add(GuiButton(601, lx + 172, ty + 50, 10, 18, "▼").also { it.enabled = ticketScrollOffset + TICKET_VISIBLE < fares.size })
+                    add(GuiButton(600, lx + 172, ty + 40, 10, 18, "▲").also { it.enabled = ticketScrollOffset > 0 })
+                    add(GuiButton(601, lx + 172, ty + 58, 10, 18, "▼").also { it.enabled = ticketScrollOffset + TICKET_VISIBLE < fares.size })
                 }
-                add(GuiButton(150, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "購入"))
+                val buyLabel = if (couponMode) "回数券を購入" else "購入"
+                add(GuiButton(150, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, buyLabel))
             }
             1 -> {
                 // サブモード切り替えボタン
@@ -118,6 +129,8 @@ class GuiCustomTicketVendor(
                     add(GuiButton(500 + i, col0 + i * 56, ty + 106, 52, btnH, "${days}日"))
                 }
                 add(GuiButton(550, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "定期購入"))
+                val dayPassPrice = calcDayPassPrice()
+                add(GuiButton(560, col0, ty + 128, btnW * 2 + 4, 18, "フリーパス（1日）  ${dayPassPrice}円"))
             }
         }
     }
@@ -157,6 +170,10 @@ class GuiCustomTicketVendor(
             button.id == 200 -> { tab = 0; ticketScrollOffset = 0; resetSelection(); buildButtons() }
             button.id == 201 -> { tab = 1; icMode = 0; resetSelection(); buildButtons() }
             button.id == 202 -> { tab = 2; passScrollOffset = 0; resetSelection(); buildButtons() }
+
+            // 切符タブ: 普通/回数券 切り替え
+            button.id == 155 -> { couponMode = false; resetSelection(); buildButtons() }
+            button.id == 156 -> { couponMode = true;  resetSelection(); buildButtons() }
 
             // ICサブモード切り替え
             button.id == 360 -> { icMode = 0; resetSelection(); buildButtons() }
@@ -200,10 +217,20 @@ class GuiCustomTicketVendor(
             }
 
             button.id == 150 -> {
-                if (selectedFare > 0) KaizPatchNetwork.CHANNEL.sendToServer(
-                    PacketPurchaseTicket(tile.xCoord, tile.yCoord, tile.zCoord,
-                        if (isEntry) stationName else selectedDest,
-                        if (isEntry) -1 else selectedFare, false))
+                if (selectedFare > 0) {
+                    if (couponMode) {
+                        val pkt = PacketPurchaseTicket()
+                        pkt.x = tile.xCoord; pkt.y = tile.yCoord; pkt.z = tile.zCoord
+                        pkt.mode = PacketPurchaseTicket.Mode.COUPON
+                        pkt.destStation = selectedDest; pkt.fare = selectedFare
+                        KaizPatchNetwork.CHANNEL.sendToServer(pkt)
+                    } else {
+                        KaizPatchNetwork.CHANNEL.sendToServer(
+                            PacketPurchaseTicket(tile.xCoord, tile.yCoord, tile.zCoord,
+                                if (isEntry) stationName else selectedDest,
+                                if (isEntry) -1 else selectedFare, false))
+                    }
+                }
             }
             // ICタブの実行ボタン（チャージ/発行/返却）
             button.id == 350 -> when (icMode) {
@@ -229,6 +256,14 @@ class GuiCustomTicketVendor(
                         PacketPurchaseTicket(tile.xCoord, tile.yCoord, tile.zCoord,
                             selectedPassDest, selectedPassFare, selectedPassDays, true))
             }
+            button.id == 560 -> {
+                val dayPassPrice = calcDayPassPrice()
+                val pkt = PacketPurchaseTicket()
+                pkt.x = tile.xCoord; pkt.y = tile.yCoord; pkt.z = tile.zCoord
+                pkt.mode = PacketPurchaseTicket.Mode.DAY_PASS
+                pkt.fare = dayPassPrice
+                KaizPatchNetwork.CHANNEL.sendToServer(pkt)
+            }
         }
     }
 
@@ -242,6 +277,15 @@ class GuiCustomTicketVendor(
     private fun resetSelection() {
         selectedFare = 0; selectedDest = ""; isEntry = false
         selectedPassDays = 0; selectedPassDest = ""; selectedPassFare = 0
+    }
+
+    private fun calcCouponPrice(baseFare: Int): Int =
+        (Math.ceil(baseFare * 10 * 0.9 / 10.0) * 10).toInt()
+
+    private fun calcDayPassPrice(): Int {
+        val maxFare = fares.maxOfOrNull { it.second } ?: 0
+        if (maxFare == 0) return 1000
+        return (Math.ceil(maxFare * 2 * 0.8 / 100.0) * 100).toInt().coerceAtLeast(1000)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -297,9 +341,15 @@ class GuiCustomTicketVendor(
 
         val selY = INV_Y - 14
         when (tab) {
-            0 -> if (selectedFare > 0)
-                    fontRendererObj.drawString(if (isEntry) "入場券 140円" else "$selectedDest ${selectedFare}円", rpx, selY, 0x0000CC)
-                 else fontRendererObj.drawString("行き先を選択", rpx, selY, 0x888888)
+            0 -> if (selectedFare > 0) {
+                    if (couponMode) {
+                        val couponPrice = calcCouponPrice(selectedFare)
+                        fontRendererObj.drawString("$selectedDest 10回 ${couponPrice}円", rpx, selY - 8, 0x0000CC)
+                        fontRendererObj.drawString("（1回あたり ${selectedFare}×0.9円）", rpx, selY + 4, 0x555555)
+                    } else {
+                        fontRendererObj.drawString(if (isEntry) "入場券 140円" else "$selectedDest ${selectedFare}円", rpx, selY, 0x0000CC)
+                    }
+                } else fontRendererObj.drawString(if (couponMode) "行き先を選択（回数券）" else "行き先を選択", rpx, selY, 0x888888)
             1 -> when (icMode) {
                 0 -> if (selectedFare > 0)
                         fontRendererObj.drawString("${selectedFare}円チャージ", rpx, selY, 0x0000CC)

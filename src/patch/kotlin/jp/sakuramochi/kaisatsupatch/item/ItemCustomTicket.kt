@@ -41,6 +41,12 @@ class ItemCustomTicket : Item() {
             stack.tagCompound.setBoolean(TAG_USED, true)
         }
 
+        /** 着駅を書き換える（乗越精算機が呼ぶ）。 */
+        fun setToStation(stack: ItemStack, toStation: String) {
+            ensureTag(stack)
+            stack.tagCompound.setString(TAG_TO, toStation)
+        }
+
         private fun ensureTag(stack: ItemStack) {
             if (!stack.hasTagCompound()) {
                 stack.tagCompound = NBTTagCompound()

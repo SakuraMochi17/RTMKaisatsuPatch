@@ -31,6 +31,7 @@ object KaizPatchClientEvents {
 
         val currentDay = ItemCustomPass.currentDay(world)
         val remaining  = ItemCustomPass.remainingDays(passStack, currentDay)
+        val isFreePast = ItemCustomPass.isFreePast(passStack)
         val from = ItemCustomPass.getFromStation(passStack)
         val to   = ItemCustomPass.getToStation(passStack)
 
@@ -41,10 +42,12 @@ object KaizPatchClientEvents {
             else            -> 0x55FF55
         }
 
+        val routeStr = if (isFreePast) "全区間" else "$from⇔$to"
+        val typeStr  = if (isFreePast) "フリーパス" else "定期券"
         val label = if (remaining <= 0L)
-            "定期券 期限切れ ($from⇔$to)"
+            "$typeStr 期限切れ ($routeStr)"
         else
-            "定期券 残り ${remaining}日 ($from⇔$to)"
+            "$typeStr 残り ${remaining}日 ($routeStr)"
 
         val sr = ScaledResolution(mc, mc.displayWidth, mc.displayHeight)
 

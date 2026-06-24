@@ -7,6 +7,7 @@ import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTurnstile
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTurnstile.GateMode
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkManager
+import jp.sakuramochi.kaisatsupatch.item.ItemCustomCouponTicket
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomICCard
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomPass
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomTicket
@@ -85,6 +86,10 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
                 if (!gm.allowsIC) { deny(world, player, "この改札はIC専用ではありません（${gm.displayName}）"); return true }
                 handleICCard(world, x, y, z, player, heldItem, tile)
             }
+            is ItemCustomCouponTicket -> {
+                if (!gm.allowsTicket) { deny(world, player, "この改札は切符専用ではありません（${gm.displayName}）"); return true }
+                handleCouponTicket(world, x, y, z, player, heldItem, tile)
+            }
             is ItemCustomTicket -> {
                 if (!gm.allowsTicket) { deny(world, player, "この改札は切符専用ではありません（${gm.displayName}）"); return true }
                 handleCustomTicket(world, x, y, z, player, heldItem, tile)
@@ -153,6 +158,60 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             deny(world, player, "この改札は入場専用です。出場改札を使ってください")
         } else if (entryStation.isEmpty() && !canEntry) {
             deny(world, player, "この改札は出場専用です。先に入場改札を通ってください")
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // 回数券処理
+    // -----------------------------------------------------------------------
+    private fun handleCouponTicket(
+        world: World, x: Int, y: Int, z: Int,
+        player: EntityPlayer, stack: ItemStack, tile: TileEntityCustomTurnstile
+    ) {
+        if (world.isRemote) return
+        val mode = tile.gateMode
+        val from  = ItemCustomCouponTicket.getFromStation(stack)
+        val to    = ItemCustomCouponTicket.getToStation(stack)
+        val uses  = ItemCustomCouponTicket.getRemainingUses(stack)
+
+        if (uses <= 0) {
+            deny(world, player, "この回数券は使い切りました")
+            return
+        }
+
+        val canEntry = mode != GateMode.EXIT
+        val canExit  = mode != GateMode.ENTRY
+
+        if (!ItemCustomCouponTicket.isEntered(stack)) {
+            // 入場
+            if (!canEntry) { deny(world, player, "この改札は出場専用です"); return }
+            if (tile.stationCode != from) {
+                deny(world, player, "この回数券は ${from} からの乗車専用です（現在: ${tile.stationCode}）")
+                return
+            }
+            ItemCustomCouponTicket.markEntry(stack, tile.stationCode)
+            openGate(world, x, y, z, tile)
+            allow(world, player)
+            player.addChatMessage(ChatComponentText(
+                "${EnumChatFormatting.GREEN}【入場】${tile.stationCode}　残り ${uses} 回"))
+        } else {
+            // 出場
+            if (!canExit) { deny(world, player, "この改札は入場専用です"); return }
+            if (tile.stationCode != to) {
+                deny(world, player, "この回数券の着駅は ${to} です（現在: ${tile.stationCode}）")
+                return
+            }
+            ItemCustomCouponTicket.clearEntry(stack)
+            val remaining = ItemCustomCouponTicket.consumeUse(stack)
+            openGate(world, x, y, z, tile)
+            allow(world, player)
+            if (remaining <= 0) {
+                player.inventory.setInventorySlotContents(player.inventory.currentItem, null)
+                player.addChatMessage(ChatComponentText("${EnumChatFormatting.GREEN}【出場】${to}　回数券を使い切りました"))
+            } else {
+                player.addChatMessage(ChatComponentText(
+                    "${EnumChatFormatting.GREEN}【出場】${to}　残り ${remaining} 回"))
+            }
         }
     }
 
