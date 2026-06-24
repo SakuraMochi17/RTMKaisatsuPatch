@@ -107,6 +107,7 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
         if (entryStation.isEmpty() && canEntry) {
             ItemCustomICCard.setEntryStation(stack, tile.stationCode)
             openGate(world, x, y, z, tile)
+            allow(world, player)
             player.addChatMessage(ChatComponentText(
                 "${EnumChatFormatting.GREEN}【入場】${tile.stationCode}　残高: ${ItemCustomICCard.getBalance(stack)}円"
             ))
@@ -127,6 +128,7 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             }
             ItemCustomICCard.clearEntryStation(stack)
             openGate(world, x, y, z, tile)
+            allow(world, player)
             player.addChatMessage(ChatComponentText(
                 "${EnumChatFormatting.GREEN}【出場】${tile.stationCode}　運賃: ${fare}円　残高: ${ItemCustomICCard.getBalance(stack)}円"
             ))
@@ -163,6 +165,7 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             }
             ItemCustomTicket.markUsed(stack)
             openGate(world, x, y, z, tile)
+            allow(world, player)
             player.addChatMessage(ChatComponentText("${EnumChatFormatting.GREEN}【入場】${from} → ${to}"))
         } else if (used && canExit) {
             if (to != tile.stationCode) {
@@ -170,6 +173,7 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             }
             if (!player.capabilities.isCreativeMode) stack.stackSize--
             openGate(world, x, y, z, tile)
+            allow(world, player)
             player.addChatMessage(ChatComponentText("${EnumChatFormatting.GREEN}【出場】${to}　ご利用ありがとうございました"))
         } else if (used && !canExit) {
             deny(world, player, "この改札は入場専用です")
@@ -199,6 +203,7 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             return
         }
         openGate(world, x, y, z, tile)
+        allow(world, player)
         val remaining = ItemCustomPass.remainingDays(stack, currentDay)
         player.addChatMessage(ChatComponentText(
             "${EnumChatFormatting.GREEN}【定期】${tile.stationCode}　残り ${remaining} 日"
@@ -214,6 +219,7 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
         ticketItem: ItemTicket
     ) {
         openGate(world, x, y, z, tile)
+        allow(world, player)
         if (!world.isRemote && ticketItem.ticketType != 2) {
             val returned = ItemTicket.consumeTicket(stack)
             if (returned != null) dropBlockAsItem(world, x, y + 1, z, returned)
@@ -229,6 +235,10 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             world.setBlockMetadataWithNotify(x, y, z, meta + 4, 2)
             tile.setCount(40)
         }
+    }
+
+    private fun allow(world: World, player: EntityPlayer) {
+        if (!world.isRemote) world.playSoundAtEntity(player, "note.pling", 1.0f, 2.0f)
     }
 
     private fun deny(world: World, player: EntityPlayer, reason: String) {

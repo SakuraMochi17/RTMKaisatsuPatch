@@ -12,6 +12,7 @@ class ItemCustomICCard : Item() {
         const val MAX_BALANCE = 20000
         private const val TAG_BALANCE = "Balance"
         private const val TAG_ENTRY_STATION = "EntryStation"
+        private const val TAG_ENTRY_TIME = "EntryTime"
 
         fun getBalance(stack: ItemStack): Int {
             ensureTag(stack)
@@ -38,10 +39,16 @@ class ItemCustomICCard : Item() {
             return true
         }
 
-        /** 入場駅コードを記録（入場時に呼ぶ）。 */
+        /** 入場駅コードを記録（入場時に呼ぶ）。入場時刻も同時に保存。 */
         fun setEntryStation(stack: ItemStack, stationCode: String) {
             ensureTag(stack)
             stack.tagCompound.setString(TAG_ENTRY_STATION, stationCode)
+            stack.tagCompound.setLong(TAG_ENTRY_TIME, System.currentTimeMillis())
+        }
+
+        fun getEntryTime(stack: ItemStack): Long {
+            ensureTag(stack)
+            return stack.tagCompound.getLong(TAG_ENTRY_TIME)
         }
 
         /** 記録済みの入場駅コードを取得。未入場なら空文字。 */
@@ -76,6 +83,12 @@ class ItemCustomICCard : Item() {
         val list = tooltip as MutableList<String>
         list.add("残高: ${getBalance(stack)}円")
         val entry = getEntryStation(stack)
-        if (entry.isNotEmpty()) list.add("入場中: $entry")
+        if (entry.isNotEmpty()) {
+            val time = getEntryTime(stack)
+            val timeStr = if (time > 0L)
+                " (${java.text.SimpleDateFormat("MM/dd HH:mm").format(java.util.Date(time))})"
+            else ""
+            list.add("入場中: $entry$timeStr")
+        }
     }
 }
