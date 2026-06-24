@@ -14,6 +14,7 @@ import cpw.mods.fml.client.registry.ClientRegistry
 import cpw.mods.fml.relauncher.Side
 import cpw.mods.fml.relauncher.SideOnly
 import jp.ngt.rtm.block.tileentity.RenderMachine
+import jp.sakuramochi.kaisatsupatch.client.KaizPatchClientEvents
 import jp.sakuramochi.kaisatsupatch.block.*
 import jp.sakuramochi.kaisatsupatch.block.tileentity.*
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityTrainManager
@@ -140,5 +141,6 @@ class RTMKaisatsuPatchCore {
             TileEntityCustomTurnstile::class.java,
             RenderMachine.INSTANCE
         )
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(KaizPatchClientEvents)
     }
 }

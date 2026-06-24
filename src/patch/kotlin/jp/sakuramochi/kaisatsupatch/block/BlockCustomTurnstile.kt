@@ -79,12 +79,25 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             return true
         }
 
+        val gm = tile.gateMode
         when (val item = heldItem.item) {
-            is ItemCustomICCard -> handleICCard(world, x, y, z, player, heldItem, tile)
-            is ItemCustomTicket -> handleCustomTicket(world, x, y, z, player, heldItem, tile)
-            is ItemCustomPass   -> handlePass(world, x, y, z, player, heldItem, tile)
-            is ItemTicket       -> handleRTMTicket(world, x, y, z, player, heldItem, tile, item)
-            else                -> deny(world, player, "切符・ICカード・定期券を手に持ってください")
+            is ItemCustomICCard -> {
+                if (!gm.allowsIC) { deny(world, player, "この改札はIC専用ではありません（${gm.displayName}）"); return true }
+                handleICCard(world, x, y, z, player, heldItem, tile)
+            }
+            is ItemCustomTicket -> {
+                if (!gm.allowsTicket) { deny(world, player, "この改札は切符専用ではありません（${gm.displayName}）"); return true }
+                handleCustomTicket(world, x, y, z, player, heldItem, tile)
+            }
+            is ItemCustomPass -> {
+                if (!gm.allowsPass) { deny(world, player, "この改札は定期専用ではありません（${gm.displayName}）"); return true }
+                handlePass(world, x, y, z, player, heldItem, tile)
+            }
+            is ItemTicket -> {
+                if (!gm.allowsTicket) { deny(world, player, "この改札は切符専用ではありません（${gm.displayName}）"); return true }
+                handleRTMTicket(world, x, y, z, player, heldItem, tile, item)
+            }
+            else -> deny(world, player, "切符・ICカード・定期券を手に持ってください")
         }
         return true
     }
@@ -100,8 +113,8 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
         val mode = tile.gateMode
         val entryStation = ItemCustomICCard.getEntryStation(stack)
 
-        val canEntry = mode == GateMode.ENTRY || mode == GateMode.BOTH
-        val canExit  = mode == GateMode.EXIT  || mode == GateMode.BOTH
+        val canEntry = mode != GateMode.EXIT
+        val canExit  = mode != GateMode.ENTRY
 
         // 未入場 → 入場処理
         if (entryStation.isEmpty() && canEntry) {
@@ -135,7 +148,7 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             return
         }
 
-        // モード不一致
+        // 方向不一致
         if (entryStation.isNotEmpty() && !canExit) {
             deny(world, player, "この改札は入場専用です。出場改札を使ってください")
         } else if (entryStation.isEmpty() && !canEntry) {
@@ -156,8 +169,8 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
         val to   = ItemCustomTicket.getToStation(stack)
         val used = ItemCustomTicket.isUsed(stack)
 
-        val canEntry = mode == GateMode.ENTRY || mode == GateMode.BOTH
-        val canExit  = mode == GateMode.EXIT  || mode == GateMode.BOTH
+        val canEntry = mode != GateMode.EXIT
+        val canExit  = mode != GateMode.ENTRY
 
         if (!used && canEntry) {
             if (from != tile.stationCode) {
@@ -274,3 +287,22 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
     override fun isOpaqueCube(): Boolean = false
     override fun renderAsNormalBlock(): Boolean = false
 }
+
+private val TileEntityCustomTurnstile.GateMode.allowsIC: Boolean
+    get() = this != TileEntityCustomTurnstile.GateMode.TICKET_ONLY && this != TileEntityCustomTurnstile.GateMode.PASS_ONLY
+
+private val TileEntityCustomTurnstile.GateMode.allowsTicket: Boolean
+    get() = this != TileEntityCustomTurnstile.GateMode.IC_ONLY && this != TileEntityCustomTurnstile.GateMode.PASS_ONLY
+
+private val TileEntityCustomTurnstile.GateMode.allowsPass: Boolean
+    get() = this != TileEntityCustomTurnstile.GateMode.IC_ONLY && this != TileEntityCustomTurnstile.GateMode.TICKET_ONLY
+
+private val TileEntityCustomTurnstile.GateMode.displayName: String
+    get() = when (this) {
+        TileEntityCustomTurnstile.GateMode.ENTRY        -> "入場専用（全種別）"
+        TileEntityCustomTurnstile.GateMode.EXIT         -> "出場専用（全種別）"
+        TileEntityCustomTurnstile.GateMode.BOTH         -> "入出場兼用（全種別）"
+        TileEntityCustomTurnstile.GateMode.IC_ONLY      -> "IC専用"
+        TileEntityCustomTurnstile.GateMode.TICKET_ONLY  -> "切符専用"
+        TileEntityCustomTurnstile.GateMode.PASS_ONLY    -> "定期専用"
+    }

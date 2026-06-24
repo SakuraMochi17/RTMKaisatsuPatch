@@ -66,7 +66,10 @@ class PacketTurnstileConfig() : IMessage {
 
 val TileEntityCustomTurnstile.GateMode.displayName: String
     get() = when (this) {
-        TileEntityCustomTurnstile.GateMode.ENTRY -> "入場専用"
-        TileEntityCustomTurnstile.GateMode.EXIT  -> "出場専用"
-        TileEntityCustomTurnstile.GateMode.BOTH  -> "入出場兼用"
+        TileEntityCustomTurnstile.GateMode.ENTRY        -> "入場専用（全種別）"
+        TileEntityCustomTurnstile.GateMode.EXIT         -> "出場専用（全種別）"
+        TileEntityCustomTurnstile.GateMode.BOTH         -> "入出場兼用（全種別）"
+        TileEntityCustomTurnstile.GateMode.IC_ONLY      -> "IC専用（入出場兼用）"
+        TileEntityCustomTurnstile.GateMode.TICKET_ONLY  -> "切符専用（入出場兼用）"
+        TileEntityCustomTurnstile.GateMode.PASS_ONLY    -> "定期専用（入出場兼用）"
     }

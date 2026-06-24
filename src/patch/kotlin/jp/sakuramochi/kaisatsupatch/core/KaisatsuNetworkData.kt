@@ -15,12 +15,23 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
     val companyLines: MutableMap<String, LineData> = mutableMapOf()
     // 駅名 → 累計売上（円）
     val stationSales: MutableMap<String, Long> = mutableMapOf()
+    // 駅名 → 品目別売上内訳
+    val stationSalesDetail: MutableMap<String, SalesBreakdown> = mutableMapOf()
     // 列車ID → 列車データ
     val trainData: MutableMap<String, TrainData> = mutableMapOf()
     // "trainID:carNum:seatNum" → playerName
     val reservations: MutableMap<String, String> = mutableMapOf()
 
     data class StationCoords(val x: Int, val y: Int, val z: Int)
+
+    data class SalesBreakdown(
+        var ticket: Long = 0L,
+        var ic: Long = 0L,
+        var pass: Long = 0L,
+        var express: Long = 0L
+    ) {
+        val total: Long get() = ticket + ic + pass + express
+    }
 
     data class CarData(val carNumber: Int, val seatCount: Int, val carClass: String)
 
@@ -73,6 +84,18 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
         for (i in 0 until salesList.tagCount()) {
             val s = salesList.getCompoundTagAt(i)
             stationSales[s.getString("Name")] = s.getLong("Sales")
+        }
+
+        stationSalesDetail.clear()
+        val detailList = nbt.getTagList("StationSalesDetail", Constants.NBT.TAG_COMPOUND)
+        for (i in 0 until detailList.tagCount()) {
+            val d = detailList.getCompoundTagAt(i)
+            stationSalesDetail[d.getString("Name")] = SalesBreakdown(
+                ticket  = d.getLong("Ticket"),
+                ic      = d.getLong("IC"),
+                pass    = d.getLong("Pass"),
+                express = d.getLong("Express")
+            )
         }
 
         trainData.clear()
@@ -146,6 +169,19 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
             }
         }
         nbt.setTag("StationSales", salesList)
+
+        val detailNBTList = NBTTagList()
+        stationSalesDetail.forEach { (name, bd) ->
+            NBTTagCompound().also {
+                it.setString("Name", name)
+                it.setLong("Ticket",  bd.ticket)
+                it.setLong("IC",      bd.ic)
+                it.setLong("Pass",    bd.pass)
+                it.setLong("Express", bd.express)
+                detailNBTList.appendTag(it)
+            }
+        }
+        nbt.setTag("StationSalesDetail", detailNBTList)
 
         val lineList = NBTTagList()
         companyLines.values.forEach { line ->

@@ -31,13 +31,20 @@ class BlockStationManager : BlockContainer(Material.iron) {
 
         if (player.currentEquippedItem?.item is ItemSettingsTool) {
             if (!world.isRemote) {
-                val data = KaisatsuNetworkData.get(world)
+                val data  = KaisatsuNetworkData.get(world)
                 val sales = data?.stationSales?.get(tile.stationName) ?: 0L
+                val bd    = data?.stationSalesDetail?.get(tile.stationName)
                 val fares = if (tile.stationName != "未設定")
                     KaisatsuNetworkManager.getAvailableFares(world, tile.stationName)
                 else emptyList()
                 KaizPatchNetwork.CHANNEL.sendTo(
-                    PacketOpenStationGui(x, y, z, tile.stationName, sales, fares),
+                    PacketOpenStationGui(
+                        x, y, z, tile.stationName, sales, fares,
+                        salesTicket  = bd?.ticket  ?: 0L,
+                        salesIC      = bd?.ic      ?: 0L,
+                        salesPass    = bd?.pass    ?: 0L,
+                        salesExpress = bd?.express ?: 0L
+                    ),
                     player as EntityPlayerMP
                 )
             }

@@ -16,12 +16,14 @@ class GuiStationManager(
     private val x: Int, private val y: Int, private val z: Int,
     private val originalName: String,
     private val salesTotal: Long = 0L,
-    private val fareList: List<Pair<String, Int>> = emptyList()
+    private val fareList: List<Pair<String, Int>> = emptyList(),
+    private val salesTicket:  Long = 0L,
+    private val salesIC:      Long = 0L,
+    private val salesPass:    Long = 0L,
+    private val salesExpress: Long = 0L
 ) : GuiScreen() {
 
     private lateinit var nameField: GuiTextField
-
-    // 運賃表スクロール
     private var fareScrollOffset = 0
     private val FARE_VISIBLE = 8
 
@@ -97,27 +99,38 @@ class GuiStationManager(
         nameField.drawTextBox()
 
         if (originalName != "未設定") {
-            val salesStr = "累計売上: ${"%,d".format(salesTotal)}円"
-            drawCenteredString(fontRendererObj, salesStr, cx, cy - 36, 0x55FF55)
+            drawCenteredString(fontRendererObj, "累計売上: ${"%,d".format(salesTotal)}円", cx, cy - 36, 0x55FF55)
+            // 品目別内訳（合計>0のときのみ）
+            if (salesTotal > 0L) {
+                val items = listOf(
+                    "切符" to salesTicket,
+                    "IC"   to salesIC,
+                    "定期" to salesPass,
+                    "特急" to salesExpress
+                ).filter { it.second > 0L }
+                items.forEachIndexed { i, (label, amount) ->
+                    val row = i / 2; val col = i % 2
+                    val tx = cx - 70 + col * 72
+                    val ty = cy - 28 + row * 10
+                    fontRendererObj.drawString("$label: ${"%,d".format(amount)}円", tx, ty, 0xAAAAAA)
+                }
+            }
         }
 
         // ── 右パネル（運賃表） ──────────────────────────────
         if (originalName != "未設定") {
-            val px = cx + 90          // パネル左端
-            val py = cy - 60          // パネル上端（タイトル行を含む）
-            val pw = 170              // パネル幅
-            val ph = FARE_VISIBLE * 13 + 24  // パネル高さ
+            val px = cx + 90
+            val py = cy - 60
+            val pw = 170
+            val ph = FARE_VISIBLE * 13 + 24
 
-            // 背景
             drawRect(px - 4, py - 14, px + pw + 4, py + ph, 0xAA000000.toInt())
-
             drawString(fontRendererObj, "この駅からの運賃（切符）", px, py - 12, 0xFFDD00)
 
             if (fareList.isEmpty()) {
                 drawString(fontRendererObj, "（路線データなし）", px, py, 0x888888)
             } else {
-                val visible = fareList.drop(fareScrollOffset).take(FARE_VISIBLE)
-                visible.forEachIndexed { i, (dest, fare) ->
+                fareList.drop(fareScrollOffset).take(FARE_VISIBLE).forEachIndexed { i, (dest, fare) ->
                     drawString(fontRendererObj, dest, px, py + i * 13, 0xEEEEEE)
                     val fareStr = "${fare}円"
                     drawString(fontRendererObj, fareStr,

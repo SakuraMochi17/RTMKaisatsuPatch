@@ -122,6 +122,7 @@ class PacketPurchaseExpressTicket() : IMessage {
                 }
             }
 
+            addSales(world, msg.fromStation, total.toLong())
             data.markDirty()
 
             val seatStr = if (msg.isReserved) "${msg.carNumber}号車${seatNumber}番席" else "自由席"
@@ -129,6 +130,14 @@ class PacketPurchaseExpressTicket() : IMessage {
                 "§a${train.trainName} $seatStr ${msg.fromStation}→${msg.toStation} ${total}円"
             ))
             return null
+        }
+
+        private fun addSales(world: net.minecraft.world.World, stationName: String, amount: Long) {
+            val data = KaisatsuNetworkData.get(world) ?: return
+            data.stationSales[stationName] = (data.stationSales[stationName] ?: 0L) + amount
+            val bd = data.stationSalesDetail.getOrPut(stationName) { KaisatsuNetworkData.SalesBreakdown() }
+            bd.express += amount
+            data.markDirty()
         }
 
         private fun deductMoneyFromPlayerInventory(player: EntityPlayer, amount: Int): Boolean {
