@@ -8,6 +8,7 @@ import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTurnstile.G
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkManager
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomICCard
+import jp.sakuramochi.kaisatsupatch.item.ItemCustomPass
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomTicket
 import jp.sakuramochi.kaisatsupatch.item.ItemSettingsTool
 import jp.sakuramochi.kaisatsupatch.network.KaizPatchNetwork
@@ -81,8 +82,9 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
         when (val item = heldItem.item) {
             is ItemCustomICCard -> handleICCard(world, x, y, z, player, heldItem, tile)
             is ItemCustomTicket -> handleCustomTicket(world, x, y, z, player, heldItem, tile)
+            is ItemCustomPass   -> handlePass(world, x, y, z, player, heldItem, tile)
             is ItemTicket       -> handleRTMTicket(world, x, y, z, player, heldItem, tile, item)
-            else                -> deny(world, player, "切符またはICカードを手に持ってください")
+            else                -> deny(world, player, "切符・ICカード・定期券を手に持ってください")
         }
         return true
     }
@@ -175,6 +177,31 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
         } else {
             deny(world, player, "この切符はすでに使用済みです")
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // 定期券処理
+    // -----------------------------------------------------------------------
+    private fun handlePass(
+        world: World, x: Int, y: Int, z: Int,
+        player: EntityPlayer, stack: ItemStack, tile: TileEntityCustomTurnstile
+    ) {
+        if (world.isRemote) return
+        val currentDay = ItemCustomPass.currentDay(world)
+        if (!ItemCustomPass.isValid(stack, tile.stationCode, currentDay)) {
+            val remaining = ItemCustomPass.remainingDays(stack, currentDay)
+            if (remaining <= 0) {
+                deny(world, player, "定期券の有効期限が切れています")
+            } else {
+                deny(world, player, "この定期券は ${tile.stationCode} では使用できません（区間外）")
+            }
+            return
+        }
+        openGate(world, x, y, z, tile)
+        val remaining = ItemCustomPass.remainingDays(stack, currentDay)
+        player.addChatMessage(ChatComponentText(
+            "${EnumChatFormatting.GREEN}【定期】${tile.stationCode}　残り ${remaining} 日"
+        ))
     }
 
     // -----------------------------------------------------------------------

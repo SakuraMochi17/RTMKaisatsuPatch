@@ -1,7 +1,14 @@
-tile.custom_turnstile.name=カスタム改札機
-tile.custom_ticket_vendor.name=カスタム券売機
+# ブロック
+tile.custom_turnstile.name=改札機
+tile.custom_ticket_vendor.name=券売機
+tile.station_manager.name=駅管理ブロック
+tile.line_manager.name=路線管理ブロック
 
-item.custom_ticket.name=カスタム切符
-item.custom_ic_card.name=カスタムICカード
+# アイテム
+item.custom_ticket.name=乗車券
+item.custom_ic_card.name=ICカード
+item.custom_pass.name=定期券
+item.settings_tool.name=設定ツール
 
+# クリエイブタブ
 itemGroup.tabKaisatsuPatch=改札パッチ

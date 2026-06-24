@@ -17,6 +17,7 @@ object KaizPatchNetwork {
         CHANNEL.registerMessage(PacketStationUpdate.Handler::class.java,       PacketStationUpdate::class.java,       id++, Side.SERVER)
         CHANNEL.registerMessage(PacketLineUpdate.Handler::class.java,          PacketLineUpdate::class.java,          id++, Side.SERVER)
         CHANNEL.registerMessage(PacketPurchaseTicket.Handler::class.java,      PacketPurchaseTicket::class.java,      id++, Side.SERVER)
+        CHANNEL.registerMessage(PacketResetSales.Handler::class.java,          PacketResetSales::class.java,          id++, Side.SERVER)
         // S→C
         CHANNEL.registerMessage(PacketOpenStationGui.Handler::class.java,      PacketOpenStationGui::class.java,      id++, Side.CLIENT)
         CHANNEL.registerMessage(PacketOpenLineGui.Handler::class.java,         PacketOpenLineGui::class.java,         id++, Side.CLIENT)
