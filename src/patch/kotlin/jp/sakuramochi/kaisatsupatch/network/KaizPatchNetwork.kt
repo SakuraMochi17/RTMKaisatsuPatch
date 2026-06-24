@@ -30,6 +30,8 @@ object KaizPatchNetwork {
         CHANNEL.registerMessage(PacketTrainUpdate.Handler::class.java,              PacketTrainUpdate::class.java,              id++, Side.SERVER)
         CHANNEL.registerMessage(PacketPurchaseExpressTicket.Handler::class.java,    PacketPurchaseExpressTicket::class.java,    id++, Side.SERVER)
         CHANNEL.registerMessage(PacketOpenTrainManager.Handler::class.java,         PacketOpenTrainManager::class.java,         id++, Side.CLIENT)
-        CHANNEL.registerMessage(PacketOpenReservedVendor.Handler::class.java,       PacketOpenReservedVendor::class.java,       id,   Side.CLIENT)
+        CHANNEL.registerMessage(PacketOpenReservedVendor.Handler::class.java,       PacketOpenReservedVendor::class.java,       id++, Side.CLIENT)
+        // 予約キャンセル
+        CHANNEL.registerMessage(PacketCancelReservation.Handler::class.java,       PacketCancelReservation::class.java,        id,   Side.SERVER)
     }
 }

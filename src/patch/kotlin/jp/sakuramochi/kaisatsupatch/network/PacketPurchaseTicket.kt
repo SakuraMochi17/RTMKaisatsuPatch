@@ -92,6 +92,7 @@ class PacketPurchaseTicket() : IMessage {
                         return null
                     }
                     vendorInv.payAndChange(msg.fare, player)
+                    ItemCustomICCard.addHistory(cardStack, "チャージ", fromStation, msg.fare)
                     addSales(world, fromStation, msg.fare.toLong(), SaleType.IC)
                     player.addChatMessage(ChatComponentText(
                         "${EnumChatFormatting.GREEN}${msg.fare}円チャージ完了　残高: ${ItemCustomICCard.getBalance(cardStack)}円"))
