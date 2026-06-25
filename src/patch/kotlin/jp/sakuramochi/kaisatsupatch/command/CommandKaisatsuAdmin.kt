@@ -1,8 +1,11 @@
 package jp.sakuramochi.kaisatsupatch.command
 
+import cpw.mods.fml.common.Loader
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
+import jp.sakuramochi.kaisatsupatch.core.OuDiaParser
 import jp.sakuramochi.kaisatsupatch.web.KaisatsuWebServer
 import net.minecraft.command.CommandBase
+import java.io.File
 import net.minecraft.command.ICommandSender
 import net.minecraft.event.ClickEvent
 import net.minecraft.event.HoverEvent
@@ -52,6 +55,11 @@ class CommandKaisatsuAdmin : CommandBase() {
                 checkOp(sender) ?: return
                 val data = data(sender, world) ?: return
                 handleLine(sender, args.drop(1).toTypedArray(), data)
+            }
+            "timetable" -> {
+                checkOp(sender) ?: return
+                val data = data(sender, world) ?: return
+                handleTimetable(sender, args.drop(1).toTypedArray(), data)
             }
             else      -> printHelp(sender)
         }
@@ -266,6 +274,75 @@ class CommandKaisatsuAdmin : CommandBase() {
         }
     }
 
+    // ── /kaisatsu timetable ... ──────────────────────────────────────
+
+    private fun handleTimetable(sender: ICommandSender, args: Array<String>, data: KaisatsuNetworkData) {
+        val configDir = Loader.instance().configDir
+        val timetableDir = File(configDir, "kaizpatch/timetables")
+        when (args.getOrNull(0)) {
+            "load" -> {
+                val filename = args.getOrNull(1) ?: run {
+                    sender.addChatMessage(ChatComponentText("§e使い方: /kaisatsu timetable load <ファイル名.oud>"))
+                    sender.addChatMessage(ChatComponentText("§7ファイルの置き場所: config/kaizpatch/timetables/"))
+                    return
+                }
+                val file = File(timetableDir, filename)
+                if (!file.exists()) {
+                    sender.addChatMessage(ChatComponentText("§cファイルが見つかりません: ${file.absolutePath}")); return
+                }
+                try {
+                    data.timetable = OuDiaParser.parse(file)
+                    data.timetableFilePath = filename
+                    data.markDirty()
+                    val tt = data.timetable!!
+                    sender.addChatMessage(ChatComponentText(
+                        "§a時刻表を読み込みました: §f$filename"))
+                    sender.addChatMessage(ChatComponentText(
+                        "  §7駅数: §f${tt.stationNames.size}  路線種別: §f${tt.trainTypes.size}  " +
+                        "ダイヤ: §f${tt.diaNames.joinToString()}  列車数: §f${tt.trains.size}"))
+                } catch (e: Exception) {
+                    sender.addChatMessage(ChatComponentText("§cパースエラー: ${e.message}"))
+                }
+            }
+            "info" -> {
+                val tt = data.timetable
+                if (tt == null) {
+                    sender.addChatMessage(ChatComponentText("§e時刻表が読み込まれていません"))
+                    sender.addChatMessage(ChatComponentText("§7/kaisatsu timetable load <ファイル名> で読み込んでください"))
+                    return
+                }
+                sender.addChatMessage(ChatComponentText("§e[時刻表情報] §f${data.timetableFilePath}"))
+                sender.addChatMessage(ChatComponentText("  駅数: §f${tt.stationNames.size}  列車数: §f${tt.trains.size}"))
+                sender.addChatMessage(ChatComponentText("  ダイヤ: §f${tt.diaNames.joinToString { it }}"))
+                sender.addChatMessage(ChatComponentText("  種別: §f${tt.trainTypes.joinToString { it }}"))
+            }
+            "list" -> {
+                if (!timetableDir.exists()) {
+                    sender.addChatMessage(ChatComponentText("§7${timetableDir.absolutePath} がありません"))
+                    return
+                }
+                val files = timetableDir.listFiles { f -> f.extension.lowercase() == "oud" }
+                if (files.isNullOrEmpty()) {
+                    sender.addChatMessage(ChatComponentText("§7.oud ファイルが見つかりません"))
+                    return
+                }
+                sender.addChatMessage(ChatComponentText("§e[時刻表ファイル一覧] config/kaizpatch/timetables/"))
+                files.forEach { f ->
+                    val mark = if (f.name == data.timetableFilePath) "§a★ " else "  "
+                    sender.addChatMessage(ChatComponentText("$mark§f${f.name}"))
+                }
+            }
+            "unload" -> {
+                data.timetable = null; data.timetableFilePath = ""; data.markDirty()
+                sender.addChatMessage(ChatComponentText("§e時刻表をアンロードしました"))
+            }
+            else -> {
+                sender.addChatMessage(ChatComponentText("§e使い方: /kaisatsu timetable <load|info|list|unload>"))
+                sender.addChatMessage(ChatComponentText("§7ファイルの置き場所: config/kaizpatch/timetables/*.oud"))
+            }
+        }
+    }
+
     // ── ヘルプ ────────────────────────────────────────────────────────
 
     private fun printHelp(sender: ICommandSender) {
@@ -274,6 +351,7 @@ class CommandKaisatsuAdmin : CommandBase() {
         sender.addChatMessage(ChatComponentText("  §f/kaisatsu log §7[駅名] — 改札通過ログ表示 §c(OP)"))
         sender.addChatMessage(ChatComponentText("  §f/kaisatsu company §7<create|list|delete|info|member|mutual|fare> §c(OP)"))
         sender.addChatMessage(ChatComponentText("  §f/kaisatsu line §7<assign|list> §c(OP)"))
+        sender.addChatMessage(ChatComponentText("  §f/kaisatsu timetable §7<load|info|list|unload> §c(OP)"))
     }
 
     // ── タブ補完 ──────────────────────────────────────────────────────
@@ -287,7 +365,9 @@ class CommandKaisatsuAdmin : CommandBase() {
 
         return when {
             args.size == 1 ->
-                getListOfStringsMatchingLastWord(args, "web", "log", "company", "line")
+                getListOfStringsMatchingLastWord(args, "web", "log", "company", "line", "timetable")
+            args.size == 2 && args[0] == "timetable" ->
+                getListOfStringsMatchingLastWord(args, "load", "info", "list", "unload")
             args.size == 2 && args[0] == "log" ->
                 getListOfStringsMatchingLastWord(args, *stationIDs)
             args.size == 2 && args[0] == "company" ->

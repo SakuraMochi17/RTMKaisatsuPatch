@@ -18,6 +18,7 @@ import jp.sakuramochi.kaisatsupatch.client.KaizPatchClientEvents
 import jp.sakuramochi.kaisatsupatch.client.RenderICCard
 import jp.sakuramochi.kaisatsupatch.block.*
 import jp.sakuramochi.kaisatsupatch.block.tileentity.*
+import jp.sakuramochi.kaisatsupatch.client.RenderDepartureBoard
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityTrainManager
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityReservedVendor
 import jp.sakuramochi.kaisatsupatch.item.*
@@ -78,13 +79,14 @@ class RTMKaisatsuPatchCore {
         val blockLineManager    = BlockLineManager()
         val blockTrainManager   = BlockTrainManager()
         val blockReservedVendor = BlockReservedVendor()
-        val blockFareAdjustment = BlockFareAdjustment()
+        val blockFareAdjustment  = BlockFareAdjustment()
+        val blockDepartureBoard  = BlockDepartureBoard()
 
         // アイテム（指定席）
         val itemExpressTicket = ItemCustomExpressTicket()
 
         listOf(itemTicket, itemICCard, itemPass, itemSettingsTool, itemExpressTicket, itemCouponTicket).forEach { it.creativeTab = myTab }
-        listOf(blockTurnstile, blockVendor, blockStationManager, blockLineManager, blockTrainManager, blockReservedVendor, blockFareAdjustment).forEach { it.setCreativeTab(myTab) }
+        listOf(blockTurnstile, blockVendor, blockStationManager, blockLineManager, blockTrainManager, blockReservedVendor, blockFareAdjustment, blockDepartureBoard).forEach { it.setCreativeTab(myTab) }
 
         GameRegistry.registerItem(itemTicket,       "custom_ticket")
         GameRegistry.registerItem(itemICCard,       "custom_ic_card")
@@ -99,7 +101,8 @@ class RTMKaisatsuPatchCore {
         GameRegistry.registerBlock(blockLineManager,    ItemBlockLineManager::class.java,       "line_manager")
         GameRegistry.registerBlock(blockTrainManager,   ItemBlockTrainManager::class.java,      "train_manager")
         GameRegistry.registerBlock(blockReservedVendor, ItemBlockReservedVendor::class.java,   "reserved_seat_vendor")
-        GameRegistry.registerBlock(blockFareAdjustment, ItemBlockFareAdjustment::class.java,   "fare_adjustment")
+        GameRegistry.registerBlock(blockFareAdjustment,  ItemBlockFareAdjustment::class.java,  "fare_adjustment")
+        GameRegistry.registerBlock(blockDepartureBoard,  ItemBlockDepartureBoard::class.java,  "departure_board")
 
         GameRegistry.registerTileEntity(TileEntityCustomTurnstile::class.java,   "TileEntityCustomTurnstile")
         GameRegistry.registerTileEntity(TileEntityCustomTicketVendor::class.java, "TileEntityCustomTicketVendor")
@@ -107,7 +110,8 @@ class RTMKaisatsuPatchCore {
         GameRegistry.registerTileEntity(TileEntityLineManager::class.java,       "TileEntityLineManager")
         GameRegistry.registerTileEntity(TileEntityTrainManager::class.java,      "TileEntityTrainManager")
         GameRegistry.registerTileEntity(TileEntityReservedVendor::class.java,    "TileEntityReservedVendor")
-        GameRegistry.registerTileEntity(TileEntityFareAdjustment::class.java,    "TileEntityFareAdjustment")
+        GameRegistry.registerTileEntity(TileEntityFareAdjustment::class.java,     "TileEntityFareAdjustment")
+        GameRegistry.registerTileEntity(TileEntityDepartureBoard::class.java,    "TileEntityDepartureBoard")
 
         registeredItems["custom_ticket"]   = itemTicket
         registeredItems["custom_ic_card"] = itemICCard
@@ -152,5 +156,6 @@ class RTMKaisatsuPatchCore {
             registeredItems["custom_ic_card"]!!, RenderICCard()
         )
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(KaizPatchClientEvents)
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityDepartureBoard::class.java, RenderDepartureBoard())
     }
 }

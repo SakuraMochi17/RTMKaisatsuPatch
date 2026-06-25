@@ -35,6 +35,9 @@ object KaizPatchNetwork {
         CHANNEL.registerMessage(PacketCancelReservation.Handler::class.java,       PacketCancelReservation::class.java,        id++, Side.SERVER)
         // 会社管理GUI
         CHANNEL.registerMessage(PacketOpenCompanyManager.Handler::class.java,      PacketOpenCompanyManager::class.java,       id++, Side.CLIENT)
-        CHANNEL.registerMessage(PacketCompanyUpdate.Handler::class.java,           PacketCompanyUpdate::class.java,            id,   Side.SERVER)
+        CHANNEL.registerMessage(PacketCompanyUpdate.Handler::class.java,           PacketCompanyUpdate::class.java,            id++, Side.SERVER)
+        // 発車標
+        CHANNEL.registerMessage(PacketOpenDepartureBoard.Handler::class.java,      PacketOpenDepartureBoard::class.java,       id++, Side.CLIENT)
+        CHANNEL.registerMessage(PacketDepartureBoardSave.Handler::class.java,      PacketDepartureBoardSave::class.java,       id,   Side.SERVER)
     }
 }

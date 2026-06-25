@@ -6,6 +6,7 @@ import net.minecraft.nbt.NBTTagString
 import net.minecraft.world.World
 import net.minecraft.world.WorldSavedData
 import net.minecraftforge.common.util.Constants
+import java.io.File
 
 class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
 
@@ -25,6 +26,23 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
     val gateLog: MutableMap<String, MutableList<GateLogEntry>> = mutableMapOf()
     // 会社ID → 会社データ
     val companies: MutableMap<String, CompanyData> = mutableMapOf()
+    // OuDia 時刻表ファイル名（config/kaizpatch/timetables/ 以下）
+    var timetableFilePath: String = ""
+    // 解析済みタイムテーブル（メモリキャッシュ、NBT未保存）
+    var timetable: TimetableData? = null
+
+    /** configDir = Minecraft の config/ フォルダ */
+    fun loadTimetable(configDir: File): Boolean {
+        if (timetableFilePath.isEmpty()) return false
+        val file = File(configDir, "kaizpatch/timetables/$timetableFilePath")
+        if (!file.exists()) return false
+        return try {
+            timetable = OuDiaParser.parse(file)
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
 
     data class StationCoords(val x: Int, val y: Int, val z: Int)
 
@@ -188,6 +206,8 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
             )
         }
 
+        timetableFilePath = nbt.getString("TimetableFilePath")
+
         companyLines.clear()
         val lineList = nbt.getTagList("CompanyLines", Constants.NBT.TAG_COMPOUND)
         for (i in 0 until lineList.tagCount()) {
@@ -332,5 +352,6 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
             }
         }
         nbt.setTag("GateLog", gateLogNBTList)
+        nbt.setString("TimetableFilePath", timetableFilePath)
     }
 }
