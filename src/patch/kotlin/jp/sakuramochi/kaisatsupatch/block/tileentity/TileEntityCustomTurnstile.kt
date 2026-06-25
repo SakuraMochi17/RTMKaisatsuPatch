@@ -17,6 +17,7 @@ class TileEntityCustomTurnstile : TileEntityTurnstile() {
 
     var stationCode: String = "STATION_A"
     var gateMode: GateMode = GateMode.ENTRY
+    var ownerCompanyID: String = ""
 
     override fun getBlockType(): Block = jp.ngt.rtm.RTMBlock.turnstile
 
@@ -24,11 +25,13 @@ class TileEntityCustomTurnstile : TileEntityTurnstile() {
         super.readFromNBT(tag)
         stationCode = tag.getString("StationCode").ifEmpty { "STATION_A" }
         gateMode = runCatching { GateMode.valueOf(tag.getString("GateMode")) }.getOrDefault(GateMode.ENTRY)
+        ownerCompanyID = tag.getString("OwnerCompanyID")
     }
 
     override fun writeToNBT(tag: NBTTagCompound) {
         super.writeToNBT(tag)
         tag.setString("StationCode", stationCode)
         tag.setString("GateMode", gateMode.name)
+        tag.setString("OwnerCompanyID", ownerCompanyID)
     }
 }

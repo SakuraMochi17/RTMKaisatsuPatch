@@ -31,9 +31,15 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
     data class CompanyData(
         val companyID: String,
         var companyName: String,
-        var color: Int,          // 0xRRGGBB
-        var icCardName: String   // "メトロIC" など
-    )
+        var color: Int,                                      // 0xRRGGBB
+        var icCardName: String,                              // "メトロIC" など
+        val members: MutableSet<String> = mutableSetOf(),   // 操作権限を持つプレイヤー名
+        val allowedCompanies: MutableSet<String> = mutableSetOf(), // IC相互利用を許可する会社ID
+        var defaultBaseFare: Int = 150,                     // 会社デフォルト初乗り運賃（路線未設定時のフォールバック）
+        var defaultCostPerBlock: Double = 0.1               // 会社デフォルト加算レート
+    ) {
+        fun isMember(playerName: String): Boolean = members.contains(playerName)
+    }
 
     data class GateLogEntry(
         val playerName: String,
@@ -72,8 +78,8 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
         var baseFare: Int,
         var costPerBlock: Double,
         val stationOrder: MutableList<String> = mutableListOf(),
-        // Phase3で乗換料金として使用予定（現在は常に0）
-        var transferFee: Int = 0
+        var transferFee: Int = 0,
+        var companyID: String = ""   // 所属会社ID（空の場合はcompanyNameで照合）
     )
 
     fun addGateLog(stationName: String, playerName: String, action: String, itemType: String) {
@@ -160,7 +166,16 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
         for (i in 0 until companyList.tagCount()) {
             val c = companyList.getCompoundTagAt(i)
             val id = c.getString("CompanyID")
-            companies[id] = CompanyData(id, c.getString("CompanyName"), c.getInteger("Color"), c.getString("ICCardName"))
+            val co = CompanyData(
+                id, c.getString("CompanyName"), c.getInteger("Color"), c.getString("ICCardName"),
+                defaultBaseFare = c.getInteger("DefaultBaseFare").let { if (it == 0) 150 else it },
+                defaultCostPerBlock = c.getDouble("DefaultCostPerBlock").let { if (it == 0.0) 0.1 else it }
+            )
+            val memberList = c.getTagList("Members", Constants.NBT.TAG_STRING)
+            for (j in 0 until memberList.tagCount()) co.members.add(memberList.getStringTagAt(j))
+            val mutualList = c.getTagList("AllowedCompanies", Constants.NBT.TAG_STRING)
+            for (j in 0 until mutualList.tagCount()) co.allowedCompanies.add(mutualList.getStringTagAt(j))
+            companies[id] = co
         }
 
         gateLog.clear()
@@ -183,7 +198,8 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
                 companyName = l.getString("CompanyName"),
                 baseFare    = l.getInteger("BaseFare"),
                 costPerBlock = l.getDouble("CostPerBlock"),
-                transferFee = l.getInteger("TransferFee")
+                transferFee = l.getInteger("TransferFee"),
+                companyID   = l.getString("CompanyID")
             )
             val order = l.getTagList("StationOrder", Constants.NBT.TAG_STRING)
             for (j in 0 until order.tagCount()) line.stationOrder.add(order.getStringTagAt(j))
@@ -236,6 +252,7 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
                 it.setInteger("BaseFare", line.baseFare)
                 it.setDouble("CostPerBlock", line.costPerBlock)
                 it.setInteger("TransferFee", line.transferFee)
+                it.setString("CompanyID", line.companyID)
                 val order = NBTTagList()
                 line.stationOrder.forEach { st -> order.appendTag(NBTTagString(st)) }
                 it.setTag("StationOrder", order)
@@ -288,6 +305,14 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
                 it.setString("CompanyName", c.companyName)
                 it.setInteger("Color", c.color)
                 it.setString("ICCardName", c.icCardName)
+                it.setInteger("DefaultBaseFare", c.defaultBaseFare)
+                it.setDouble("DefaultCostPerBlock", c.defaultCostPerBlock)
+                val memberList = NBTTagList()
+                c.members.forEach { m -> memberList.appendTag(NBTTagString(m)) }
+                it.setTag("Members", memberList)
+                val mutualList = NBTTagList()
+                c.allowedCompanies.forEach { m -> mutualList.appendTag(NBTTagString(m)) }
+                it.setTag("AllowedCompanies", mutualList)
                 companyNBTList.appendTag(it)
             }
         }

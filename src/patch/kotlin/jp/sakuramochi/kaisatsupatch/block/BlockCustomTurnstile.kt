@@ -49,6 +49,22 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
         // 設定ツール → 設定操作
         // ---------------------------------------------------------------
         if (heldItem?.item is ItemSettingsTool) {
+            // 会社ロックチェック（サーバーサイドのみ）
+            if (!world.isRemote) {
+                val ownerID = tile.ownerCompanyID
+                if (ownerID.isNotEmpty()) {
+                    val data = KaisatsuNetworkData.get(world)
+                    val company = data?.companies?.get(ownerID)
+                    val isOp = (player as? EntityPlayerMP)?.mcServer?.configurationManager
+                        ?.func_152596_g(player.gameProfile) ?: false
+                    if (!isOp && company != null && !company.isMember(player.gameProfile.name)) {
+                        player.addChatMessage(ChatComponentText(
+                            "§c[${company.companyName}] の改札です。操作権限がありません"))
+                        return true
+                    }
+                }
+            }
+
             if (player.isSneaking) {
                 // スニーク＋設定ツール → モデル選択
                 if (world.isRemote) {
@@ -84,6 +100,24 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
         when (val item = heldItem.item) {
             is ItemCustomICCard -> {
                 if (!gm.allowsIC) { deny(world, player, "この改札はIC専用ではありません（${gm.displayName}）"); return true }
+                // 会社ロック: 相互利用チェック
+                if (!world.isRemote) {
+                    val ownerID = tile.ownerCompanyID
+                    if (ownerID.isNotEmpty()) {
+                        val cardCompanyID = ItemCustomICCard.getCompanyID(heldItem)
+                        val data = KaisatsuNetworkData.get(world)
+                        val ownerCompany = data?.companies?.get(ownerID)
+                        val allowed = cardCompanyID.isEmpty()                          // 会社なし=汎用IC
+                            || cardCompanyID == ownerID                                // 自社カード
+                            || ownerCompany?.allowedCompanies?.contains(cardCompanyID) == true // 相互利用許可
+                        if (!allowed) {
+                            val cardName = ItemCustomICCard.getCompanyName(heldItem)
+                            val ownerName = ownerCompany?.companyName ?: ownerID
+                            deny(world, player, "${cardName}はこの改札（${ownerName}）では利用できません")
+                            return true
+                        }
+                    }
+                }
                 handleICCard(world, x, y, z, player, heldItem, tile)
             }
             is ItemCustomCouponTicket -> {
