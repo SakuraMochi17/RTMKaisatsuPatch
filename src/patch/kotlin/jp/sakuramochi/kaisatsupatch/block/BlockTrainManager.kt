@@ -16,7 +16,7 @@ class BlockTrainManager : BlockContainer(Material.iron) {
 
     init {
         setBlockName("train_manager")
-        setBlockTextureName("rtmkaisatsupatch:station_manager")
+        setBlockTextureName("rtmkaisatsupatch:train_manager")
     }
 
     override fun createNewTileEntity(world: World?, meta: Int): TileEntity = TileEntityTrainManager()

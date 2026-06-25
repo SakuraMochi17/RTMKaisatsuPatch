@@ -19,7 +19,7 @@ class BlockDepartureBoard : BlockContainer(Material.iron) {
 
     init {
         setBlockName("departure_board")
-        setBlockTextureName("rtmkaisatsupatch:line_manager")  // 流用テクスチャ（後で専用テクスチャに差替可）
+        setBlockTextureName("rtmkaisatsupatch:departure_board")
     }
 
     override fun createNewTileEntity(world: World?, meta: Int): TileEntity = TileEntityDepartureBoard()
