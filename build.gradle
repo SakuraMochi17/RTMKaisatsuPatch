@@ -111,7 +111,7 @@ tasks.register('patchJar', Jar) {
 
     //出力されるファイル名の設定（Gradle 7.x 向けの正しいプロパティ名）
     archiveBaseName = "RTMKaisatsuPatch"
-    archiveVersion = "0.1.0-pre1"
+    archiveVersion = "0.1.0-pre2"
     archiveClassifier = "1.7.10"
 
     manifest {
