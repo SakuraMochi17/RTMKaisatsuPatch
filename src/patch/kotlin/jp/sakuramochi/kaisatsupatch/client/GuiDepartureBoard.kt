@@ -39,24 +39,24 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
                 add(GuiButton(99, cx - 30, cy + 90, 60, 18, "閉じる"))
             }
             1 -> {
-                fldTitle    = GuiTextField(fontRendererObj, cx - 60, cy - 88, 120, 14)
-                fldPlatform = GuiTextField(fontRendererObj, cx + 5,  cy + 18, 60,  14)
+                fldTitle    = GuiTextField(fontRendererObj, cx - 80, cy - 90, 160, 14)
+                fldPlatform = GuiTextField(fontRendererObj, cx - 30, cy + 18, 80,  14)
                 fldTitle.text    = data.title
                 fldPlatform.text = data.platform
                 fldPlatform.setMaxStringLength(8)
 
                 // 駅
-                add(GuiButton(10, cx - 112, cy - 54, 18, 14, "<"))
-                add(GuiButton(11, cx + 94,  cy - 54, 18, 14, ">"))
+                add(GuiButton(10, cx - 80, cy - 54, 18, 14, "<"))
+                add(GuiButton(11, cx + 62, cy - 54, 18, 14, ">"))
                 // 路線
-                add(GuiButton(18, cx - 112, cy - 34, 18, 14, "<"))
-                add(GuiButton(19, cx + 94,  cy - 34, 18, 14, ">"))
+                add(GuiButton(18, cx - 80, cy - 34, 18, 14, "<"))
+                add(GuiButton(19, cx + 62, cy - 34, 18, 14, ">"))
                 // ダイヤ
-                add(GuiButton(12, cx - 112, cy - 14, 18, 14, "<"))
-                add(GuiButton(13, cx + 94,  cy - 14, 18, 14, ">"))
+                add(GuiButton(12, cx - 80, cy - 14, 18, 14, "<"))
+                add(GuiButton(13, cx + 62, cy - 14, 18, 14, ">"))
                 // 方向
-                add(GuiButton(14, cx - 112, cy + 6,  18, 14, "<"))
-                add(GuiButton(15, cx + 94,  cy + 6,  18, 14, ">"))
+                add(GuiButton(14, cx - 80, cy + 6,  18, 14, "<"))
+                add(GuiButton(15, cx + 62, cy + 6,  18, 14, ">"))
                 // 表示行数
                 add(GuiButton(16, cx - 50,  cy + 38, 18, 14, "-"))
                 add(GuiButton(17, cx + 32,  cy + 38, 18, 14, "+"))
@@ -127,11 +127,12 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawDefaultBackground()
         val cx = width / 2; val cy = height / 2
+        if (page == 1) drawRect(cx - 140, cy - 118, cx + 140, cy + 106, 0xF0202030.toInt())
+        super.drawScreen(mouseX, mouseY, partialTicks)
         when (page) {
             0 -> drawDisplayPage(cx, cy)
             1 -> drawConfigPage(cx, cy)
         }
-        super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
     // ── 表示ページ ───────────────────────────────────────────────────
@@ -182,7 +183,7 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
         val dirLabel  = DIRS[selDir]
         val rowsLabel = "${selRows + 1}行"
 
-        val labelX = cx - 112
+        val labelX = cx - 130
 
         drawString(fontRendererObj, "駅",       labelX,  cy - 66, 0xAAAAAA)
         drawString(fontRendererObj, "路線",     labelX,  cy - 46, 0xAAAAAA)

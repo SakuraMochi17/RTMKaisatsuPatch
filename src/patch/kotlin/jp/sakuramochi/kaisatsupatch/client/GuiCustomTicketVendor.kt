@@ -41,7 +41,7 @@ class GuiCustomTicketVendor(
     private var ticketScrollOffset = 0
     private var passScrollOffset   = 0
     private val TICKET_VISIBLE = 8
-    private val PASS_VISIBLE   = 6
+    private val PASS_VISIBLE   = 4
 
     private val rightPanelWidth get() = xSize - RIGHT_PANEL_X - 4
 
@@ -118,19 +118,19 @@ class GuiCustomTicketVendor(
                 val visible = fares.drop(passScrollOffset).take(PASS_VISIBLE)
                 for (i in visible.indices) {
                     val (dest, _) = visible[i]
-                    add(GuiButton(400 + i, if (i % 2 == 0) col0 else col1, ty + 28 + (i / 2) * 24, btnW, btnH, dest))
+                    add(GuiButton(400 + i, if (i % 2 == 0) col0 else col1, ty + 26 + (i / 2) * 22, btnW, btnH, dest))
                 }
                 if (fares.size > PASS_VISIBLE) {
-                    add(GuiButton(602, lx + 172, ty + 28, 10, 18, "▲").also { it.enabled = passScrollOffset > 0 })
-                    add(GuiButton(603, lx + 172, ty + 50, 10, 18, "▼").also { it.enabled = passScrollOffset + PASS_VISIBLE < fares.size })
+                    add(GuiButton(602, lx + 172, ty + 26, 10, 18, "▲").also { it.enabled = passScrollOffset > 0 })
+                    add(GuiButton(603, lx + 172, ty + 48, 10, 18, "▼").also { it.enabled = passScrollOffset + PASS_VISIBLE < fares.size })
                 }
                 for ((i, pair) in passDurations.withIndex()) {
                     val (days, _) = pair
-                    add(GuiButton(500 + i, col0 + i * 56, ty + 106, 52, btnH, "${days}日"))
+                    add(GuiButton(500 + i, col0 + i * 56, ty + 76, 52, btnH, "${days}日"))
                 }
                 add(GuiButton(550, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "定期購入"))
                 val dayPassPrice = calcDayPassPrice()
-                add(GuiButton(560, col0, ty + 128, btnW * 2 + 4, 18, "フリーパス（1日）  ${dayPassPrice}円"))
+                add(GuiButton(560, col0, ty + 98, btnW * 2 + 4, 18, "フリーパス（1日）  ${dayPassPrice}円"))
             }
         }
     }

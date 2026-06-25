@@ -22,7 +22,7 @@ class ContainerCustomVendor(
             210 to 58, 230 to 58
         )
         // ICカードスロット
-        const val CARD_X = 220; const val CARD_Y = 96
+        const val CARD_X = 220; const val CARD_Y = 108
 
         // プレイヤーインベントリ
         const val INV_X = 8; const val INV_Y = 138
