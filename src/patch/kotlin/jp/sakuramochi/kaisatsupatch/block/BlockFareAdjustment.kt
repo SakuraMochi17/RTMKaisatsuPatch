@@ -5,6 +5,7 @@ import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityFareAdjustment
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkManager
 import jp.sakuramochi.kaisatsupatch.gui.InventoryCustomVendor
+import jp.sakuramochi.kaisatsupatch.item.ItemBoardingCertificate
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomTicket
 import jp.sakuramochi.kaisatsupatch.item.ItemSettingsTool
 import jp.sakuramochi.kaisatsupatch.network.KaizPatchNetwork
@@ -49,54 +50,93 @@ class BlockFareAdjustment : BlockContainer(Material.iron) {
         if (world.isRemote) return true
 
         val heldStack = player.currentEquippedItem
-        if (heldStack == null || heldStack.item !is ItemCustomTicket) {
-            player.addChatMessage(ChatComponentText("使用済み乗車券を手に持ってください"))
-            return true
+        when {
+            heldStack?.item is ItemBoardingCertificate -> {
+                handleBoardingCertificate(world, player, tile, heldStack)
+            }
+            heldStack?.item is ItemCustomTicket -> {
+                handleCustomTicket(world, player, tile, heldStack)
+            }
+            else -> player.addChatMessage(ChatComponentText(
+                "使用済み乗車券または乗車駅証明書を手に持ってください"))
         }
-        if (!ItemCustomTicket.isUsed(heldStack)) {
-            player.addChatMessage(ChatComponentText("この切符はまだ使用されていません（先に入場改札を通ってください）"))
-            return true
+        return true
+    }
+
+    private fun handleBoardingCertificate(
+        world: World, player: EntityPlayer,
+        tile: TileEntityFareAdjustment, stack: net.minecraft.item.ItemStack
+    ) {
+        val boardingStation = ItemBoardingCertificate.getBoardingStation(stack)
+        if (boardingStation.isEmpty()) {
+            player.addChatMessage(ChatComponentText("${EnumChatFormatting.RED}無効な乗車駅証明書です"))
+            return
         }
         if (tile.stationName == "未設定") {
             player.addChatMessage(ChatComponentText("${EnumChatFormatting.RED}精算機の設置駅が設定されていません（設定ツールで設定してください）"))
-            return true
+            return
         }
+        val current = tile.stationName
+        if (boardingStation == current) {
+            // 乗車駅と精算機が同じ駅 → 証明書を回収して通過
+            stack.stackSize--
+            player.addChatMessage(ChatComponentText("${EnumChatFormatting.GREEN}${current} での乗車を確認しました（同一駅のため運賃不要）"))
+            return
+        }
+        val fare = KaisatsuNetworkManager.calculateFare(world, boardingStation, current)
+        if (fare < 0) {
+            player.addChatMessage(ChatComponentText("${EnumChatFormatting.RED}運賃データが見つかりません（${boardingStation} → ${current}）"))
+            return
+        }
+        if (!deductMoney(player, fare)) {
+            player.addChatMessage(ChatComponentText("${EnumChatFormatting.RED}残高不足です（運賃: ${fare}円）"))
+            return
+        }
+        stack.stackSize--
+        addSales(world, current, fare.toLong())
+        player.addChatMessage(ChatComponentText(
+            "${EnumChatFormatting.GREEN}精算しました（${boardingStation} → ${current}：${fare}円）"))
+    }
 
+    private fun handleCustomTicket(
+        world: World, player: EntityPlayer,
+        tile: TileEntityFareAdjustment, heldStack: net.minecraft.item.ItemStack
+    ) {
+        if (!ItemCustomTicket.isUsed(heldStack)) {
+            player.addChatMessage(ChatComponentText("この切符はまだ使用されていません（先に入場改札を通ってください）"))
+            return
+        }
+        if (tile.stationName == "未設定") {
+            player.addChatMessage(ChatComponentText("${EnumChatFormatting.RED}精算機の設置駅が設定されていません（設定ツールで設定してください）"))
+            return
+        }
         val from = ItemCustomTicket.getFromStation(heldStack)
         val to   = ItemCustomTicket.getToStation(heldStack)
         val current = tile.stationName
-
         if (to == current) {
             player.addChatMessage(ChatComponentText("この切符は ${current} まで有効です。精算不要です"))
-            return true
+            return
         }
-
         val originalFare = KaisatsuNetworkManager.calculateFare(world, from, to)
         val newFare      = KaisatsuNetworkManager.calculateFare(world, from, current)
-
         if (originalFare < 0 || newFare < 0) {
             player.addChatMessage(ChatComponentText("${EnumChatFormatting.RED}運賃データが見つかりません（路線設定を確認してください）"))
-            return true
+            return
         }
-
         val extraFare = newFare - originalFare
-
         if (extraFare <= 0) {
             ItemCustomTicket.setToStation(heldStack, current)
             player.addChatMessage(ChatComponentText("${EnumChatFormatting.GREEN}精算しました（追加料金なし）。${current} で出場できます"))
-            return true
+            return
         }
-
         if (!deductMoney(player, extraFare)) {
             player.addChatMessage(ChatComponentText("${EnumChatFormatting.RED}残高不足です（精算額: ${extraFare}円）"))
-            return true
+            return
         }
-
         ItemCustomTicket.setToStation(heldStack, current)
         addSales(world, current, extraFare.toLong())
         player.addChatMessage(ChatComponentText(
             "${EnumChatFormatting.GREEN}乗越精算しました（${extraFare}円）。${current} で出場できます"))
-        return true
     }
 
     private fun deductMoney(player: EntityPlayer, amount: Int): Boolean {

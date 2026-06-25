@@ -7,6 +7,7 @@ import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTurnstile
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTurnstile.GateMode
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkManager
+import jp.sakuramochi.kaisatsupatch.item.ItemBoardingCertificate
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomCouponTicket
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomICCard
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomPass
@@ -135,6 +136,10 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             is ItemTicket -> {
                 if (!gm.allowsTicket) { deny(world, player, "この改札は切符専用ではありません（${gm.displayName}）"); return true }
                 handleRTMTicket(world, x, y, z, player, heldItem, tile, item)
+            }
+            is ItemBoardingCertificate -> {
+                if (gm == GateMode.ENTRY) { deny(world, player, "この改札は入場専用です。精算機または出場改札をご利用ください"); return true }
+                if (!world.isRemote) handleBoardingCertificate(world, x, y, z, player, heldItem, tile)
             }
             else -> deny(world, player, "切符・ICカード・定期券を手に持ってください")
         }
@@ -340,6 +345,59 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             val returned = ItemTicket.consumeTicket(stack)
             if (returned != null) dropBlockAsItem(world, x, y + 1, z, returned)
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // 乗車駅証明書 出場処理
+    // -----------------------------------------------------------------------
+    private fun handleBoardingCertificate(
+        world: World, x: Int, y: Int, z: Int,
+        player: EntityPlayer, stack: ItemStack, tile: TileEntityCustomTurnstile
+    ) {
+        val boardingStation = ItemBoardingCertificate.getBoardingStation(stack)
+        if (boardingStation.isEmpty()) {
+            deny(world, player, "無効な乗車駅証明書です"); return
+        }
+        val fare = KaisatsuNetworkManager.calculateFare(world, boardingStation, tile.stationCode)
+        if (fare < 0) {
+            deny(world, player, "運賃データが見つかりません（${boardingStation} → ${tile.stationCode}）"); return
+        }
+        if (!deductMoney(player, fare)) {
+            deny(world, player, "残高不足です（運賃: ${fare}円）"); return
+        }
+        stack.stackSize--
+        KaisatsuNetworkData.get(world)?.addGateLog(tile.stationCode, player.gameProfile.name, "出場", "証明書")
+        openGate(world, x, y, z, tile)
+        allow(world, player)
+        player.addChatMessage(net.minecraft.util.ChatComponentText(
+            "${EnumChatFormatting.GREEN}【出場】${boardingStation} → ${tile.stationCode}　運賃: ${fare}円"))
+    }
+
+    private fun deductMoney(player: EntityPlayer, amount: Int): Boolean {
+        if (amount <= 0) return true
+        val inv = player.inventory
+        var total = 0
+        for (i in 0 until inv.sizeInventory) {
+            val s = inv.getStackInSlot(i) ?: continue
+            if (s.item != jp.ngt.rtm.RTMItem.money) continue
+            total += jp.ngt.rtm.RTMItem.MoneyType.getPrice(s.itemDamage) * s.stackSize
+        }
+        if (total < amount) return false
+        for (i in 0 until inv.sizeInventory) {
+            val s = inv.getStackInSlot(i) ?: continue
+            if (s.item != jp.ngt.rtm.RTMItem.money) continue
+            inv.setInventorySlotContents(i, null)
+        }
+        var change = total - amount
+        for ((id, value) in jp.sakuramochi.kaisatsupatch.gui.InventoryCustomVendor.DENOMINATIONS) {
+            val count = change / value
+            if (count > 0) {
+                val s = net.minecraft.item.ItemStack(jp.ngt.rtm.RTMItem.money, count, id)
+                if (!inv.addItemStackToInventory(s)) player.dropPlayerItemWithRandomChoice(s, false)
+                change -= count * value
+            }
+        }
+        return true
     }
 
     // -----------------------------------------------------------------------

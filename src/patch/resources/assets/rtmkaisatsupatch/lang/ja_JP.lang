@@ -5,6 +5,10 @@ tile.station_manager.name=駅管理ブロック
 tile.line_manager.name=路線管理ブロック
 tile.train_manager.name=列車管理ブロック
 tile.reserved_seat_vendor.name=指定席券売機
+tile.fare_adjustment.name=乗越精算機
+tile.departure_board.name=発車標
+tile.boarding_cert_machine.name=乗車駅証明書発行機
+tile.simple_ic_reader.name=IC簡易リーダー
 
 # アイテム
 item.custom_ticket.name=乗車券
@@ -12,6 +16,8 @@ item.custom_ic_card.name=ICカード
 item.custom_pass.name=定期券
 item.settings_tool.name=設定ツール
 item.express_ticket.name=特急券
+item.coupon_ticket.name=回数券
+item.boarding_certificate.name=乗車駅証明書
 
 # クリエイブタブ
 itemGroup.tabKaisatsuPatch=改札パッチ
