@@ -21,8 +21,27 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
     val trainData: MutableMap<String, TrainData> = mutableMapOf()
     // "trainID:carNum:seatNum" → playerName
     val reservations: MutableMap<String, String> = mutableMapOf()
+    // 駅名 → 改札通過ログ（新しい順、最大50件）
+    val gateLog: MutableMap<String, MutableList<GateLogEntry>> = mutableMapOf()
+    // 会社ID → 会社データ
+    val companies: MutableMap<String, CompanyData> = mutableMapOf()
 
     data class StationCoords(val x: Int, val y: Int, val z: Int)
+
+    data class CompanyData(
+        val companyID: String,
+        var companyName: String,
+        var color: Int,          // 0xRRGGBB
+        var icCardName: String   // "メトロIC" など
+    )
+
+    data class GateLogEntry(
+        val playerName: String,
+        val stationName: String,
+        val action: String,   // "入場" / "出場"
+        val itemType: String, // "IC" / "切符" / "定期券" / "回数券" / "RTM切符"
+        val timestamp: Long
+    )
 
     data class SalesBreakdown(
         var ticket: Long = 0L,
@@ -56,6 +75,13 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
         // Phase3で乗換料金として使用予定（現在は常に0）
         var transferFee: Int = 0
     )
+
+    fun addGateLog(stationName: String, playerName: String, action: String, itemType: String) {
+        val list = gateLog.getOrPut(stationName) { mutableListOf() }
+        list.add(0, GateLogEntry(playerName, stationName, action, itemType, System.currentTimeMillis()))
+        if (list.size > 50) list.subList(50, list.size).clear()
+        markDirty()
+    }
 
     companion object {
         private const val DATA_NAME = "KaizPatchNetworkData"
@@ -127,6 +153,24 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
         for (i in 0 until resvList.tagCount()) {
             val r = resvList.getCompoundTagAt(i)
             reservations[r.getString("Key")] = r.getString("Player")
+        }
+
+        companies.clear()
+        val companyList = nbt.getTagList("Companies", Constants.NBT.TAG_COMPOUND)
+        for (i in 0 until companyList.tagCount()) {
+            val c = companyList.getCompoundTagAt(i)
+            val id = c.getString("CompanyID")
+            companies[id] = CompanyData(id, c.getString("CompanyName"), c.getInteger("Color"), c.getString("ICCardName"))
+        }
+
+        gateLog.clear()
+        val gateLogList = nbt.getTagList("GateLog", Constants.NBT.TAG_COMPOUND)
+        for (i in 0 until gateLogList.tagCount()) {
+            val e = gateLogList.getCompoundTagAt(i)
+            val station = e.getString("Station")
+            gateLog.getOrPut(station) { mutableListOf() }.add(
+                GateLogEntry(e.getString("Player"), station, e.getString("Action"), e.getString("ItemType"), e.getLong("Time"))
+            )
         }
 
         companyLines.clear()
@@ -236,5 +280,32 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
             }
         }
         nbt.setTag("Reservations", resvNBTList)
+
+        val companyNBTList = NBTTagList()
+        companies.values.forEach { c ->
+            NBTTagCompound().also {
+                it.setString("CompanyID", c.companyID)
+                it.setString("CompanyName", c.companyName)
+                it.setInteger("Color", c.color)
+                it.setString("ICCardName", c.icCardName)
+                companyNBTList.appendTag(it)
+            }
+        }
+        nbt.setTag("Companies", companyNBTList)
+
+        val gateLogNBTList = NBTTagList()
+        gateLog.forEach { (_, entries) ->
+            entries.forEach { entry ->
+                NBTTagCompound().also {
+                    it.setString("Station", entry.stationName)
+                    it.setString("Player", entry.playerName)
+                    it.setString("Action", entry.action)
+                    it.setString("ItemType", entry.itemType)
+                    it.setLong("Time", entry.timestamp)
+                    gateLogNBTList.appendTag(it)
+                }
+            }
+        }
+        nbt.setTag("GateLog", gateLogNBTList)
     }
 }

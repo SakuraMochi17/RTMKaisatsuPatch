@@ -39,7 +39,7 @@ class BlockFareAdjustment : BlockContainer(Material.iron) {
             if (!world.isRemote) {
                 val stations = KaisatsuNetworkData.get(world)?.globalStations?.keys?.sorted() ?: emptyList()
                 KaizPatchNetwork.CHANNEL.sendTo(
-                    PacketOpenVendorConfig(x, y, z, tile.stationName, stations),
+                    PacketOpenVendorConfig(x, y, z, tile.stationName, "", stations, emptyList()),
                     player as EntityPlayerMP
                 )
             }

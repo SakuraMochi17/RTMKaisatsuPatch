@@ -7,6 +7,7 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent
 import cpw.mods.fml.common.event.FMLServerStartingEvent
 import cpw.mods.fml.common.event.FMLServerStoppingEvent
 import jp.sakuramochi.kaisatsupatch.command.CommandKaizWeb
+import jp.sakuramochi.kaisatsupatch.command.CommandKaisatsuAdmin
 import jp.sakuramochi.kaisatsupatch.command.CommandKaisatsuLog
 import jp.sakuramochi.kaisatsupatch.web.KaisatsuWebServer
 import cpw.mods.fml.common.network.NetworkRegistry
@@ -16,6 +17,7 @@ import cpw.mods.fml.relauncher.Side
 import cpw.mods.fml.relauncher.SideOnly
 import jp.ngt.rtm.block.tileentity.RenderMachine
 import jp.sakuramochi.kaisatsupatch.client.KaizPatchClientEvents
+import jp.sakuramochi.kaisatsupatch.client.RenderICCard
 import jp.sakuramochi.kaisatsupatch.block.*
 import jp.sakuramochi.kaisatsupatch.block.tileentity.*
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityTrainManager
@@ -134,6 +136,7 @@ class RTMKaisatsuPatchCore {
     @Mod.EventHandler
     fun serverStarting(event: FMLServerStartingEvent) {
         event.registerServerCommand(CommandKaizWeb())
+        event.registerServerCommand(CommandKaisatsuAdmin())
         event.registerServerCommand(CommandKaisatsuLog())
         KaisatsuWebServer.start()
     }
@@ -148,6 +151,9 @@ class RTMKaisatsuPatchCore {
         ClientRegistry.bindTileEntitySpecialRenderer(
             TileEntityCustomTurnstile::class.java,
             RenderMachine.INSTANCE
+        )
+        net.minecraftforge.client.MinecraftForgeClient.registerItemRenderer(
+            registeredItems["custom_ic_card"]!!, RenderICCard()
         )
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(KaizPatchClientEvents)
     }

@@ -135,11 +135,21 @@ class PacketPurchaseTicket() : IMessage {
                     val icItem = RTMKaisatsuPatchCore.registeredItems["custom_ic_card"] as? ItemCustomICCard ?: return null
                     val icStack = ItemStack(icItem)
                     ItemCustomICCard.charge(icStack, initBalance)
+                    // 会社情報を付与
+                    val companyID = tile.companyID
+                    if (companyID.isNotEmpty()) {
+                        val companyData = KaisatsuNetworkData.get(world)?.companies?.get(companyID)
+                        if (companyData != null)
+                            ItemCustomICCard.initCompany(icStack, companyID, companyData.color, companyData.icCardName)
+                    }
                     if (!player.inventory.addItemStackToInventory(icStack))
                         player.dropPlayerItemWithRandomChoice(icStack, false)
                     addSales(world, fromStation, cost.toLong(), SaleType.IC)
+                    val cardLabel = if (companyID.isNotEmpty())
+                        KaisatsuNetworkData.get(world)?.companies?.get(companyID)?.icCardName ?: "ICカード"
+                    else "ICカード"
                     player.addChatMessage(ChatComponentText(
-                        "${EnumChatFormatting.GREEN}ICカードを発行しました（残高: ${initBalance}円 / 預り金: 500円）"))
+                        "${EnumChatFormatting.GREEN}${cardLabel}を発行しました（残高: ${initBalance}円 / 預り金: 500円）"))
                 }
 
                 PacketPurchaseTicket.Mode.RETURN_IC -> {
