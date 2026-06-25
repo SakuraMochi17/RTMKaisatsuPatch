@@ -2,6 +2,7 @@ package jp.sakuramochi.kaisatsupatch.command
 
 import cpw.mods.fml.common.Loader
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
+import jp.sakuramochi.kaisatsupatch.core.OuDiaExporter
 import jp.sakuramochi.kaisatsupatch.core.OuDiaParser
 import jp.sakuramochi.kaisatsupatch.web.KaisatsuWebServer
 import net.minecraft.command.CommandBase
@@ -336,9 +337,34 @@ class CommandKaisatsuAdmin : CommandBase() {
                 data.timetable = null; data.timetableFilePath = ""; data.markDirty()
                 sender.addChatMessage(ChatComponentText("§e時刻表をアンロードしました"))
             }
+            "export" -> {
+                // /kaisatsu timetable export [路線ID] [ファイル名]
+                val lineID   = args.getOrNull(1) ?: ""
+                val fileName = args.getOrNull(2)
+                val outputDir = File(configDir, "kaizpatch/timetables")
+                try {
+                    val file = if (lineID.isEmpty()) {
+                        OuDiaExporter.exportAll(data, outputDir,
+                            filename = fileName ?: "template.oud")
+                    } else {
+                        val line = data.companyLines[lineID] ?: run {
+                            sender.addChatMessage(ChatComponentText("§c路線 '$lineID' が見つかりません"))
+                            return
+                        }
+                        OuDiaExporter.exportLine(line, outputDir,
+                            filename = fileName ?: "${lineID}.oud")
+                    }
+                    sender.addChatMessage(ChatComponentText("§a[OuDia] テンプレートを出力しました: §f${file.name}"))
+                    sender.addChatMessage(ChatComponentText("  §7場所: ${file.parentFile.absolutePath}"))
+                    sender.addChatMessage(ChatComponentText("  §7ヒント: /kaisatsu timetable load ${file.name}"))
+                } catch (e: Exception) {
+                    sender.addChatMessage(ChatComponentText("§c書き出しエラー: ${e.message}"))
+                }
+            }
             else -> {
-                sender.addChatMessage(ChatComponentText("§e使い方: /kaisatsu timetable <load|info|list|unload>"))
+                sender.addChatMessage(ChatComponentText("§e使い方: /kaisatsu timetable <load|info|list|unload|export>"))
                 sender.addChatMessage(ChatComponentText("§7ファイルの置き場所: config/kaizpatch/timetables/*.oud"))
+                sender.addChatMessage(ChatComponentText("§7テンプレ: /kaisatsu timetable export [路線ID] [ファイル名]"))
             }
         }
     }
@@ -367,7 +393,7 @@ class CommandKaisatsuAdmin : CommandBase() {
             args.size == 1 ->
                 getListOfStringsMatchingLastWord(args, "web", "log", "company", "line", "timetable")
             args.size == 2 && args[0] == "timetable" ->
-                getListOfStringsMatchingLastWord(args, "load", "info", "list", "unload")
+                getListOfStringsMatchingLastWord(args, "load", "info", "list", "unload", "export")
             args.size == 2 && args[0] == "log" ->
                 getListOfStringsMatchingLastWord(args, *stationIDs)
             args.size == 2 && args[0] == "company" ->

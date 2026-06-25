@@ -38,6 +38,8 @@ object KaizPatchNetwork {
         CHANNEL.registerMessage(PacketCompanyUpdate.Handler::class.java,           PacketCompanyUpdate::class.java,            id++, Side.SERVER)
         // 発車標
         CHANNEL.registerMessage(PacketOpenDepartureBoard.Handler::class.java,      PacketOpenDepartureBoard::class.java,       id++, Side.CLIENT)
-        CHANNEL.registerMessage(PacketDepartureBoardSave.Handler::class.java,      PacketDepartureBoardSave::class.java,       id,   Side.SERVER)
+        CHANNEL.registerMessage(PacketDepartureBoardSave.Handler::class.java,      PacketDepartureBoardSave::class.java,       id++, Side.SERVER)
+        // OuDia テンプレート出力
+        CHANNEL.registerMessage(PacketExportTemplate.Handler::class.java,          PacketExportTemplate::class.java,           id,   Side.SERVER)
     }
 }

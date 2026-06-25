@@ -3,6 +3,7 @@ package jp.sakuramochi.kaisatsupatch.client
 import cpw.mods.fml.relauncher.Side
 import cpw.mods.fml.relauncher.SideOnly
 import jp.sakuramochi.kaisatsupatch.network.KaizPatchNetwork
+import jp.sakuramochi.kaisatsupatch.network.PacketExportTemplate
 import jp.sakuramochi.kaisatsupatch.network.PacketLineUpdate
 import jp.sakuramochi.kaisatsupatch.network.PacketOpenLineGui
 import net.minecraft.client.gui.GuiButton
@@ -47,6 +48,9 @@ class GuiLineManager(private val data: PacketOpenLineGui) : GuiScreen() {
                     it.enabled = data.companyLines.isNotEmpty()
                 })
                 add(GuiButton(14, cx + 10, cy + 40, 90, 20, "+ 新規路線作成"))
+                add(GuiButton(17, cx - 100, cy + 65, 90, 16, "OuDia テンプレ出力").also {
+                    it.enabled = data.companyLines.isNotEmpty()
+                })
             }
             1 -> {
                 idField   = GuiTextField(fontRendererObj, cx - 110, cy - 80, 90, 15)
@@ -128,6 +132,11 @@ class GuiLineManager(private val data: PacketOpenLineGui) : GuiScreen() {
                     editLineStations = data.companyLines[selectedLineIndex].stations.toMutableList()
                     page = 1; initGui() }
             14 -> { currentOldLineID = ""; editLineStations = mutableListOf(); page = 1; initGui() }
+            17 -> {
+                val lineID = if (data.companyLines.isNotEmpty()) data.companyLines[selectedLineIndex].lineID else ""
+                KaizPatchNetwork.CHANNEL.sendToServer(PacketExportTemplate().also { it.lineID = lineID })
+                // サーバーからチャットでファイルパスが通知される
+            }
             // 会社名編集
             10 -> {
                 send(PacketLineUpdate().also {
