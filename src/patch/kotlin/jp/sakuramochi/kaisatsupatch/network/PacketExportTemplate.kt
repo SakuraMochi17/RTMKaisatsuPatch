@@ -7,6 +7,8 @@ import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import io.netty.buffer.ByteBuf
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
 import jp.sakuramochi.kaisatsupatch.core.OuDiaExporter
+import jp.sakuramochi.kaisatsupatch.util.isOp
+import jp.sakuramochi.kaisatsupatch.util.sendError
 import net.minecraft.util.ChatComponentText
 import net.minecraftforge.common.DimensionManager
 import java.io.File
@@ -35,9 +37,7 @@ class PacketExportTemplate : IMessage {
             val player = ctx.serverHandler.playerEntity
             val world  = DimensionManager.getWorld(0)
 
-            if (!player.mcServer.configurationManager.func_152596_g(player.gameProfile)) {
-                player.addChatMessage(ChatComponentText("§cOP 権限が必要です")); return null
-            }
+            if (!player.isOp()) { player.sendError("OP 権限が必要です"); return null }
 
             val data = KaisatsuNetworkData.get(world) ?: run {
                 player.addChatMessage(ChatComponentText("§cネットワークデータが見つかりません")); return null

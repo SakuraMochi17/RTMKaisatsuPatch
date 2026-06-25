@@ -1,11 +1,14 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import io.netty.buffer.ByteBuf
 import jp.sakuramochi.kaisatsupatch.core.DepartureRow
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.readStringList
+import jp.sakuramochi.kaisatsupatch.util.writeStr
+import jp.sakuramochi.kaisatsupatch.util.writeStringList
 import net.minecraft.client.Minecraft
 
 /** S→C: 発車標GUI (設定 or 表示) を開く */
@@ -29,57 +32,47 @@ class PacketOpenDepartureBoard() : IMessage {
     override fun toBytes(buf: ByteBuf) {
         buf.writeInt(x); buf.writeInt(y); buf.writeInt(z)
         buf.writeBoolean(isConfigMode)
-        ByteBufUtils.writeUTF8String(buf, stationName)
-        ByteBufUtils.writeUTF8String(buf, lineID)
-        ByteBufUtils.writeUTF8String(buf, platform)
-        ByteBufUtils.writeUTF8String(buf, diaName)
-        ByteBufUtils.writeUTF8String(buf, direction)
+        buf.writeStr(stationName)
+        buf.writeStr(lineID)
+        buf.writeStr(platform)
+        buf.writeStr(diaName)
+        buf.writeStr(direction)
         buf.writeInt(displayRows)
-        ByteBufUtils.writeUTF8String(buf, title)
-        buf.writeInt(availableDias.size)
-        availableDias.forEach { ByteBufUtils.writeUTF8String(buf, it) }
-        buf.writeInt(availableStations.size)
-        availableStations.forEach { ByteBufUtils.writeUTF8String(buf, it) }
+        buf.writeStr(title)
+        buf.writeStringList(availableDias)
+        buf.writeStringList(availableStations)
         buf.writeInt(availableLines.size)
         availableLines.forEach { (id, name) ->
-            ByteBufUtils.writeUTF8String(buf, id)
-            ByteBufUtils.writeUTF8String(buf, name)
+            buf.writeStr(id)
+            buf.writeStr(name)
         }
-        ByteBufUtils.writeUTF8String(buf, currentTime)
+        buf.writeStr(currentTime)
         buf.writeInt(departures.size)
         departures.forEach { r ->
-            ByteBufUtils.writeUTF8String(buf, r.time)
-            ByteBufUtils.writeUTF8String(buf, r.destination)
-            ByteBufUtils.writeUTF8String(buf, r.typeName)
-            ByteBufUtils.writeUTF8String(buf, r.trainNumber)
-            ByteBufUtils.writeUTF8String(buf, r.trainName)
+            buf.writeStr(r.time)
+            buf.writeStr(r.destination)
+            buf.writeStr(r.typeName)
+            buf.writeStr(r.trainNumber)
+            buf.writeStr(r.trainName)
         }
     }
 
     override fun fromBytes(buf: ByteBuf) {
         x = buf.readInt(); y = buf.readInt(); z = buf.readInt()
         isConfigMode   = buf.readBoolean()
-        stationName    = ByteBufUtils.readUTF8String(buf)
-        lineID         = ByteBufUtils.readUTF8String(buf)
-        platform       = ByteBufUtils.readUTF8String(buf)
-        diaName        = ByteBufUtils.readUTF8String(buf)
-        direction      = ByteBufUtils.readUTF8String(buf)
+        stationName    = buf.readStr()
+        lineID         = buf.readStr()
+        platform       = buf.readStr()
+        diaName        = buf.readStr()
+        direction      = buf.readStr()
         displayRows    = buf.readInt()
-        title          = ByteBufUtils.readUTF8String(buf)
-        availableDias      = (0 until buf.readInt()).map { ByteBufUtils.readUTF8String(buf) }
-        availableStations  = (0 until buf.readInt()).map { ByteBufUtils.readUTF8String(buf) }
-        availableLines     = (0 until buf.readInt()).map {
-            ByteBufUtils.readUTF8String(buf) to ByteBufUtils.readUTF8String(buf)
-        }
-        currentTime    = ByteBufUtils.readUTF8String(buf)
+        title          = buf.readStr()
+        availableDias      = buf.readStringList()
+        availableStations  = buf.readStringList()
+        availableLines     = (0 until buf.readInt()).map { buf.readStr() to buf.readStr() }
+        currentTime    = buf.readStr()
         departures     = (0 until buf.readInt()).map {
-            DepartureRow(
-                ByteBufUtils.readUTF8String(buf),
-                ByteBufUtils.readUTF8String(buf),
-                ByteBufUtils.readUTF8String(buf),
-                ByteBufUtils.readUTF8String(buf),
-                ByteBufUtils.readUTF8String(buf)
-            )
+            DepartureRow(buf.readStr(), buf.readStr(), buf.readStr(), buf.readStr(), buf.readStr())
         }
     }
 

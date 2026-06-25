@@ -1,7 +1,12 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
+import jp.sakuramochi.kaisatsupatch.util.isOp
+import jp.sakuramochi.kaisatsupatch.util.readEnum
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.sendError
+import jp.sakuramochi.kaisatsupatch.util.writeEnum
+import jp.sakuramochi.kaisatsupatch.util.writeStr
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import io.netty.buffer.ByteBuf
@@ -25,32 +30,30 @@ class PacketCompanyUpdate() : IMessage {
 
     override fun toBytes(buf: ByteBuf) {
         buf.writeInt(mode.ordinal)
-        ByteBufUtils.writeUTF8String(buf, companyID)
-        ByteBufUtils.writeUTF8String(buf, companyName)
+        buf.writeStr(companyID)
+        buf.writeStr(companyName)
         buf.writeInt(color)
-        ByteBufUtils.writeUTF8String(buf, icCardName)
+        buf.writeStr(icCardName)
         buf.writeInt(defaultBaseFare)
         buf.writeDouble(defaultCostPerBlock)
-        ByteBufUtils.writeUTF8String(buf, targetParam)
+        buf.writeStr(targetParam)
     }
 
     override fun fromBytes(buf: ByteBuf) {
         mode = Mode.values()[buf.readInt()]
-        companyID    = ByteBufUtils.readUTF8String(buf)
-        companyName  = ByteBufUtils.readUTF8String(buf)
+        companyID    = buf.readStr()
+        companyName  = buf.readStr()
         color        = buf.readInt()
-        icCardName   = ByteBufUtils.readUTF8String(buf)
+        icCardName   = buf.readStr()
         defaultBaseFare     = buf.readInt()
         defaultCostPerBlock = buf.readDouble()
-        targetParam  = ByteBufUtils.readUTF8String(buf)
+        targetParam  = buf.readStr()
     }
 
     class Handler : IMessageHandler<PacketCompanyUpdate, IMessage> {
         override fun onMessage(msg: PacketCompanyUpdate, ctx: MessageContext): IMessage? {
             val player = ctx.serverHandler.playerEntity
-            if (!player.mcServer.configurationManager.func_152596_g(player.gameProfile)) {
-                player.addChatMessage(ChatComponentText("${EnumChatFormatting.RED}権限がありません")); return null
-            }
+            if (!player.isOp()) { player.sendError("権限がありません"); return null }
             val world = player.worldObj
             val data = KaisatsuNetworkData.get(world) ?: return null
 

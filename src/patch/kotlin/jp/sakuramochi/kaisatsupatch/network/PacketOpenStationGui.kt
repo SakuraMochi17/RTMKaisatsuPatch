@@ -1,7 +1,10 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
+import jp.sakuramochi.kaisatsupatch.util.readCoords
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.writeCoords
+import jp.sakuramochi.kaisatsupatch.util.writeStr
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import cpw.mods.fml.relauncher.Side
@@ -42,7 +45,7 @@ class PacketOpenStationGui() : IMessage {
 
     override fun fromBytes(buf: ByteBuf) {
         x = buf.readInt(); y = buf.readInt(); z = buf.readInt()
-        stationName  = ByteBufUtils.readUTF8String(buf)
+        stationName  = buf.readStr()
         salesTotal   = buf.readLong()
         salesTicket  = buf.readLong()
         salesIC      = buf.readLong()
@@ -50,13 +53,13 @@ class PacketOpenStationGui() : IMessage {
         salesExpress = buf.readLong()
         val count = buf.readInt()
         val list = mutableListOf<Pair<String, Int>>()
-        repeat(count) { list.add(ByteBufUtils.readUTF8String(buf) to buf.readInt()) }
+        repeat(count) { list.add(buf.readStr() to buf.readInt()) }
         fareList = list
     }
 
     override fun toBytes(buf: ByteBuf) {
         buf.writeInt(x); buf.writeInt(y); buf.writeInt(z)
-        ByteBufUtils.writeUTF8String(buf, stationName)
+        buf.writeStr(stationName)
         buf.writeLong(salesTotal)
         buf.writeLong(salesTicket)
         buf.writeLong(salesIC)
@@ -64,7 +67,7 @@ class PacketOpenStationGui() : IMessage {
         buf.writeLong(salesExpress)
         buf.writeInt(fareList.size)
         fareList.forEach { (dest, fare) ->
-            ByteBufUtils.writeUTF8String(buf, dest)
+            buf.writeStr(dest)
             buf.writeInt(fare)
         }
     }

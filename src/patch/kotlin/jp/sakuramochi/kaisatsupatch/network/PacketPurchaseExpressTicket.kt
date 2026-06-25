@@ -1,7 +1,10 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
+import jp.sakuramochi.kaisatsupatch.util.readCoords
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.writeCoords
+import jp.sakuramochi.kaisatsupatch.util.writeStr
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import io.netty.buffer.ByteBuf
@@ -47,9 +50,9 @@ class PacketPurchaseExpressTicket() : IMessage {
 
     override fun toBytes(buf: ByteBuf) {
         buf.writeInt(vendorX); buf.writeInt(vendorY); buf.writeInt(vendorZ)
-        ByteBufUtils.writeUTF8String(buf, trainID)
-        ByteBufUtils.writeUTF8String(buf, fromStation)
-        ByteBufUtils.writeUTF8String(buf, toStation)
+        buf.writeStr(trainID)
+        buf.writeStr(fromStation)
+        buf.writeStr(toStation)
         buf.writeBoolean(isReserved)
         buf.writeInt(carNumber)
         buf.writeBoolean(includeTicket)
@@ -57,9 +60,9 @@ class PacketPurchaseExpressTicket() : IMessage {
 
     override fun fromBytes(buf: ByteBuf) {
         vendorX = buf.readInt(); vendorY = buf.readInt(); vendorZ = buf.readInt()
-        trainID = ByteBufUtils.readUTF8String(buf)
-        fromStation = ByteBufUtils.readUTF8String(buf)
-        toStation = ByteBufUtils.readUTF8String(buf)
+        trainID = buf.readStr()
+        fromStation = buf.readStr()
+        toStation = buf.readStr()
         isReserved = buf.readBoolean()
         carNumber = buf.readInt()
         includeTicket = buf.readBoolean()

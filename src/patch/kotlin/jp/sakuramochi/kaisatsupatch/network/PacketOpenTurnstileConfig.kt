@@ -1,7 +1,12 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
+import jp.sakuramochi.kaisatsupatch.util.readCoords
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.readStringList
+import jp.sakuramochi.kaisatsupatch.util.writeCoords
+import jp.sakuramochi.kaisatsupatch.util.writeStr
+import jp.sakuramochi.kaisatsupatch.util.writeStringList
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import cpw.mods.fml.relauncher.Side
@@ -25,18 +30,18 @@ class PacketOpenTurnstileConfig() : IMessage {
 
     override fun fromBytes(buf: ByteBuf) {
         x = buf.readInt(); y = buf.readInt(); z = buf.readInt()
-        currentStation = ByteBufUtils.readUTF8String(buf)
-        gateMode = ByteBufUtils.readUTF8String(buf)
+        currentStation = buf.readStr()
+        gateMode = buf.readStr()
         val size = buf.readInt()
-        stationList = (0 until size).map { ByteBufUtils.readUTF8String(buf) }
+        stationList = (0 until size).map { buf.readStr() }
     }
 
     override fun toBytes(buf: ByteBuf) {
         buf.writeInt(x); buf.writeInt(y); buf.writeInt(z)
-        ByteBufUtils.writeUTF8String(buf, currentStation)
-        ByteBufUtils.writeUTF8String(buf, gateMode)
+        buf.writeStr(currentStation)
+        buf.writeStr(gateMode)
         buf.writeInt(stationList.size)
-        stationList.forEach { ByteBufUtils.writeUTF8String(buf, it) }
+        stationList.forEach { buf.writeStr(it) }
     }
 
     class Handler : IMessageHandler<PacketOpenTurnstileConfig, IMessage> {

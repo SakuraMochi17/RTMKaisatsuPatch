@@ -1,11 +1,12 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import io.netty.buffer.ByteBuf
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityDepartureBoard
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.writeStr
 
 /** C→S: 発車標の設定を保存する */
 class PacketDepartureBoardSave() : IMessage {
@@ -21,24 +22,24 @@ class PacketDepartureBoardSave() : IMessage {
 
     override fun toBytes(buf: ByteBuf) {
         buf.writeInt(x); buf.writeInt(y); buf.writeInt(z)
-        ByteBufUtils.writeUTF8String(buf, stationName)
-        ByteBufUtils.writeUTF8String(buf, lineID)
-        ByteBufUtils.writeUTF8String(buf, platform)
-        ByteBufUtils.writeUTF8String(buf, diaName)
-        ByteBufUtils.writeUTF8String(buf, direction)
+        buf.writeStr(stationName)
+        buf.writeStr(lineID)
+        buf.writeStr(platform)
+        buf.writeStr(diaName)
+        buf.writeStr(direction)
         buf.writeInt(displayRows)
-        ByteBufUtils.writeUTF8String(buf, title)
+        buf.writeStr(title)
     }
 
     override fun fromBytes(buf: ByteBuf) {
         x = buf.readInt(); y = buf.readInt(); z = buf.readInt()
-        stationName = ByteBufUtils.readUTF8String(buf)
-        lineID      = ByteBufUtils.readUTF8String(buf)
-        platform    = ByteBufUtils.readUTF8String(buf)
-        diaName     = ByteBufUtils.readUTF8String(buf)
-        direction   = ByteBufUtils.readUTF8String(buf)
+        stationName = buf.readStr()
+        lineID      = buf.readStr()
+        platform    = buf.readStr()
+        diaName     = buf.readStr()
+        direction   = buf.readStr()
         displayRows = buf.readInt()
-        title       = ByteBufUtils.readUTF8String(buf)
+        title       = buf.readStr()
     }
 
     class Handler : IMessageHandler<PacketDepartureBoardSave, IMessage> {

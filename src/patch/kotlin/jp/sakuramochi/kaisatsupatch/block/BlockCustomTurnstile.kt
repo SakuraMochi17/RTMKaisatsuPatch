@@ -14,6 +14,7 @@ import jp.sakuramochi.kaisatsupatch.item.ItemCustomTicket
 import jp.sakuramochi.kaisatsupatch.item.ItemSettingsTool
 import jp.sakuramochi.kaisatsupatch.network.KaizPatchNetwork
 import jp.sakuramochi.kaisatsupatch.network.PacketOpenTurnstileConfig
+import jp.sakuramochi.kaisatsupatch.util.isOp
 import net.minecraft.block.material.Material
 import net.minecraft.client.Minecraft
 import net.minecraft.entity.EntityLivingBase
@@ -55,8 +56,7 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
                 if (ownerID.isNotEmpty()) {
                     val data = KaisatsuNetworkData.get(world)
                     val company = data?.companies?.get(ownerID)
-                    val isOp = (player as? EntityPlayerMP)?.mcServer?.configurationManager
-                        ?.func_152596_g(player.gameProfile) ?: false
+                    val isOp = (player as? EntityPlayerMP)?.isOp() ?: false
                     if (!isOp && company != null && !company.isMember(player.gameProfile.name)) {
                         player.addChatMessage(ChatComponentText(
                             "§c[${company.companyName}] の改札です。操作権限がありません"))

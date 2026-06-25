@@ -1,8 +1,9 @@
 package jp.sakuramochi.kaisatsupatch.core
 
+import jp.sakuramochi.kaisatsupatch.util.getStringList
+import jp.sakuramochi.kaisatsupatch.util.setStringList
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.nbt.NBTTagList
-import net.minecraft.nbt.NBTTagString
 import net.minecraft.world.World
 import net.minecraft.world.WorldSavedData
 import net.minecraftforge.common.util.Constants
@@ -152,8 +153,7 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
         val trainList = nbt.getTagList("TrainData", Constants.NBT.TAG_COMPOUND)
         for (i in 0 until trainList.tagCount()) {
             val t = trainList.getCompoundTagAt(i)
-            val stopList = t.getTagList("StopStations", Constants.NBT.TAG_STRING)
-            val stops = (0 until stopList.tagCount()).map { stopList.getStringTagAt(it) }
+            val stops = t.getStringList("StopStations")
             val carList = t.getTagList("Cars", Constants.NBT.TAG_COMPOUND)
             val cars = (0 until carList.tagCount()).map { ci ->
                 val c = carList.getCompoundTagAt(ci)
@@ -189,10 +189,8 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
                 defaultBaseFare = c.getInteger("DefaultBaseFare").let { if (it == 0) 150 else it },
                 defaultCostPerBlock = c.getDouble("DefaultCostPerBlock").let { if (it == 0.0) 0.1 else it }
             )
-            val memberList = c.getTagList("Members", Constants.NBT.TAG_STRING)
-            for (j in 0 until memberList.tagCount()) co.members.add(memberList.getStringTagAt(j))
-            val mutualList = c.getTagList("AllowedCompanies", Constants.NBT.TAG_STRING)
-            for (j in 0 until mutualList.tagCount()) co.allowedCompanies.add(mutualList.getStringTagAt(j))
+            co.members.addAll(c.getStringList("Members"))
+            co.allowedCompanies.addAll(c.getStringList("AllowedCompanies"))
             companies[id] = co
         }
 
@@ -221,8 +219,7 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
                 transferFee = l.getInteger("TransferFee"),
                 companyID   = l.getString("CompanyID")
             )
-            val order = l.getTagList("StationOrder", Constants.NBT.TAG_STRING)
-            for (j in 0 until order.tagCount()) line.stationOrder.add(order.getStringTagAt(j))
+            line.stationOrder.addAll(l.getStringList("StationOrder"))
             companyLines[line.lineID] = line
         }
     }
@@ -273,9 +270,7 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
                 it.setDouble("CostPerBlock", line.costPerBlock)
                 it.setInteger("TransferFee", line.transferFee)
                 it.setString("CompanyID", line.companyID)
-                val order = NBTTagList()
-                line.stationOrder.forEach { st -> order.appendTag(NBTTagString(st)) }
-                it.setTag("StationOrder", order)
+                it.setStringList("StationOrder", line.stationOrder)
                 lineList.appendTag(it)
             }
         }
@@ -290,9 +285,7 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
                 t.setString("LineID", train.lineID)
                 t.setInteger("ReservedFare", train.reservedFare)
                 t.setInteger("UnreservedFare", train.unreservedFare)
-                val stopList = NBTTagList()
-                train.stopStations.forEach { st -> stopList.appendTag(NBTTagString(st)) }
-                t.setTag("StopStations", stopList)
+                t.setStringList("StopStations", train.stopStations)
                 val carList = NBTTagList()
                 train.cars.forEach { car ->
                     NBTTagCompound().also { c ->
@@ -327,12 +320,8 @@ class KaisatsuNetworkData(name: String) : WorldSavedData(name) {
                 it.setString("ICCardName", c.icCardName)
                 it.setInteger("DefaultBaseFare", c.defaultBaseFare)
                 it.setDouble("DefaultCostPerBlock", c.defaultCostPerBlock)
-                val memberList = NBTTagList()
-                c.members.forEach { m -> memberList.appendTag(NBTTagString(m)) }
-                it.setTag("Members", memberList)
-                val mutualList = NBTTagList()
-                c.allowedCompanies.forEach { m -> mutualList.appendTag(NBTTagString(m)) }
-                it.setTag("AllowedCompanies", mutualList)
+                it.setStringList("Members", c.members)
+                it.setStringList("AllowedCompanies", c.allowedCompanies)
                 companyNBTList.appendTag(it)
             }
         }

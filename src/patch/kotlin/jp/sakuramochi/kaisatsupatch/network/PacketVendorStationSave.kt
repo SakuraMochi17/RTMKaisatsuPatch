@@ -1,7 +1,10 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
+import jp.sakuramochi.kaisatsupatch.util.readCoords
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.writeCoords
+import jp.sakuramochi.kaisatsupatch.util.writeStr
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import io.netty.buffer.ByteBuf
@@ -22,15 +25,15 @@ class PacketVendorStationSave() : IMessage {
     }
 
     override fun toBytes(buf: ByteBuf) {
-        buf.writeInt(x); buf.writeInt(y); buf.writeInt(z)
-        ByteBufUtils.writeUTF8String(buf, stationName)
-        ByteBufUtils.writeUTF8String(buf, companyID)
+        buf.writeCoords(x, y, z)
+        buf.writeStr(stationName)
+        buf.writeStr(companyID)
     }
 
     override fun fromBytes(buf: ByteBuf) {
-        x = buf.readInt(); y = buf.readInt(); z = buf.readInt()
-        stationName = ByteBufUtils.readUTF8String(buf)
-        companyID = ByteBufUtils.readUTF8String(buf)
+        buf.readCoords().also { x = it.x; y = it.y; z = it.z }
+        stationName = buf.readStr()
+        companyID = buf.readStr()
     }
 
     class Handler : IMessageHandler<PacketVendorStationSave, IMessage> {
