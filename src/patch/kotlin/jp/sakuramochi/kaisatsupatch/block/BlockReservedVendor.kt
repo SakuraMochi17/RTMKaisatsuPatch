@@ -42,7 +42,7 @@ class BlockReservedVendor : BlockMachineBase(Material.iron) {
                 if (!world.isRemote) {
                     val stationList = KaisatsuNetworkData.get(world)?.globalStations?.keys?.sorted() ?: emptyList()
                     KaizPatchNetwork.CHANNEL.sendTo(
-                        PacketOpenVendorConfig(x, y, z, tile.stationName, stationList),
+                        PacketOpenVendorConfig(x, y, z, tile.stationName, "", stationList, emptyList()),
                         player as EntityPlayerMP
                     )
                 }

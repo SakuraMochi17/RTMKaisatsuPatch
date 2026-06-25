@@ -10,6 +10,7 @@ import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTicketVendo
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
 import jp.sakuramochi.kaisatsupatch.gui.ContainerCustomVendor
 import jp.ngt.rtm.RTMItem
+import jp.sakuramochi.kaisatsupatch.item.ItemCustomCouponTicket
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomICCard
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomPass
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomTicket
@@ -25,7 +26,7 @@ import net.minecraft.util.EnumChatFormatting
  */
 class PacketPurchaseTicket() : IMessage {
 
-    enum class Mode { TICKET, CHARGE, PASS, BUY_IC, RETURN_IC }
+    enum class Mode { TICKET, CHARGE, PASS, BUY_IC, RETURN_IC, COUPON, DAY_PASS }
 
     var x = 0; var y = 0; var z = 0
     var mode = Mode.TICKET
@@ -91,7 +92,8 @@ class PacketPurchaseTicket() : IMessage {
                         return null
                     }
                     vendorInv.payAndChange(msg.fare, player)
-                    addSales(world, fromStation, msg.fare.toLong())
+                    ItemCustomICCard.addHistory(cardStack, "チャージ", fromStation, msg.fare)
+                    addSales(world, fromStation, msg.fare.toLong(), SaleType.IC)
                     player.addChatMessage(ChatComponentText(
                         "${EnumChatFormatting.GREEN}${msg.fare}円チャージ完了　残高: ${ItemCustomICCard.getBalance(cardStack)}円"))
                 }
@@ -114,7 +116,7 @@ class PacketPurchaseTicket() : IMessage {
                     } else ItemStack(net.minecraft.init.Items.paper)
                     if (!player.inventory.addItemStackToInventory(ticketStack))
                         player.dropPlayerItemWithRandomChoice(ticketStack, false)
-                    addSales(world, fromStation, cost.toLong())
+                    addSales(world, fromStation, cost.toLong(), SaleType.TICKET)
                     val destLabel = if (isEntry) "入場券" else msg.destStation
                     player.addChatMessage(ChatComponentText(
                         "${EnumChatFormatting.GREEN}${destLabel}の切符を購入しました（${cost}円）"))
@@ -133,11 +135,21 @@ class PacketPurchaseTicket() : IMessage {
                     val icItem = RTMKaisatsuPatchCore.registeredItems["custom_ic_card"] as? ItemCustomICCard ?: return null
                     val icStack = ItemStack(icItem)
                     ItemCustomICCard.charge(icStack, initBalance)
+                    // 会社情報を付与
+                    val companyID = tile.companyID
+                    if (companyID.isNotEmpty()) {
+                        val companyData = KaisatsuNetworkData.get(world)?.companies?.get(companyID)
+                        if (companyData != null)
+                            ItemCustomICCard.initCompany(icStack, companyID, companyData.color, companyData.icCardName)
+                    }
                     if (!player.inventory.addItemStackToInventory(icStack))
                         player.dropPlayerItemWithRandomChoice(icStack, false)
-                    addSales(world, fromStation, cost.toLong())
+                    addSales(world, fromStation, cost.toLong(), SaleType.IC)
+                    val cardLabel = if (companyID.isNotEmpty())
+                        KaisatsuNetworkData.get(world)?.companies?.get(companyID)?.icCardName ?: "ICカード"
+                    else "ICカード"
                     player.addChatMessage(ChatComponentText(
-                        "${EnumChatFormatting.GREEN}ICカードを発行しました（残高: ${initBalance}円 / 預り金: 500円）"))
+                        "${EnumChatFormatting.GREEN}${cardLabel}を発行しました（残高: ${initBalance}円 / 預り金: 500円）"))
                 }
 
                 PacketPurchaseTicket.Mode.RETURN_IC -> {
@@ -177,6 +189,41 @@ class PacketPurchaseTicket() : IMessage {
                         "${EnumChatFormatting.GREEN}ICカードを返却しました（${msg2}）"))
                 }
 
+                PacketPurchaseTicket.Mode.COUPON -> {
+                    // ── 回数券発行 ────────────────────────────────
+                    val cost = (Math.ceil(msg.fare * 10 * 0.9 / 10.0) * 10).toInt()
+                    if (!vendorInv.payAndChange(cost, player)) {
+                        player.addChatMessage(ChatComponentText(
+                            "${EnumChatFormatting.RED}お金が不足しています（必要: ${cost}円 / 所持: ${vendorInv.getMoneyYen()}円）"))
+                        return null
+                    }
+                    val couponItem = RTMKaisatsuPatchCore.registeredItems["coupon_ticket"] as? ItemCustomCouponTicket ?: return null
+                    val s = ItemStack(couponItem)
+                    ItemCustomCouponTicket.initTicket(s, fromStation, msg.destStation)
+                    if (!player.inventory.addItemStackToInventory(s))
+                        player.dropPlayerItemWithRandomChoice(s, false)
+                    addSales(world, fromStation, cost.toLong(), SaleType.TICKET)
+                    player.addChatMessage(ChatComponentText(
+                        "${EnumChatFormatting.GREEN}回数券を発行しました（${fromStation}→${msg.destStation} 10回分 ${cost}円）"))
+                }
+
+                PacketPurchaseTicket.Mode.DAY_PASS -> {
+                    // ── 一日フリーパス ────────────────────────────
+                    if (!vendorInv.payAndChange(msg.fare, player)) {
+                        player.addChatMessage(ChatComponentText(
+                            "${EnumChatFormatting.RED}お金が不足しています（必要: ${msg.fare}円 / 所持: ${vendorInv.getMoneyYen()}円）"))
+                        return null
+                    }
+                    val passItem = RTMKaisatsuPatchCore.registeredItems["custom_pass"] as? ItemCustomPass ?: return null
+                    val s = ItemStack(passItem)
+                    ItemCustomPass.initDayPass(s, ItemCustomPass.currentDay(world))
+                    if (!player.inventory.addItemStackToInventory(s))
+                        player.dropPlayerItemWithRandomChoice(s, false)
+                    addSales(world, fromStation, msg.fare.toLong(), SaleType.PASS)
+                    player.addChatMessage(ChatComponentText(
+                        "${EnumChatFormatting.GREEN}一日フリーパスを購入しました（${msg.fare}円）全区間 1日間有効"))
+                }
+
                 PacketPurchaseTicket.Mode.PASS -> {
                     // ── 定期券購入 ────────────────────────────────
                     if (!vendorInv.payAndChange(msg.fare, player)) {
@@ -193,7 +240,7 @@ class PacketPurchaseTicket() : IMessage {
                     } else ItemStack(net.minecraft.init.Items.paper)
                     if (!player.inventory.addItemStackToInventory(passStack))
                         player.dropPlayerItemWithRandomChoice(passStack, false)
-                    addSales(world, fromStation, msg.fare.toLong())
+                    addSales(world, fromStation, msg.fare.toLong(), SaleType.PASS)
                     player.addChatMessage(ChatComponentText(
                         "${EnumChatFormatting.GREEN}定期券を発行しました（${fromStation}⇔${msg.destStation} / ${msg.passDays}日間 / ${msg.fare}円）"))
                 }
@@ -201,9 +248,18 @@ class PacketPurchaseTicket() : IMessage {
             return null
         }
 
-        private fun addSales(world: net.minecraft.world.World, stationName: String, amount: Long) {
+        enum class SaleType { TICKET, IC, PASS, EXPRESS }
+
+        private fun addSales(world: net.minecraft.world.World, stationName: String, amount: Long, type: SaleType) {
             val data = KaisatsuNetworkData.get(world) ?: return
             data.stationSales[stationName] = (data.stationSales[stationName] ?: 0L) + amount
+            val bd = data.stationSalesDetail.getOrPut(stationName) { KaisatsuNetworkData.SalesBreakdown() }
+            when (type) {
+                SaleType.TICKET  -> bd.ticket  += amount
+                SaleType.IC      -> bd.ic      += amount
+                SaleType.PASS    -> bd.pass    += amount
+                SaleType.EXPRESS -> bd.express += amount
+            }
             data.markDirty()
         }
     }

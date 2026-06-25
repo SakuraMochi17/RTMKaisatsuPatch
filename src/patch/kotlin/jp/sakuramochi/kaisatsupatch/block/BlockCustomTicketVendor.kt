@@ -45,9 +45,12 @@ class BlockCustomTicketVendor : BlockMachineBase(Material.iron) {
                 }
             } else {
                 if (!world.isRemote) {
-                    val stationList = KaisatsuNetworkData.get(world)?.globalStations?.keys?.sorted() ?: emptyList()
+                    val data = KaisatsuNetworkData.get(world)
+                    val stationList = data?.globalStations?.keys?.sorted() ?: emptyList()
+                    val companyList = data?.companies?.values?.sortedBy { it.companyID }
+                        ?.map { it.companyID to it.companyName } ?: emptyList()
                     KaizPatchNetwork.CHANNEL.sendTo(
-                        PacketOpenVendorConfig(x, y, z, tile.stationName, stationList),
+                        PacketOpenVendorConfig(x, y, z, tile.stationName, tile.companyID, stationList, companyList),
                         player as EntityPlayerMP
                     )
                 }

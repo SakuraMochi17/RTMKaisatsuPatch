@@ -6,7 +6,7 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent
 import cpw.mods.fml.common.event.FMLPreInitializationEvent
 import cpw.mods.fml.common.event.FMLServerStartingEvent
 import cpw.mods.fml.common.event.FMLServerStoppingEvent
-import jp.sakuramochi.kaisatsupatch.command.CommandKaizWeb
+import jp.sakuramochi.kaisatsupatch.command.CommandKaisatsuAdmin
 import jp.sakuramochi.kaisatsupatch.web.KaisatsuWebServer
 import cpw.mods.fml.common.network.NetworkRegistry
 import cpw.mods.fml.common.registry.GameRegistry
@@ -14,6 +14,8 @@ import cpw.mods.fml.client.registry.ClientRegistry
 import cpw.mods.fml.relauncher.Side
 import cpw.mods.fml.relauncher.SideOnly
 import jp.ngt.rtm.block.tileentity.RenderMachine
+import jp.sakuramochi.kaisatsupatch.client.KaizPatchClientEvents
+import jp.sakuramochi.kaisatsupatch.client.RenderICCard
 import jp.sakuramochi.kaisatsupatch.block.*
 import jp.sakuramochi.kaisatsupatch.block.tileentity.*
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityTrainManager
@@ -67,6 +69,7 @@ class RTMKaisatsuPatchCore {
         val itemICCard       = ItemCustomICCard()
         val itemPass         = ItemCustomPass()
         val itemSettingsTool = ItemSettingsTool()
+        val itemCouponTicket = ItemCustomCouponTicket()
 
         // ブロック
         val blockTurnstile      = BlockCustomTurnstile()
@@ -75,18 +78,20 @@ class RTMKaisatsuPatchCore {
         val blockLineManager    = BlockLineManager()
         val blockTrainManager   = BlockTrainManager()
         val blockReservedVendor = BlockReservedVendor()
+        val blockFareAdjustment = BlockFareAdjustment()
 
         // アイテム（指定席）
         val itemExpressTicket = ItemCustomExpressTicket()
 
-        listOf(itemTicket, itemICCard, itemPass, itemSettingsTool, itemExpressTicket).forEach { it.creativeTab = myTab }
-        listOf(blockTurnstile, blockVendor, blockStationManager, blockLineManager, blockTrainManager, blockReservedVendor).forEach { it.setCreativeTab(myTab) }
+        listOf(itemTicket, itemICCard, itemPass, itemSettingsTool, itemExpressTicket, itemCouponTicket).forEach { it.creativeTab = myTab }
+        listOf(blockTurnstile, blockVendor, blockStationManager, blockLineManager, blockTrainManager, blockReservedVendor, blockFareAdjustment).forEach { it.setCreativeTab(myTab) }
 
         GameRegistry.registerItem(itemTicket,       "custom_ticket")
         GameRegistry.registerItem(itemICCard,       "custom_ic_card")
         GameRegistry.registerItem(itemPass,         "custom_pass")
         GameRegistry.registerItem(itemSettingsTool, "settings_tool")
         GameRegistry.registerItem(itemExpressTicket, "express_ticket")
+        GameRegistry.registerItem(itemCouponTicket, "coupon_ticket")
 
         GameRegistry.registerBlock(blockTurnstile,      ItemBlockCustomTurnstile::class.java,  "custom_turnstile")
         GameRegistry.registerBlock(blockVendor,         ItemBlockCustomTicketVendor::class.java,"custom_ticket_vendor")
@@ -94,6 +99,7 @@ class RTMKaisatsuPatchCore {
         GameRegistry.registerBlock(blockLineManager,    ItemBlockLineManager::class.java,       "line_manager")
         GameRegistry.registerBlock(blockTrainManager,   ItemBlockTrainManager::class.java,      "train_manager")
         GameRegistry.registerBlock(blockReservedVendor, ItemBlockReservedVendor::class.java,   "reserved_seat_vendor")
+        GameRegistry.registerBlock(blockFareAdjustment, ItemBlockFareAdjustment::class.java,   "fare_adjustment")
 
         GameRegistry.registerTileEntity(TileEntityCustomTurnstile::class.java,   "TileEntityCustomTurnstile")
         GameRegistry.registerTileEntity(TileEntityCustomTicketVendor::class.java, "TileEntityCustomTicketVendor")
@@ -101,11 +107,13 @@ class RTMKaisatsuPatchCore {
         GameRegistry.registerTileEntity(TileEntityLineManager::class.java,       "TileEntityLineManager")
         GameRegistry.registerTileEntity(TileEntityTrainManager::class.java,      "TileEntityTrainManager")
         GameRegistry.registerTileEntity(TileEntityReservedVendor::class.java,    "TileEntityReservedVendor")
+        GameRegistry.registerTileEntity(TileEntityFareAdjustment::class.java,    "TileEntityFareAdjustment")
 
         registeredItems["custom_ticket"]   = itemTicket
         registeredItems["custom_ic_card"] = itemICCard
         registeredItems["custom_pass"]    = itemPass
         registeredItems["express_ticket"] = itemExpressTicket
+        registeredItems["coupon_ticket"]  = itemCouponTicket
 
         if (event.side.isClient) {
             registerRenderer()
@@ -125,7 +133,7 @@ class RTMKaisatsuPatchCore {
 
     @Mod.EventHandler
     fun serverStarting(event: FMLServerStartingEvent) {
-        event.registerServerCommand(CommandKaizWeb())
+        event.registerServerCommand(CommandKaisatsuAdmin())
         KaisatsuWebServer.start()
     }
 
@@ -140,5 +148,9 @@ class RTMKaisatsuPatchCore {
             TileEntityCustomTurnstile::class.java,
             RenderMachine.INSTANCE
         )
+        net.minecraftforge.client.MinecraftForgeClient.registerItemRenderer(
+            registeredItems["custom_ic_card"]!!, RenderICCard()
+        )
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(KaizPatchClientEvents)
     }
 }

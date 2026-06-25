@@ -35,7 +35,7 @@ object KaisatsuNetworkManager {
 
         for (line in data.companyLines.values) {
             if (line.stationOrder.contains(startStation)) {
-                val initial = line.baseFare.toDouble()
+                val initial = effectiveBaseFare(line, data).toDouble()
                 pq.add(State(startStation, line.lineID, initial))
                 minCost["$startStation:${line.lineID}"] = initial
             }
@@ -51,9 +51,9 @@ object KaisatsuNetworkManager {
 
             for (edge in graph[curr.station] ?: continue) {
                 val nextLine = data.companyLines[edge.lineID] ?: continue
-                // 路線が変わる場合は乗換料金を加算
                 val transferCost = if (edge.lineID != curr.lineID) nextLine.transferFee.toDouble() else 0.0
-                val nextCost = curr.cost + edge.distance * nextLine.costPerBlock + transferCost
+                val rate = effectiveCostPerBlock(nextLine, data)
+                val nextCost = curr.cost + edge.distance * rate + transferCost
                 val key = "${edge.toStation}:${edge.lineID}"
                 if (nextCost < minCost.getOrDefault(key, Double.MAX_VALUE)) {
                     minCost[key] = nextCost
@@ -74,6 +74,22 @@ object KaisatsuNetworkManager {
                 if (fare > 0) dest to fare else null
             }
             .sortedBy { it.second }
+    }
+
+    /** 会社の defaultBaseFare にフォールバックする初乗り運賃 */
+    private fun effectiveBaseFare(line: KaisatsuNetworkData.LineData, data: KaisatsuNetworkData): Int {
+        if (line.baseFare > 0) return line.baseFare
+        val company = data.companies[line.companyID]
+            ?: data.companies.values.firstOrNull { it.companyName == line.companyName }
+        return company?.defaultBaseFare ?: 150
+    }
+
+    /** 会社の defaultCostPerBlock にフォールバックする加算レート */
+    private fun effectiveCostPerBlock(line: KaisatsuNetworkData.LineData, data: KaisatsuNetworkData): Double {
+        if (line.costPerBlock > 0.0) return line.costPerBlock
+        val company = data.companies[line.companyID]
+            ?: data.companies.values.firstOrNull { it.companyName == line.companyName }
+        return company?.defaultCostPerBlock ?: 0.1
     }
 
     private fun getDistance(st1: String, st2: String, data: KaisatsuNetworkData): Double {

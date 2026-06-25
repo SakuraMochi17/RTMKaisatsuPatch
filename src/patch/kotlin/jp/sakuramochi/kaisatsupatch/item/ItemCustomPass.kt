@@ -11,9 +11,10 @@ import net.minecraft.world.World
 class ItemCustomPass : Item() {
 
     companion object {
-        private const val TAG_FROM   = "FromStation"
-        private const val TAG_TO     = "ToStation"
-        private const val TAG_EXPIRY = "ExpiryDay"
+        private const val TAG_FROM      = "FromStation"
+        private const val TAG_TO        = "ToStation"
+        private const val TAG_EXPIRY    = "ExpiryDay"
+        private const val TAG_FREE_PASS = "FreePast"
 
         const val TICKS_PER_DAY = 24000L
 
@@ -27,6 +28,15 @@ class ItemCustomPass : Item() {
         fun getFromStation(stack: ItemStack): String { ensureTag(stack); return stack.tagCompound.getString(TAG_FROM) }
         fun getToStation(stack: ItemStack): String   { ensureTag(stack); return stack.tagCompound.getString(TAG_TO) }
         fun getExpiryDay(stack: ItemStack): Long     { ensureTag(stack); return stack.tagCompound.getLong(TAG_EXPIRY) }
+        fun isFreePast(stack: ItemStack): Boolean    { ensureTag(stack); return stack.tagCompound.getBoolean(TAG_FREE_PASS) }
+
+        fun initDayPass(stack: ItemStack, currentDay: Long) {
+            ensureTag(stack)
+            stack.tagCompound.setString(TAG_FROM, "*")
+            stack.tagCompound.setString(TAG_TO, "*")
+            stack.tagCompound.setLong(TAG_EXPIRY, currentDay + 1)
+            stack.tagCompound.setBoolean(TAG_FREE_PASS, true)
+        }
 
         /**
          * 現在駅が定期券の有効区間内かつ期限内なら有効。
@@ -35,6 +45,7 @@ class ItemCustomPass : Item() {
         fun isValid(stack: ItemStack, currentStation: String, currentDay: Long, world: World? = null): Boolean {
             ensureTag(stack)
             if (currentDay > getExpiryDay(stack)) return false
+            if (isFreePast(stack)) return true
             val from = getFromStation(stack)
             val to   = getToStation(stack)
             if (currentStation == from || currentStation == to) return true
@@ -73,6 +84,7 @@ class ItemCustomPass : Item() {
     }
 
     override fun getItemStackDisplayName(stack: ItemStack): String {
+        if (isFreePast(stack)) return "フリーパス（1日）"
         val from = getFromStation(stack).ifEmpty { "??" }
         val to   = getToStation(stack).ifEmpty { "??" }
         return "定期券 $from ⇔ $to"
@@ -89,6 +101,7 @@ class ItemCustomPass : Item() {
         } else {
             list.add("§c期限切れ")
         }
-        list.add("${getFromStation(stack)} ⇔ ${getToStation(stack)}")
+        if (isFreePast(stack)) list.add("全区間乗り放題")
+        else list.add("${getFromStation(stack)} ⇔ ${getToStation(stack)}")
     }
 }

@@ -2,6 +2,7 @@ package jp.sakuramochi.kaisatsupatch.block
 
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityStationManager
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
+import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkManager
 import jp.sakuramochi.kaisatsupatch.item.ItemSettingsTool
 import jp.sakuramochi.kaisatsupatch.network.KaizPatchNetwork
 import jp.sakuramochi.kaisatsupatch.network.PacketOpenStationGui
@@ -30,9 +31,20 @@ class BlockStationManager : BlockContainer(Material.iron) {
 
         if (player.currentEquippedItem?.item is ItemSettingsTool) {
             if (!world.isRemote) {
-                val sales = KaisatsuNetworkData.get(world)?.stationSales?.get(tile.stationName) ?: 0L
+                val data  = KaisatsuNetworkData.get(world)
+                val sales = data?.stationSales?.get(tile.stationName) ?: 0L
+                val bd    = data?.stationSalesDetail?.get(tile.stationName)
+                val fares = if (tile.stationName != "未設定")
+                    KaisatsuNetworkManager.getAvailableFares(world, tile.stationName)
+                else emptyList()
                 KaizPatchNetwork.CHANNEL.sendTo(
-                    PacketOpenStationGui(x, y, z, tile.stationName, sales),
+                    PacketOpenStationGui(
+                        x, y, z, tile.stationName, sales, fares,
+                        salesTicket  = bd?.ticket  ?: 0L,
+                        salesIC      = bd?.ic      ?: 0L,
+                        salesPass    = bd?.pass    ?: 0L,
+                        salesExpress = bd?.express ?: 0L
+                    ),
                     player as EntityPlayerMP
                 )
             }

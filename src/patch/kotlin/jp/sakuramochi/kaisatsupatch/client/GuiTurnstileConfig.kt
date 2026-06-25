@@ -46,9 +46,12 @@ class GuiTurnstileConfig(
             1 -> { if (stationList.isNotEmpty()) selectedStationIndex = (selectedStationIndex + 1) % stationList.size }
             2 -> {
                 currentMode = when (currentMode) {
-                    GateMode.ENTRY         -> GateMode.EXIT
-                    GateMode.EXIT          -> GateMode.BOTH
-                    GateMode.BOTH          -> GateMode.ENTRY
+                    GateMode.ENTRY        -> GateMode.EXIT
+                    GateMode.EXIT         -> GateMode.BOTH
+                    GateMode.BOTH         -> GateMode.IC_ONLY
+                    GateMode.IC_ONLY      -> GateMode.TICKET_ONLY
+                    GateMode.TICKET_ONLY  -> GateMode.PASS_ONLY
+                    GateMode.PASS_ONLY    -> GateMode.ENTRY
                 }
                 modeBtn.displayString = modeLabel()
             }
@@ -95,7 +98,10 @@ class GuiTurnstileConfig(
 
 val GateMode.displayName: String
     get() = when (this) {
-        GateMode.ENTRY -> "入場専用"
-        GateMode.EXIT  -> "出場専用"
-        GateMode.BOTH  -> "入出場兼用"
+        GateMode.ENTRY        -> "入場専用（全種別）"
+        GateMode.EXIT         -> "出場専用（全種別）"
+        GateMode.BOTH         -> "入出場兼用（全種別）"
+        GateMode.IC_ONLY      -> "IC専用（入出場兼用）"
+        GateMode.TICKET_ONLY  -> "切符専用（入出場兼用）"
+        GateMode.PASS_ONLY    -> "定期専用（入出場兼用）"
     }
