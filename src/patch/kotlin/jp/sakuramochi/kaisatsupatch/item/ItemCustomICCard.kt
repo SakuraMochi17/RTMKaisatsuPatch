@@ -1,8 +1,5 @@
 package jp.sakuramochi.kaisatsupatch.item
 
-import cpw.mods.fml.relauncher.Side
-import cpw.mods.fml.relauncher.SideOnly
-import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.Item
@@ -129,14 +126,9 @@ class ItemCustomICCard : Item() {
 
     init {
         unlocalizedName = "custom_ic_card"
-        setTextureName("kaizpatch:ic_card_default")
+        setTextureName("rtm:icCard")
         creativeTab = CreativeTabs.tabTransport
         maxStackSize = 1
-    }
-
-    @SideOnly(Side.CLIENT)
-    override fun registerIcons(register: IIconRegister) {
-        itemIcon = register.registerIcon("kaizpatch:ic_card_default")
     }
 
     override fun getItemStackDisplayName(stack: ItemStack): String {

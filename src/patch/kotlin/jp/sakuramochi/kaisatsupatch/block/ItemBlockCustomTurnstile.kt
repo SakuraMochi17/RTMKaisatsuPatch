@@ -16,6 +16,8 @@ import net.minecraft.world.World
 
 class ItemBlockCustomTurnstile(block: Block) : ItemBlock(block) {
 
+    init { setTextureName("rtm:itemTurnstile") }
+
     override fun onItemRightClick(itemStack: ItemStack, world: World, player: EntityPlayer): ItemStack {
         if (world.isRemote) {
             // モデルリストが存在するときだけ開く（null チェックでクラッシュを防ぐ）
