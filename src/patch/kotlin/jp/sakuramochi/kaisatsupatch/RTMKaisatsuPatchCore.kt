@@ -6,9 +6,7 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent
 import cpw.mods.fml.common.event.FMLPreInitializationEvent
 import cpw.mods.fml.common.event.FMLServerStartingEvent
 import cpw.mods.fml.common.event.FMLServerStoppingEvent
-import jp.sakuramochi.kaisatsupatch.command.CommandKaizWeb
 import jp.sakuramochi.kaisatsupatch.command.CommandKaisatsuAdmin
-import jp.sakuramochi.kaisatsupatch.command.CommandKaisatsuLog
 import jp.sakuramochi.kaisatsupatch.web.KaisatsuWebServer
 import cpw.mods.fml.common.network.NetworkRegistry
 import cpw.mods.fml.common.registry.GameRegistry
@@ -135,9 +133,7 @@ class RTMKaisatsuPatchCore {
 
     @Mod.EventHandler
     fun serverStarting(event: FMLServerStartingEvent) {
-        event.registerServerCommand(CommandKaizWeb())
         event.registerServerCommand(CommandKaisatsuAdmin())
-        event.registerServerCommand(CommandKaisatsuLog())
         KaisatsuWebServer.start()
     }
 
