@@ -48,9 +48,10 @@ class RenderDepartureBoard : TileEntitySpecialRenderer() {
         val now  = LocalTime.now()
         val time = "%02d:%02d".format(now.hour, now.minute)
         val titleText = tile.title.ifEmpty { tile.stationName }.ifEmpty { "発車標" }
+        val platText  = if (tile.platform.isNotEmpty()) " ${tile.platform}番線" else ""
 
         // ── タイトル行（現在時刻付き）──────────────────────
-        val header = "$titleText  $time"
+        val header = "$titleText$platText  $time"
         val hw = fr.getStringWidth(header)
         fr.drawString(header, -hw / 2, -62, 0xFFFF55, false)
 

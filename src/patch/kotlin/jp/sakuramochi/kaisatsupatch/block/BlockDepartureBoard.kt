@@ -41,30 +41,39 @@ class BlockDepartureBoard : BlockContainer(Material.iron) {
 
         if (player.currentEquippedItem?.item is ItemSettingsTool) {
             // 設定GUI
-            val dias      = data.timetable?.diaNames ?: emptyList()
-            val stations  = data.globalStations.keys.sorted()
+            val dias     = data.timetable?.diaNames ?: emptyList()
+            val stations = data.globalStations.keys.sorted()
+            val lines    = data.companyLines.values.sortedBy { it.lineID }
+                .map { it.lineID to it.lineName }
             KaizPatchNetwork.CHANNEL.sendTo(PacketOpenDepartureBoard().also { pkt ->
                 pkt.x = x; pkt.y = y; pkt.z = z
                 pkt.isConfigMode       = true
                 pkt.stationName        = tile.stationName
+                pkt.lineID             = tile.lineID
+                pkt.platform           = tile.platform
                 pkt.diaName            = tile.diaName
                 pkt.direction          = tile.direction
                 pkt.displayRows        = tile.displayRows
                 pkt.title              = tile.title
                 pkt.availableDias      = dias
                 pkt.availableStations  = stations
+                pkt.availableLines     = lines
             }, mp)
         } else {
             // 表示GUI（発車情報をサーバーで計算して送る）
             val now = java.time.LocalTime.now()
             val nowMin = now.hour * 60 + now.minute
+            val lineStations = if (tile.lineID.isNotEmpty())
+                data.companyLines[tile.lineID]?.stationOrder?.toSet() else null
             val rows = data.timetable
-                ?.getNextDepartures(tile.stationName, tile.diaName, tile.direction, nowMin, 10)
+                ?.getNextDepartures(tile.stationName, tile.diaName, tile.direction, nowMin, 10, lineStations)
                 ?: emptyList()
             KaizPatchNetwork.CHANNEL.sendTo(PacketOpenDepartureBoard().also { pkt ->
                 pkt.x = x; pkt.y = y; pkt.z = z
                 pkt.isConfigMode  = false
                 pkt.stationName   = tile.stationName
+                pkt.lineID        = tile.lineID
+                pkt.platform      = tile.platform
                 pkt.diaName       = tile.diaName
                 pkt.direction     = tile.direction
                 pkt.currentTime   = "%02d:%02d".format(now.hour, now.minute)

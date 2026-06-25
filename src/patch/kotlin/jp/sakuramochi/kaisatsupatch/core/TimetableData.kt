@@ -38,16 +38,20 @@ data class TimetableData(
     /**
      * 指定駅の次発 [count] 件を返す。
      * fromMin = 午前0時からの経過分数。日をまたぐ場合は翌日扱いでソートする。
+     * lineStations が指定されると、その駅リストに含まれる停車駅だけを持つ列車に絞り込む。
      */
     fun getNextDepartures(
         station: String, diaFilter: String, dirFilter: String,
-        fromMin: Int, count: Int
+        fromMin: Int, count: Int,
+        lineStations: Set<String>? = null
     ): List<DepartureRow> {
         return trains
             .filter { t ->
                 (diaFilter.isEmpty() || t.diaName == diaFilter) &&
                 (dirFilter.isEmpty() || dirFilter == "両方" || t.direction == dirFilter) &&
-                t.getStopAt(station) != null
+                t.getStopAt(station) != null &&
+                (lineStations == null ||
+                    t.stops.filter { it.second != null }.all { it.first in lineStations })
             }
             .mapNotNull { t ->
                 val dep = t.getStopAt(station)?.departureMin ?: return@mapNotNull null

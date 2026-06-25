@@ -16,6 +16,8 @@ class TileEntityDepartureBoard : TileEntity() {
 
     // 設定
     var stationName  = ""
+    var lineID       = ""   // 路線フィルター（空 = フィルターなし）
+    var platform     = ""   // 番線表示（空 = 非表示）
     var diaName      = ""
     var direction    = "両方"
     var displayRows  = 5
@@ -42,7 +44,9 @@ class TileEntityDepartureBoard : TileEntity() {
         val tt = data.timetable ?: return
         val now = java.time.LocalTime.now()
         val nowMin = now.hour * 60 + now.minute
-        cachedDepartures = tt.getNextDepartures(stationName, diaName, direction, nowMin, displayRows)
+        val lineStations = if (lineID.isNotEmpty())
+            data.companyLines[lineID]?.stationOrder?.toSet() else null
+        cachedDepartures = tt.getNextDepartures(stationName, diaName, direction, nowMin, displayRows, lineStations)
         worldObj?.markBlockForUpdate(xCoord, yCoord, zCoord)
     }
 
@@ -51,6 +55,8 @@ class TileEntityDepartureBoard : TileEntity() {
     override fun writeToNBT(tag: NBTTagCompound) {
         super.writeToNBT(tag)
         tag.setString("StationName",  stationName)
+        tag.setString("LineID",       lineID)
+        tag.setString("Platform",     platform)
         tag.setString("DiaName",      diaName)
         tag.setString("Direction",    direction)
         tag.setInteger("DisplayRows", displayRows)
@@ -73,6 +79,8 @@ class TileEntityDepartureBoard : TileEntity() {
     override fun readFromNBT(tag: NBTTagCompound) {
         super.readFromNBT(tag)
         stationName  = tag.getString("StationName")
+        lineID       = tag.getString("LineID")
+        platform     = tag.getString("Platform")
         diaName      = tag.getString("DiaName")
         direction    = tag.getString("Direction").ifEmpty { "両方" }
         displayRows  = tag.getInteger("DisplayRows").let { if (it == 0) 5 else it }
