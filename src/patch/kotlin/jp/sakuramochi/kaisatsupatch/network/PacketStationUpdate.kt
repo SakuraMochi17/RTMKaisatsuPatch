@@ -1,7 +1,10 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
+import jp.sakuramochi.kaisatsupatch.util.readCoords
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.writeCoords
+import jp.sakuramochi.kaisatsupatch.util.writeStr
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import io.netty.buffer.ByteBuf
@@ -20,15 +23,15 @@ class PacketStationUpdate() : IMessage {
     }
 
     override fun fromBytes(buf: ByteBuf) {
-        x = buf.readInt(); y = buf.readInt(); z = buf.readInt()
-        oldName = ByteBufUtils.readUTF8String(buf)
-        newName = ByteBufUtils.readUTF8String(buf)
+        buf.readCoords().also { x = it.x; y = it.y; z = it.z }
+        oldName = buf.readStr()
+        newName = buf.readStr()
     }
 
     override fun toBytes(buf: ByteBuf) {
-        buf.writeInt(x); buf.writeInt(y); buf.writeInt(z)
-        ByteBufUtils.writeUTF8String(buf, oldName)
-        ByteBufUtils.writeUTF8String(buf, newName)
+        buf.writeCoords(x, y, z)
+        buf.writeStr(oldName)
+        buf.writeStr(newName)
     }
 
     class Handler : IMessageHandler<PacketStationUpdate, IMessage> {

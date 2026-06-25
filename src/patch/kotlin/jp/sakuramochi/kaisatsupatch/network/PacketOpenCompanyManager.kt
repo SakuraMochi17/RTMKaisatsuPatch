@@ -1,7 +1,10 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.readStringList
+import jp.sakuramochi.kaisatsupatch.util.writeStr
+import jp.sakuramochi.kaisatsupatch.util.writeStringList
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import io.netty.buffer.ByteBuf
@@ -33,41 +36,41 @@ class PacketOpenCompanyManager() : IMessage {
     override fun toBytes(buf: ByteBuf) {
         buf.writeInt(companies.size)
         companies.forEach { c ->
-            ByteBufUtils.writeUTF8String(buf, c.companyID)
-            ByteBufUtils.writeUTF8String(buf, c.companyName)
+            buf.writeStr(c.companyID)
+            buf.writeStr(c.companyName)
             buf.writeInt(c.color)
-            ByteBufUtils.writeUTF8String(buf, c.icCardName)
+            buf.writeStr(c.icCardName)
             buf.writeInt(c.defaultBaseFare)
             buf.writeDouble(c.defaultCostPerBlock)
             buf.writeInt(c.members.size)
-            c.members.forEach { ByteBufUtils.writeUTF8String(buf, it) }
+            c.members.forEach { buf.writeStr(it) }
             buf.writeInt(c.allowedCompanies.size)
-            c.allowedCompanies.forEach { ByteBufUtils.writeUTF8String(buf, it) }
+            c.allowedCompanies.forEach { buf.writeStr(it) }
         }
         buf.writeInt(lines.size)
         lines.forEach { l ->
-            ByteBufUtils.writeUTF8String(buf, l.lineID)
-            ByteBufUtils.writeUTF8String(buf, l.lineName)
-            ByteBufUtils.writeUTF8String(buf, l.companyID)
+            buf.writeStr(l.lineID)
+            buf.writeStr(l.lineName)
+            buf.writeStr(l.companyID)
         }
     }
 
     override fun fromBytes(buf: ByteBuf) {
         val cSize = buf.readInt()
         companies = (0 until cSize).map {
-            val id   = ByteBufUtils.readUTF8String(buf)
-            val name = ByteBufUtils.readUTF8String(buf)
+            val id   = buf.readStr()
+            val name = buf.readStr()
             val col  = buf.readInt()
-            val ic   = ByteBufUtils.readUTF8String(buf)
+            val ic   = buf.readStr()
             val base = buf.readInt()
             val rate = buf.readDouble()
-            val mems = (0 until buf.readInt()).map { ByteBufUtils.readUTF8String(buf) }
-            val mutu = (0 until buf.readInt()).map { ByteBufUtils.readUTF8String(buf) }
+            val mems = (0 until buf.readInt()).map { buf.readStr() }
+            val mutu = (0 until buf.readInt()).map { buf.readStr() }
             CompanyInfo(id, name, col, ic, base, rate, mems, mutu)
         }
         val lSize = buf.readInt()
         lines = (0 until lSize).map {
-            LineInfo(ByteBufUtils.readUTF8String(buf), ByteBufUtils.readUTF8String(buf), ByteBufUtils.readUTF8String(buf))
+            LineInfo(buf.readStr(), buf.readStr(), buf.readStr())
         }
     }
 

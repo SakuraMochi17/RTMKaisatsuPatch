@@ -1,7 +1,10 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
+import jp.sakuramochi.kaisatsupatch.util.readCoords
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.writeCoords
+import jp.sakuramochi.kaisatsupatch.util.writeStr
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import io.netty.buffer.ByteBuf
@@ -29,16 +32,16 @@ class PacketTurnstileConfig() : IMessage {
         x = buf.readInt()
         y = buf.readInt()
         z = buf.readInt()
-        stationCode = ByteBufUtils.readUTF8String(buf)
-        gateMode = ByteBufUtils.readUTF8String(buf)
+        stationCode = buf.readStr()
+        gateMode = buf.readStr()
     }
 
     override fun toBytes(buf: ByteBuf) {
         buf.writeInt(x)
         buf.writeInt(y)
         buf.writeInt(z)
-        ByteBufUtils.writeUTF8String(buf, stationCode)
-        ByteBufUtils.writeUTF8String(buf, gateMode)
+        buf.writeStr(stationCode)
+        buf.writeStr(gateMode)
     }
 
     class Handler : IMessageHandler<PacketTurnstileConfig, IMessage> {

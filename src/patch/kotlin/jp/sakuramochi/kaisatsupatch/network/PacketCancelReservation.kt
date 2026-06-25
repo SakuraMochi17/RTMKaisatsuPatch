@@ -1,7 +1,8 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.writeStr
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import io.netty.buffer.ByteBuf
@@ -22,12 +23,12 @@ class PacketCancelReservation() : IMessage {
     }
 
     override fun toBytes(buf: ByteBuf) {
-        ByteBufUtils.writeUTF8String(buf, trainID)
+        buf.writeStr(trainID)
         buf.writeInt(carNumber); buf.writeInt(seatNumber)
     }
 
     override fun fromBytes(buf: ByteBuf) {
-        trainID = ByteBufUtils.readUTF8String(buf)
+        trainID = buf.readStr()
         carNumber = buf.readInt(); seatNumber = buf.readInt()
     }
 

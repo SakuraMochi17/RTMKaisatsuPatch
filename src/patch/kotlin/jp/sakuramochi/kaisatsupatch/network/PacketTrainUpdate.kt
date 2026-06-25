@@ -1,7 +1,14 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
+import jp.sakuramochi.kaisatsupatch.util.readCoords
+import jp.sakuramochi.kaisatsupatch.util.readEnum
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.readStringList
+import jp.sakuramochi.kaisatsupatch.util.writeCoords
+import jp.sakuramochi.kaisatsupatch.util.writeEnum
+import jp.sakuramochi.kaisatsupatch.util.writeStr
+import jp.sakuramochi.kaisatsupatch.util.writeStringList
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import io.netty.buffer.ByteBuf
@@ -26,36 +33,36 @@ class PacketTrainUpdate() : IMessage {
     override fun toBytes(buf: ByteBuf) {
         buf.writeInt(x); buf.writeInt(y); buf.writeInt(z)
         buf.writeBoolean(delete)
-        ByteBufUtils.writeUTF8String(buf, trainID)
-        ByteBufUtils.writeUTF8String(buf, trainName)
-        ByteBufUtils.writeUTF8String(buf, trainType)
-        ByteBufUtils.writeUTF8String(buf, lineID)
+        buf.writeStr(trainID)
+        buf.writeStr(trainName)
+        buf.writeStr(trainType)
+        buf.writeStr(lineID)
         buf.writeInt(reservedFare)
         buf.writeInt(unreservedFare)
         buf.writeInt(stopStations.size)
-        stopStations.forEach { ByteBufUtils.writeUTF8String(buf, it) }
+        stopStations.forEach { buf.writeStr(it) }
         buf.writeInt(cars.size)
         cars.forEach { (num, count, cls) ->
             buf.writeInt(num)
             buf.writeInt(count)
-            ByteBufUtils.writeUTF8String(buf, cls)
+            buf.writeStr(cls)
         }
     }
 
     override fun fromBytes(buf: ByteBuf) {
         x = buf.readInt(); y = buf.readInt(); z = buf.readInt()
         delete = buf.readBoolean()
-        trainID = ByteBufUtils.readUTF8String(buf)
-        trainName = ByteBufUtils.readUTF8String(buf)
-        trainType = ByteBufUtils.readUTF8String(buf)
-        lineID = ByteBufUtils.readUTF8String(buf)
+        trainID = buf.readStr()
+        trainName = buf.readStr()
+        trainType = buf.readStr()
+        lineID = buf.readStr()
         reservedFare = buf.readInt()
         unreservedFare = buf.readInt()
         val stopCount = buf.readInt()
-        stopStations = (0 until stopCount).map { ByteBufUtils.readUTF8String(buf) }
+        stopStations = (0 until stopCount).map { buf.readStr() }
         val carCount = buf.readInt()
         cars = (0 until carCount).map {
-            Triple(buf.readInt(), buf.readInt(), ByteBufUtils.readUTF8String(buf))
+            Triple(buf.readInt(), buf.readInt(), buf.readStr())
         }
     }
 

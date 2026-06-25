@@ -1,7 +1,12 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
+import jp.sakuramochi.kaisatsupatch.util.readCoords
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.readStringList
+import jp.sakuramochi.kaisatsupatch.util.writeCoords
+import jp.sakuramochi.kaisatsupatch.util.writeStr
+import jp.sakuramochi.kaisatsupatch.util.writeStringList
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import cpw.mods.fml.relauncher.Side
@@ -53,27 +58,27 @@ class PacketOpenTrainManager() : IMessage {
         buf.writeBoolean(hasTrain)
         if (hasTrain && train != null) {
             val t = train!!
-            ByteBufUtils.writeUTF8String(buf, t.trainID)
-            ByteBufUtils.writeUTF8String(buf, t.trainName)
-            ByteBufUtils.writeUTF8String(buf, t.trainType)
-            ByteBufUtils.writeUTF8String(buf, t.lineID)
+            buf.writeStr(t.trainID)
+            buf.writeStr(t.trainName)
+            buf.writeStr(t.trainType)
+            buf.writeStr(t.lineID)
             buf.writeInt(t.reservedFare)
             buf.writeInt(t.unreservedFare)
             buf.writeInt(t.stopStations.size)
-            t.stopStations.forEach { ByteBufUtils.writeUTF8String(buf, it) }
+            t.stopStations.forEach { buf.writeStr(it) }
             buf.writeInt(t.cars.size)
             t.cars.forEach { c ->
                 buf.writeInt(c.carNumber)
                 buf.writeInt(c.seatCount)
-                ByteBufUtils.writeUTF8String(buf, c.carClass)
+                buf.writeStr(c.carClass)
             }
         }
         buf.writeInt(lines.size)
         lines.forEach { line ->
-            ByteBufUtils.writeUTF8String(buf, line.lineID)
-            ByteBufUtils.writeUTF8String(buf, line.lineName)
+            buf.writeStr(line.lineID)
+            buf.writeStr(line.lineName)
             buf.writeInt(line.stations.size)
-            line.stations.forEach { ByteBufUtils.writeUTF8String(buf, it) }
+            line.stations.forEach { buf.writeStr(it) }
         }
     }
 
@@ -81,26 +86,26 @@ class PacketOpenTrainManager() : IMessage {
         x = buf.readInt(); y = buf.readInt(); z = buf.readInt()
         hasTrain = buf.readBoolean()
         if (hasTrain) {
-            val trainID = ByteBufUtils.readUTF8String(buf)
-            val trainName = ByteBufUtils.readUTF8String(buf)
-            val trainType = ByteBufUtils.readUTF8String(buf)
-            val lineID = ByteBufUtils.readUTF8String(buf)
+            val trainID = buf.readStr()
+            val trainName = buf.readStr()
+            val trainType = buf.readStr()
+            val lineID = buf.readStr()
             val reservedFare = buf.readInt()
             val unreservedFare = buf.readInt()
             val stopCount = buf.readInt()
-            val stops = (0 until stopCount).map { ByteBufUtils.readUTF8String(buf) }
+            val stops = (0 until stopCount).map { buf.readStr() }
             val carCount = buf.readInt()
             val cars = (0 until carCount).map {
-                CarInfo(buf.readInt(), buf.readInt(), ByteBufUtils.readUTF8String(buf))
+                CarInfo(buf.readInt(), buf.readInt(), buf.readStr())
             }
             train = TrainInfo(trainID, trainName, trainType, lineID, stops, reservedFare, unreservedFare, cars)
         }
         val lineCount = buf.readInt()
         lines = (0 until lineCount).map {
-            val id = ByteBufUtils.readUTF8String(buf)
-            val name = ByteBufUtils.readUTF8String(buf)
+            val id = buf.readStr()
+            val name = buf.readStr()
             val stCount = buf.readInt()
-            val stations = (0 until stCount).map { ByteBufUtils.readUTF8String(buf) }
+            val stations = (0 until stCount).map { buf.readStr() }
             LineInfo(id, name, stations)
         }
     }

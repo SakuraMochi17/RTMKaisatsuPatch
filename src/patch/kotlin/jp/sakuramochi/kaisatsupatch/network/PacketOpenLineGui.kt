@@ -1,7 +1,12 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
+import jp.sakuramochi.kaisatsupatch.util.readCoords
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.readStringList
+import jp.sakuramochi.kaisatsupatch.util.writeCoords
+import jp.sakuramochi.kaisatsupatch.util.writeStr
+import jp.sakuramochi.kaisatsupatch.util.writeStringList
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import cpw.mods.fml.relauncher.Side
@@ -33,36 +38,36 @@ class PacketOpenLineGui() : IMessage {
 
     override fun fromBytes(buf: ByteBuf) {
         x = buf.readInt(); y = buf.readInt(); z = buf.readInt()
-        companyName = ByteBufUtils.readUTF8String(buf)
+        companyName = buf.readStr()
         val stCount = buf.readInt()
-        globalStations = (0 until stCount).map { ByteBufUtils.readUTF8String(buf) }
+        globalStations = (0 until stCount).map { buf.readStr() }
         val lineCount = buf.readInt()
         companyLines = (0 until lineCount).map {
-            val id   = ByteBufUtils.readUTF8String(buf)
-            val name = ByteBufUtils.readUTF8String(buf)
+            val id   = buf.readStr()
+            val name = buf.readStr()
             val base = buf.readInt()
             val cost = buf.readDouble()
             val tf   = buf.readInt()
             val stSize = buf.readInt()
-            val sts = (0 until stSize).map { ByteBufUtils.readUTF8String(buf) }
+            val sts = (0 until stSize).map { buf.readStr() }
             LineInfo(id, name, base, cost, tf, sts)
         }
     }
 
     override fun toBytes(buf: ByteBuf) {
         buf.writeInt(x); buf.writeInt(y); buf.writeInt(z)
-        ByteBufUtils.writeUTF8String(buf, companyName)
+        buf.writeStr(companyName)
         buf.writeInt(globalStations.size)
-        globalStations.forEach { ByteBufUtils.writeUTF8String(buf, it) }
+        globalStations.forEach { buf.writeStr(it) }
         buf.writeInt(companyLines.size)
         companyLines.forEach { line ->
-            ByteBufUtils.writeUTF8String(buf, line.lineID)
-            ByteBufUtils.writeUTF8String(buf, line.lineName)
+            buf.writeStr(line.lineID)
+            buf.writeStr(line.lineName)
             buf.writeInt(line.baseFare)
             buf.writeDouble(line.costPerBlock)
             buf.writeInt(line.transferFee)
             buf.writeInt(line.stations.size)
-            line.stations.forEach { ByteBufUtils.writeUTF8String(buf, it) }
+            line.stations.forEach { buf.writeStr(it) }
         }
     }
 

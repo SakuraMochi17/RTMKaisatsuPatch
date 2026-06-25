@@ -1,7 +1,8 @@
 package jp.sakuramochi.kaisatsupatch.network
 
-import cpw.mods.fml.common.network.ByteBufUtils
 import cpw.mods.fml.common.network.simpleimpl.IMessage
+import jp.sakuramochi.kaisatsupatch.util.readStr
+import jp.sakuramochi.kaisatsupatch.util.writeStr
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import io.netty.buffer.ByteBuf
@@ -14,8 +15,8 @@ class PacketResetSales() : IMessage {
         this.stationName = stationName
     }
 
-    override fun fromBytes(buf: ByteBuf) { stationName = ByteBufUtils.readUTF8String(buf) }
-    override fun toBytes(buf: ByteBuf) { ByteBufUtils.writeUTF8String(buf, stationName) }
+    override fun fromBytes(buf: ByteBuf) { stationName = buf.readStr() }
+    override fun toBytes(buf: ByteBuf) { buf.writeStr(stationName) }
 
     class Handler : IMessageHandler<PacketResetSales, IMessage> {
         override fun onMessage(msg: PacketResetSales, ctx: MessageContext): IMessage? {
