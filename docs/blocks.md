@@ -1,5 +1,7 @@
 # ブロック詳細
 
+**言語:** 日本語 | [English](en/blocks.md) | [中文](zh/blocks.md) | [한국어](ko/blocks.md)
+
 ---
 
 ## 改札機

@@ -1,5 +1,7 @@
 # セットアップガイド
 
+**言語:** 日本語 | [English](en/setup.md) | [中文](zh/setup.md) | [한국어](ko/setup.md)
+
 このガイドでは、RTM Kaisatsu Patch を使って鉄道改札システムを一から構築する手順を説明します。
 
 ---

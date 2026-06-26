@@ -10,6 +10,7 @@ import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
+import net.minecraft.util.StatCollector
 
 @SideOnly(Side.CLIENT)
 class GuiStationManager(
@@ -37,10 +38,10 @@ class GuiStationManager(
 
         @Suppress("UNCHECKED_CAST")
         val buttons = buttonList as MutableList<GuiButton>
-        buttons.add(GuiButton(0, cx - 55, cy + 20, 110, 20, "ネットワークに登録"))
+        buttons.add(GuiButton(0, cx - 55, cy + 20, 110, 20, StatCollector.translateToLocal("gui.kaisatsu.station.btn.register")))
         if (originalName != "未設定") {
-            buttons.add(GuiButton(1, cx - 55, cy + 44, 110, 20, "ネットワークから削除"))
-            buttons.add(GuiButton(2, cx - 55, cy + 68, 110, 20, "売上をリセット"))
+            buttons.add(GuiButton(1, cx - 55, cy + 44, 110, 20, StatCollector.translateToLocal("gui.kaisatsu.station.btn.unregister")))
+            buttons.add(GuiButton(2, cx - 55, cy + 68, 110, 20, StatCollector.translateToLocal("gui.kaisatsu.station.btn.reset_sales")))
         }
     }
 
@@ -94,19 +95,21 @@ class GuiStationManager(
         val cx = width / 2; val cy = height / 2
 
         // ── 左パネル（既存コントロール） ──────────────────────
-        drawCenteredString(fontRendererObj, "駅管理ブロック 設定", cx, cy - 50, 0xFFFFFF)
-        drawString(fontRendererObj, "駅名を入力:", cx - 75, cy - 22, 0xAAAAAA)
+        val tlc = StatCollector::translateToLocal
+        drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.station.title"), cx, cy - 50, 0xFFFFFF)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.station.lbl.name"), cx - 75, cy - 22, 0xAAAAAA)
         nameField.drawTextBox()
 
         if (originalName != "未設定") {
-            drawCenteredString(fontRendererObj, "累計売上: ${"%,d".format(salesTotal)}円", cx, cy - 36, 0x55FF55)
-            // 品目別内訳（合計>0のときのみ）
+            drawCenteredString(fontRendererObj,
+                "${tlc("gui.kaisatsu.station.lbl.sales")} ${"%,d".format(salesTotal)}円",
+                cx, cy - 36, 0x55FF55)
             if (salesTotal > 0L) {
                 val items = listOf(
-                    "切符" to salesTicket,
-                    "IC"   to salesIC,
-                    "定期" to salesPass,
-                    "特急" to salesExpress
+                    tlc("gui.kaisatsu.station.cat.ticket") to salesTicket,
+                    tlc("gui.kaisatsu.station.cat.ic")     to salesIC,
+                    tlc("gui.kaisatsu.station.cat.pass")   to salesPass,
+                    tlc("gui.kaisatsu.station.cat.express") to salesExpress
                 ).filter { it.second > 0L }
                 items.forEachIndexed { i, (label, amount) ->
                     val row = i / 2; val col = i % 2
@@ -125,10 +128,10 @@ class GuiStationManager(
             val ph = FARE_VISIBLE * 13 + 24
 
             drawRect(px - 4, py - 14, px + pw + 4, py + ph, 0xAA000000.toInt())
-            drawString(fontRendererObj, "この駅からの運賃（切符）", px, py - 12, 0xFFDD00)
+            drawString(fontRendererObj, tlc("gui.kaisatsu.station.fare.title"), px, py - 12, 0xFFDD00)
 
             if (fareList.isEmpty()) {
-                drawString(fontRendererObj, "（路線データなし）", px, py, 0x888888)
+                drawString(fontRendererObj, tlc("gui.kaisatsu.station.fare.no_data"), px, py, 0x888888)
             } else {
                 fareList.drop(fareScrollOffset).take(FARE_VISIBLE).forEachIndexed { i, (dest, fare) ->
                     drawString(fontRendererObj, dest, px, py + i * 13, 0xEEEEEE)
@@ -139,7 +142,7 @@ class GuiStationManager(
                 if (fareList.size > FARE_VISIBLE) {
                     val end = minOf(fareScrollOffset + FARE_VISIBLE, fareList.size)
                     drawString(fontRendererObj,
-                        "${fareScrollOffset + 1}-${end} / ${fareList.size}  ↑↓スクロール",
+                        "${fareScrollOffset + 1}-${end} / ${fareList.size}  ${tlc("gui.kaisatsu.station.fare.scroll_hint")}",
                         px, py + FARE_VISIBLE * 13 + 4, 0x888888)
                 }
             }

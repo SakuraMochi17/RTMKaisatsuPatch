@@ -1,5 +1,7 @@
 # アイテム詳細
 
+**言語:** 日本語 | [English](en/items.md) | [中文](zh/items.md) | [한국어](ko/items.md)
+
 ---
 
 ## 乗車券

@@ -6,6 +6,7 @@ import jp.sakuramochi.kaisatsupatch.network.KaizPatchNetwork
 import jp.sakuramochi.kaisatsupatch.network.PacketVendorStationSave
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
+import net.minecraft.util.StatCollector
 import org.lwjgl.input.Keyboard
 
 @SideOnly(Side.CLIENT)
@@ -40,7 +41,7 @@ class GuiVendorStationConfig(
             buttons.add(GuiButton(11, cx + 100, cy + 10, 20, 20, ">"))
         }
 
-        buttons.add(GuiButton(2, cx - 55, cy + 40, 110, 20, "適用 [Enter]"))
+        buttons.add(GuiButton(2, cx - 55, cy + 40, 110, 20, StatCollector.translateToLocal("gui.kaisatsu.btn.apply")))
     }
 
     override fun onGuiClosed() { Keyboard.enableRepeatEvents(false) }
@@ -72,23 +73,22 @@ class GuiVendorStationConfig(
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawDefaultBackground()
         val cx = width / 2; val cy = height / 2
-        drawCenteredString(fontRendererObj, "券売機  設定", cx, cy - 50, 0xFFFFFF)
+        val tlc = StatCollector::translateToLocal
+        drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.vendor_config.title"), cx, cy - 50, 0xFFFFFF)
 
-        // 駅
-        drawCenteredString(fontRendererObj, "設置駅:", cx, cy - 34, 0xAAAAAA)
-        val stLabel = if (stationList.isEmpty()) "（登録済み駅がありません）" else stationList[selectedStationIdx]
+        drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.vendor_config.lbl.station"), cx, cy - 34, 0xAAAAAA)
+        val stLabel = if (stationList.isEmpty()) tlc("gui.kaisatsu.vendor_config.no_station") else stationList[selectedStationIdx]
         drawCenteredString(fontRendererObj, stLabel, cx, cy - 18, 0xFFFF55)
         if (stationList.size > 1)
             drawCenteredString(fontRendererObj, "${selectedStationIdx + 1} / ${stationList.size}", cx, cy - 6, 0x555555)
 
-        // 会社
         if (companyList.isNotEmpty()) {
-            drawCenteredString(fontRendererObj, "所属会社:", cx, cy - 2, 0xAAAAAA)
+            drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.vendor_config.lbl.company"), cx, cy - 2, 0xAAAAAA)
             val co = companyList[selectedCompanyIdx]
             drawCenteredString(fontRendererObj, "[${co.first}] ${co.second}", cx, cy + 14, 0x55FFFF)
             drawCenteredString(fontRendererObj, "${selectedCompanyIdx + 1} / ${companyList.size}", cx, cy + 26, 0x555555)
         } else {
-            drawCenteredString(fontRendererObj, "§7会社未登録 (/kaisatsu company create で追加)", cx, cy + 8, 0x555555)
+            drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.vendor_config.no_company"), cx, cy + 8, 0x555555)
         }
 
         super.drawScreen(mouseX, mouseY, partialTicks)

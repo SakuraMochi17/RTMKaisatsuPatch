@@ -1,122 +1,122 @@
 # RTM Kaisatsu Patch
 
-**RealTrainMod (RTM)** に改札・運賃・定期券・ICカードなどの鉄道運賃システムを追加する Minecraft 1.7.10 Forge MOD です。
+**Language:** [日本語](README.ja.md) | English | [中文](README.zh.md) | [한국어](README.ko.md)
+
+A Minecraft 1.7.10 Forge mod that adds a railway fare system — ticket gates, fares, IC cards, commuter passes, and more — to **RealTrainMod (RTM)**.
 
 ---
 
-## 必要環境
+## Requirements
 
-以下のいずれかの構成が必要です。
+One of the following setups is required.
 
-**構成 A: RTM + NGTLib**
+**Option A: RTM + NGTLib**
 
-| 項目 | バージョン |
+| Component | Version |
 |---|---|
 | Minecraft | 1.7.10 |
-| Forge | 10.13.4.1614 以上 |
-| [RealTrainMod (RTM)](https://www.curseforge.com/minecraft/mc-mods/realtrainmod) | 1.7.10.41 以上 |
-| [NGTLib](https://www.curseforge.com/minecraft/mc-mods/ngtlib) | 1.7.10.32 以上 |
+| Forge | 10.13.4.1614 or later |
+| [RealTrainMod (RTM)](https://www.curseforge.com/minecraft/mc-mods/realtrainmod) | 1.7.10.41 or later |
+| [NGTLib](https://www.curseforge.com/minecraft/mc-mods/ngtlib) | 1.7.10.32 or later |
 
-**構成 B: KaizPatchX（推奨）**
+**Option B: KaizPatchX (Recommended)**
 
-| 項目 | バージョン |
+| Component | Version |
 |---|---|
 | Minecraft | 1.7.10 |
-| Forge | 10.13.4.1614 以上 |
-| [KaizPatchX](https://github.com/Kai-Z-JP/KaizPatchX/releases/latest) | 最新版 |
+| Forge | 10.13.4.1614 or later |
+| [KaizPatchX](https://github.com/Kai-Z-JP/KaizPatchX/releases/latest) | Latest |
 
-> RTM + NGTLib の代わりに **[KaizPatchX](https://github.com/Kai-Z-JP/KaizPatchX/releases/latest)** 単体でも動作します。KaizPatchX は RTM・NGTLib のバグ修正・機能拡張を統合したオールインワン版です。
-
----
-
-## 導入方法
-
-1. 上記の必要 MOD をすべてダウンロードし、`.minecraft/mods/` フォルダへ入れる
-2. [Releases](../../releases) から最新の `RTMKaisatsuPatch-*.jar` をダウンロードし、同じ `mods/` フォルダへ入れる
-3. Minecraft を起動する（初回起動でワールドデータが自動生成されます）
+> **[KaizPatchX](https://github.com/Kai-Z-JP/KaizPatchX/releases/latest)** is an all-in-one build that bundles RTM and NGTLib with bug fixes and enhancements. It can be used instead of the RTM + NGTLib combination.
 
 ---
 
-## クイックスタート
+## Installation
 
-最短でシステムを動かすまでの手順です。
+1. Download all required mods and place them in `.minecraft/mods/`.
+2. Download the latest `RTMKaisatsuPatch-*.jar` from [Releases](../../releases) and place it in the same `mods/` folder.
+3. Launch Minecraft (world data is generated automatically on first start).
+
+---
+
+## Quick Start
 
 ```
-1. 駅管理ブロックを設置 → 設定ツールで右クリック → 駅名を登録
-2. 路線管理ブロックを設置 → 設定ツールで右クリック → 路線名・運賃・駅順を設定
-3. 改札機を設置 → 設定ツールで右クリック → 駅名・モードを設定
-4. 券売機を設置 → 設定ツールで右クリック → 発駅を設定
-5. 券売機でお金を入れて切符・ICカードを購入し、改札を通過
+1. Place a Station Manager block → right-click with the Settings Tool → register the station name
+2. Place a Line Manager block → right-click with the Settings Tool → set line name, fares, and station order
+3. Place a Ticket Gate → right-click with the Settings Tool → set the station name and gate mode
+4. Place a Ticket Vendor → right-click with the Settings Tool → set the departure station
+5. Insert coins into the Ticket Vendor, buy a ticket or IC card, and pass through the gate
 ```
 
-詳しい手順は **[セットアップガイド](docs/setup.md)** を参照してください。
+For detailed instructions, see the **[Setup Guide](docs/setup.md)**.
 
 ---
 
-## ドキュメント
+## Documentation
 
-| ページ | 内容 |
+| Page | Content |
 |---|---|
-| [セットアップガイド](docs/setup.md) | 初めて使う人向けの詳細な手順 |
-| [ブロック詳細](docs/blocks.md) | 改札機・券売機・精算機・発車標など全ブロックの設定方法 |
-| [アイテム詳細](docs/items.md) | 切符・ICカード・定期券・回数券など全アイテムの使い方 |
-| [会社管理システム](docs/company.md) | 会社の作成・路線紐付け・ICカード相互利用・メンバー管理 |
-| [管理者コマンド](docs/commands.md) | `/kaisatsu` コマンド一覧・使用例 |
-| [よくある質問](docs/faq.md) | トラブルシューティング・Q&A |
+| [Setup Guide](docs/setup.md) | Detailed walkthrough for first-time users |
+| [Block Reference](docs/blocks.md) | Configuration for all blocks (gates, vendors, boards, etc.) |
+| [Item Reference](docs/items.md) | Usage for all items (tickets, IC cards, passes, etc.) |
+| [Company Management](docs/company.md) | Company creation, line assignment, IC interoperability, member management |
+| [Admin Commands](docs/commands.md) | Full `/kaisatsu` command reference |
+| [FAQ](docs/faq.md) | Troubleshooting and Q&A |
 
 ---
 
-## 機能一覧
+## Features
 
-### アイテム
+### Items
 
-| アイテム | 概要 |
+| Item | Description |
 |---|---|
-| 乗車券 | 出発駅・到着駅が記録された一回限りの切符 |
-| ICカード | 残高プリペイド式。自動精算・乗降履歴・会社別デザイン対応 |
-| 定期券 | 指定区間を有効期限内なら何度でも通過。7/30/90日券。継続購入対応 |
-| 回数券 | 10回分まとめ。9枚分の値段でお得 |
-| 一日フリーパス | 購入当日限り全区間乗り放題 |
-| 特急券 | 号車・座席番号まで記録。指定席・自由席対応 |
-| 乗車駅証明書 | 無人駅で発行し、有人駅の改札で現金精算する証明書 |
-| 設定ツール | 各ブロックの設定GUIを開くツール |
+| Ticket | Single-use ticket with origin and destination recorded |
+| IC Card | Prepaid balance card — automatic fare deduction, boarding history, company-specific design |
+| Commuter Pass | Valid for a fixed route and period (7 / 30 / 90 days). Supports renewal |
+| Coupon Ticket | 10-ride book at the price of 9 |
+| Day Free Pass | Unlimited rides on the day of purchase |
+| Reserved Express Ticket | Records car and seat number; supports reserved and unreserved seating |
+| Boarding Certificate | Issued at unstaffed stations; settled with cash at staffed gates |
+| Settings Tool | Opens the configuration GUI for any block |
 
-### ブロック
+### Blocks
 
-| ブロック | 概要 |
+| Block | Description |
 |---|---|
-| 改札機 | 切符・IC・定期に対応。入出場モード・通過メッセージ設定可 |
-| 券売機 | 切符・ICチャージ・定期（継続含む）・回数券を販売 |
-| 乗越精算機 | ICカード・切符の乗り越し分を現金精算 |
-| 発車標 | タイムテーブルと連携して発車情報を表示。現実/ゲーム内時刻を選択可 |
-| 乗車駅証明書発行機 | 無人駅向け乗車証明書発行機 |
-| IC簡易リーダー | IC残高・入場状態を確認するだけの小型端末 |
-| 駅管理ブロック | 駅名・座標・売上を管理 |
-| 路線管理ブロック | 駅順・運賃・会社を管理 |
-| 列車管理ブロック | 特急列車の定義・号車・停車駅を管理 |
-| 指定席券売機 | 特急券の発売・予約・キャンセル |
+| Ticket Gate | Supports tickets, IC cards, and passes. Configurable entry/exit modes and pass-through message |
+| Ticket Vending Machine | Sells tickets, IC charge, passes (including renewals), and coupon tickets |
+| Fare Adjustment Machine | Collects additional fare for IC cards and tickets when riding beyond the paid zone |
+| Departure Board | Displays departure information linked to timetables. Supports real-world and in-game time |
+| Boarding Certificate Machine | Issues boarding certificates for unmanned stations |
+| IC Simple Reader | Compact terminal to check IC balance and boarding status |
+| Station Manager Block | Manages station name, coordinates, and sales totals |
+| Line Manager Block | Manages station order, fares, and company assignment |
+| Train Manager Block | Defines limited express trains, cars, and stop lists |
+| Reserved Seat Vendor | Sells, reserves, and cancels limited express tickets |
 
 ---
 
-## よくある質問（抜粋）
+## FAQ (Excerpt)
 
-**Q. 改札を通ろうとするとエラーが出て通れない**  
-→ 改札機に駅名が設定されているか・路線に駅が登録されているか確認してください。詳細は [FAQ](docs/faq.md#改札が通れない)
+**Q. I get an error when trying to pass through the gate**  
+→ Check that the gate has a station name set and that the station is registered on a line. See [FAQ](docs/faq.md).
 
-**Q. 券売機に行き先が表示されない**  
-→ 路線管理ブロックでその駅を路線に追加してください。行き先は路線データから自動生成されます。
+**Q. No destinations appear in the Ticket Vendor**  
+→ Add the station to a line in the Line Manager block. Destinations are generated from line data.
 
-**Q. ICカードで出場時に「入場駅が削除されています」と出る**  
-→ 入場後にサーバー再起動・駅削除があった場合のメッセージです。自動でリセットされるので再入場してください。
+**Q. I see "Entry station has been deleted" when exiting with an IC card**  
+→ This appears when the server restarted or the station was deleted after you entered. It resets automatically — just enter again.
 
-**Q. 定期券の継続購入はどこでできる？**  
-→ 券売機「定期券」タブ → 「継続」サブモードから購入できます。残り7日以内の定期券が対象です。
+**Q. Where do I renew a commuter pass?**  
+→ Ticket Vendor → "Pass" tab → "Renew" sub-mode. Passes with 7 or fewer days remaining are eligible.
 
-その他は [よくある質問](docs/faq.md) をご確認ください。
+See [FAQ](docs/faq.md) for more.
 
 ---
 
-## ライセンス
+## License
 
-ソースコードは学習・参考目的での閲覧を許可します。再配布・改変・商用利用はご遠慮ください。  
-RTM・NGTLib は JP-MOD 様の著作物です。
+Source code may be viewed for learning and reference purposes. Redistribution, modification, and commercial use are not permitted.  
+RTM and NGTLib are the intellectual property of JP-MOD.

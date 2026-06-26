@@ -19,6 +19,7 @@ import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.entity.player.InventoryPlayer
 import net.minecraft.item.ItemStack
+import net.minecraft.util.StatCollector
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
 
@@ -81,18 +82,18 @@ class GuiCustomTicketVendor(
         val lx = guiLeft; val ty = guiTop
         val tabW = (xSize - 4) / 3
 
-        add(GuiButton(200, lx + 2,          ty + 4, tabW, 18, if (tab == 0) "▶ 切符購入"  else "  切符購入"))
-        add(GuiButton(201, lx + 2 + tabW,   ty + 4, tabW, 18, if (tab == 1) "▶ ICカード"  else "  ICカード"))
-        add(GuiButton(202, lx + 2 + tabW*2, ty + 4, tabW, 18, if (tab == 2) "▶ 定期券"    else "  定期券"))
+        val tlc = StatCollector::translateToLocal
+        add(GuiButton(200, lx + 2,          ty + 4, tabW, 18, if (tab == 0) "▶ ${tlc("gui.kaisatsu.vendor.tab.ticket")}" else "   ${tlc("gui.kaisatsu.vendor.tab.ticket")}"))
+        add(GuiButton(201, lx + 2 + tabW,   ty + 4, tabW, 18, if (tab == 1) "▶ ${tlc("gui.kaisatsu.vendor.tab.ic")}"    else "   ${tlc("gui.kaisatsu.vendor.tab.ic")}"))
+        add(GuiButton(202, lx + 2 + tabW*2, ty + 4, tabW, 18, if (tab == 2) "▶ ${tlc("gui.kaisatsu.vendor.tab.pass")}"  else "   ${tlc("gui.kaisatsu.vendor.tab.pass")}"))
 
         val btnW = 82; val btnH = 20; val col0 = lx + 4; val col1 = lx + 90
 
         when (tab) {
             0 -> {
-                // 普通切符/回数券 トグル
                 val smW2 = (RIGHT_PANEL_X - 6) / 2
-                add(GuiButton(155, lx + 2,        ty + 25, smW2, 14, "普通切符").also { it.enabled = couponMode })
-                add(GuiButton(156, lx + 2 + smW2, ty + 25, smW2, 14, "回数券").also { it.enabled = !couponMode })
+                add(GuiButton(155, lx + 2,        ty + 25, smW2, 14, StatCollector.translateToLocal("gui.kaisatsu.vendor.ticket.normal")).also { it.enabled = couponMode })
+                add(GuiButton(156, lx + 2 + smW2, ty + 25, smW2, 14, StatCollector.translateToLocal("gui.kaisatsu.vendor.ticket.coupon")).also { it.enabled = !couponMode })
 
                 val visible = fares.drop(ticketScrollOffset).take(TICKET_VISIBLE)
                 for (i in visible.indices) {
@@ -102,49 +103,47 @@ class GuiCustomTicketVendor(
                 }
                 if (!couponMode) {
                     val entryRow = (visible.size + 1) / 2
-                    add(GuiButton(100, col0, ty + 40 + entryRow * 22, btnW, 18, "入場券  140円"))
+                    add(GuiButton(100, col0, ty + 40 + entryRow * 22, btnW, 18, StatCollector.translateToLocal("gui.kaisatsu.vendor.entry_ticket")))
                 }
                 if (fares.size > TICKET_VISIBLE) {
                     add(GuiButton(600, lx + 172, ty + 40, 10, 18, "▲").also { it.enabled = ticketScrollOffset > 0 })
                     add(GuiButton(601, lx + 172, ty + 58, 10, 18, "▼").also { it.enabled = ticketScrollOffset + TICKET_VISIBLE < fares.size })
                 }
-                val buyLabel = if (couponMode) "回数券を購入" else "購入"
+                val buyLabel = if (couponMode) StatCollector.translateToLocal("gui.kaisatsu.vendor.btn.buy_coupon") else StatCollector.translateToLocal("gui.kaisatsu.vendor.btn.buy")
                 add(GuiButton(150, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, buyLabel))
             }
             1 -> {
-                // サブモード切り替えボタン
                 val smW = (RIGHT_PANEL_X - 6) / 3
-                add(GuiButton(360, lx + 2,          ty + 25, smW, 14, "チャージ").also { it.enabled = icMode != 0 })
-                add(GuiButton(361, lx + 2 + smW,    ty + 25, smW, 14, "新規購入").also { it.enabled = icMode != 1 })
-                add(GuiButton(362, lx + 2 + smW*2,  ty + 25, smW, 14, "返却").also   { it.enabled = icMode != 2 })
+                add(GuiButton(360, lx + 2,          ty + 25, smW, 14, StatCollector.translateToLocal("gui.kaisatsu.vendor.ic.btn.charge")).also { it.enabled = icMode != 0 })
+                add(GuiButton(361, lx + 2 + smW,    ty + 25, smW, 14, StatCollector.translateToLocal("gui.kaisatsu.vendor.ic.btn.new")).also    { it.enabled = icMode != 1 })
+                add(GuiButton(362, lx + 2 + smW*2,  ty + 25, smW, 14, StatCollector.translateToLocal("gui.kaisatsu.vendor.ic.btn.return")).also  { it.enabled = icMode != 2 })
 
                 when (icMode) {
-                    0 -> { // チャージ
+                    0 -> {
                         for ((i, amount) in chargeOptions.withIndex())
                             add(GuiButton(300 + i, if (i % 2 == 0) col0 else col1, ty + 44 + (i / 2) * 24, btnW, btnH, "${amount}円"))
-                        add(GuiButton(350, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "チャージ")
+                        add(GuiButton(350, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, StatCollector.translateToLocal("gui.kaisatsu.vendor.ic.act.charge"))
                             .also { it.enabled = selectedFare > 0 })
                     }
-                    1 -> { // 新規購入
+                    1 -> {
                         for ((i, amount) in chargeOptions.withIndex()) {
                             val balance = amount - 500
                             add(GuiButton(700 + i, if (i % 2 == 0) col0 else col1, ty + 44 + (i / 2) * 24, btnW, btnH, "${amount}円→残高${balance}円"))
                         }
-                        add(GuiButton(350, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "発行")
+                        add(GuiButton(350, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, StatCollector.translateToLocal("gui.kaisatsu.vendor.ic.act.issue"))
                             .also { it.enabled = selectedFare > 0 })
                     }
-                    2 -> { // 返却
+                    2 -> {
                         val hasCard = container.vendorInv.getICBalance() != null
-                        add(GuiButton(350, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "返却する")
+                        add(GuiButton(350, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, StatCollector.translateToLocal("gui.kaisatsu.vendor.ic.act.return"))
                             .also { it.enabled = hasCard })
                     }
                 }
             }
             2 -> {
-                // 新規/継続 サブモード切り替え
                 val smW2 = (RIGHT_PANEL_X - 6) / 2
-                add(GuiButton(570, lx + 2,        ty + 25, smW2, 14, "新規").also { it.enabled = passSubMode != 0 })
-                add(GuiButton(571, lx + 2 + smW2, ty + 25, smW2, 14, "継続").also { it.enabled = passSubMode != 1 })
+                add(GuiButton(570, lx + 2,        ty + 25, smW2, 14, StatCollector.translateToLocal("gui.kaisatsu.vendor.pass.btn.new")).also   { it.enabled = passSubMode != 0 })
+                add(GuiButton(571, lx + 2 + smW2, ty + 25, smW2, 14, StatCollector.translateToLocal("gui.kaisatsu.vendor.pass.btn.renew")).also { it.enabled = passSubMode != 1 })
 
                 if (passSubMode == 0) {
                     // ── 新規定期券 ──────────────────────────────────
@@ -161,9 +160,9 @@ class GuiCustomTicketVendor(
                         val (days, _) = pair
                         add(GuiButton(500 + i, col0 + i * 56, ty + 92, 52, btnH, "${days}日"))
                     }
-                    add(GuiButton(550, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "定期購入"))
+                    add(GuiButton(550, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, StatCollector.translateToLocal("gui.kaisatsu.vendor.pass.btn.buy")))
                     val dayPassPrice = calcDayPassPrice()
-                    add(GuiButton(560, col0, ty + 114, btnW * 2 + 4, 18, "フリーパス（1日）  ${dayPassPrice}円"))
+                    add(GuiButton(560, col0, ty + 114, btnW * 2 + 4, 18, String.format(StatCollector.translateToLocal("gui.kaisatsu.vendor.pass.free_pass"), dayPassPrice)))
                 } else {
                     // ── 継続定期券 ──────────────────────────────────
                     val expiring = getExpiringPasses()
@@ -174,7 +173,10 @@ class GuiCustomTicketVendor(
                             val (_, stack) = pair
                             val dest = passOtherStation(stack)
                             val remaining = ItemCustomPass.remainingDays(stack, currentDay)
-                            val label = if (remaining > 0) "$dest (残${remaining}日)" else "$dest (期限切れ)"
+                            val label = if (remaining > 0)
+                                "$dest (${String.format(StatCollector.translateToLocal("gui.kaisatsu.vendor.remaining_days"), remaining)})"
+                            else
+                                "$dest (${StatCollector.translateToLocal("gui.kaisatsu.vendor.expired")})"
                             add(GuiButton(580 + i, if (i % 2 == 0) col0 else col1, ty + 42 + (i / 2) * 22, btnW, btnH, label))
                         }
                     }
@@ -182,7 +184,7 @@ class GuiCustomTicketVendor(
                         val (days, _) = pair
                         add(GuiButton(500 + i, col0 + i * 56, ty + 92, 52, btnH, "${days}日"))
                     }
-                    add(GuiButton(550, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "継続購入"))
+                    add(GuiButton(550, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, StatCollector.translateToLocal("gui.kaisatsu.vendor.pass.btn.renew_buy")))
                 }
             }
         }
@@ -400,21 +402,21 @@ class GuiCustomTicketVendor(
     }
 
     override fun drawGuiContainerForegroundLayer(mouseX: Int, mouseY: Int) {
-        val title = "券売機  $stationName"
+        val tlc = StatCollector::translateToLocal
+        val title = "${tlc("gui.kaisatsu.vendor.title")}  $stationName"
         fontRendererObj.drawString(title, xSize / 2 - fontRendererObj.getStringWidth(title) / 2, -9, 0x404040)
 
         val rpx = RIGHT_PANEL_X + 2
-        fontRendererObj.drawString("お金投入", rpx, MONEY_POSITIONS[0].second - 12, 0x404040)
+        fontRendererObj.drawString(tlc("gui.kaisatsu.vendor.lbl.money"), rpx, MONEY_POSITIONS[0].second - 12, 0x404040)
         val moneyYen = container.vendorInv.getMoneyYen()
-        fontRendererObj.drawString("合計: ${moneyYen}円", rpx, MONEY_POSITIONS[2].second + 20, 0x006600)
+        fontRendererObj.drawString("${tlc("gui.kaisatsu.vendor.lbl.money_total")} ${moneyYen}円", rpx, MONEY_POSITIONS[2].second + 20, 0x006600)
 
-        fontRendererObj.drawString("ICカード", rpx, CARD_Y - 12, 0x404040)
+        fontRendererObj.drawString(tlc("gui.kaisatsu.vendor.lbl.ic"), rpx, CARD_Y - 12, 0x404040)
         val icBalance = container.vendorInv.getICBalance()
         fontRendererObj.drawString(
-            if (icBalance != null) "残高:${icBalance}円" else "未挿入",
+            if (icBalance != null) "${tlc("gui.kaisatsu.vendor.ic.balance")}${icBalance}円" else tlc("gui.kaisatsu.vendor.ic.not_inserted"),
             rpx, CARD_Y + 20, if (icBalance != null) 0x0000AA else 0x888888)
 
-        // スクロールインジケーター
         if (tab == 0 && fares.size > TICKET_VISIBLE) {
             val end = minOf(ticketScrollOffset + TICKET_VISIBLE, fares.size)
             fontRendererObj.drawString("${ticketScrollOffset + 1}-${end} / ${fares.size}", 4, 22, 0x888888)
@@ -432,50 +434,50 @@ class GuiCustomTicketVendor(
                         fontRendererObj.drawString("$selectedDest 10回 ${couponPrice}円", rpx, selY - 8, 0x0000CC)
                         fontRendererObj.drawString("（1回あたり ${selectedFare}×0.9円）", rpx, selY + 4, 0x555555)
                     } else {
-                        fontRendererObj.drawString(if (isEntry) "入場券 140円" else "$selectedDest ${selectedFare}円", rpx, selY, 0x0000CC)
+                        fontRendererObj.drawString(if (isEntry) tlc("gui.kaisatsu.vendor.entry_ticket.select") else "$selectedDest ${selectedFare}円", rpx, selY, 0x0000CC)
                     }
-                } else fontRendererObj.drawString(if (couponMode) "行き先を選択（回数券）" else "行き先を選択", rpx, selY, 0x888888)
+                } else fontRendererObj.drawString(if (couponMode) tlc("gui.kaisatsu.vendor.select.destination.coupon") else tlc("gui.kaisatsu.vendor.select.destination"), rpx, selY, 0x888888)
             1 -> when (icMode) {
                 0 -> if (selectedFare > 0)
-                        fontRendererObj.drawString("${selectedFare}円チャージ", rpx, selY, 0x0000CC)
-                     else fontRendererObj.drawString("金額を選択", rpx, selY, 0x888888)
+                        fontRendererObj.drawString("${selectedFare}円${tlc("gui.kaisatsu.vendor.ic.act.charge")}", rpx, selY, 0x0000CC)
+                     else fontRendererObj.drawString(tlc("gui.kaisatsu.vendor.select.amount"), rpx, selY, 0x888888)
                 1 -> if (selectedFare > 0) {
                         fontRendererObj.drawString("${selectedFare}円（残高${selectedFare - 500}円）", rpx, selY - 8, 0x0000CC)
-                        fontRendererObj.drawString("預り金500円含む", rpx, selY + 4, 0x555555)
-                    } else fontRendererObj.drawString("購入額を選択", rpx, selY, 0x888888)
+                        fontRendererObj.drawString(tlc("gui.kaisatsu.vendor.ic.deposit"), rpx, selY + 4, 0x555555)
+                    } else fontRendererObj.drawString(tlc("gui.kaisatsu.vendor.select.amount.new_ic"), rpx, selY, 0x888888)
                 2 -> if (icBalance != null) {
                         val refund = maxOf(0, icBalance - 220) + 500
-                        fontRendererObj.drawString("返却額: ${refund}円", rpx, selY - 8, 0x55AA00)
+                        fontRendererObj.drawString("${tlc("gui.kaisatsu.vendor.ic.return_amount")} ${refund}円", rpx, selY - 8, 0x55AA00)
                         if (icBalance > 0)
-                            fontRendererObj.drawString("残高${icBalance}-手数料220+預り金500", rpx, selY + 4, 0x555555)
+                            fontRendererObj.drawString(String.format(tlc("gui.kaisatsu.vendor.ic.deposit_detail"), icBalance), rpx, selY + 4, 0x555555)
                         else
-                            fontRendererObj.drawString("預り金 500円", rpx, selY + 4, 0x555555)
-                    } else fontRendererObj.drawString("ICカードをスロットへ", rpx, selY, 0x888888)
+                            fontRendererObj.drawString(tlc("gui.kaisatsu.vendor.ic.deposit"), rpx, selY + 4, 0x555555)
+                    } else fontRendererObj.drawString(tlc("gui.kaisatsu.vendor.ic.insert_card"), rpx, selY, 0x888888)
             }
             2 -> {
                 if (selectedPassFare > 0) {
-                    val prefix = if (passSubMode == 1) "継続 " else ""
+                    val prefix = if (passSubMode == 1) "${tlc("gui.kaisatsu.vendor.pass.btn.renew")} " else ""
                     fontRendererObj.drawString("${prefix}${selectedPassDest} ${selectedPassDays}日 ${selectedPassFare}円", rpx, selY - 8, 0x0000CC)
                 } else {
                     if (passSubMode == 1 && getExpiringPasses().isEmpty()) {
-                        fontRendererObj.drawString("対象の定期券なし", rpx, selY - 8, 0x888888)
+                        fontRendererObj.drawString(tlc("gui.kaisatsu.vendor.pass.no_target"), rpx, selY - 8, 0x888888)
                     } else {
-                        val destStr = if (selectedPassDest.isEmpty()) "定期券を選択" else selectedPassDest
-                        val dayStr  = if (selectedPassDays == 0) "期間を選択" else "${selectedPassDays}日"
+                        val destStr = if (selectedPassDest.isEmpty()) tlc("gui.kaisatsu.vendor.pass.select") else selectedPassDest
+                        val dayStr  = if (selectedPassDays == 0) tlc("gui.kaisatsu.vendor.pass.select.duration") else "${selectedPassDays}日"
                         fontRendererObj.drawString("$destStr  $dayStr", rpx, selY - 8, 0x888888)
                     }
                 }
                 if (passSubMode == 0) {
-                    fontRendererObj.drawString("7日:10%割引", rpx, selY + 4, 0x555555)
-                    fontRendererObj.drawString("30日:25%  90日:40%", rpx, selY + 14, 0x555555)
+                    fontRendererObj.drawString(tlc("gui.kaisatsu.vendor.pass.discount.7"), rpx, selY + 4, 0x555555)
+                    fontRendererObj.drawString(tlc("gui.kaisatsu.vendor.pass.discount.other"), rpx, selY + 14, 0x555555)
                 } else {
-                    fontRendererObj.drawString("期限切れ間近の定期を延長", rpx, selY + 4, 0x555555)
+                    fontRendererObj.drawString(tlc("gui.kaisatsu.vendor.pass.renew.hint"), rpx, selY + 4, 0x555555)
                 }
             }
         }
 
-        fontRendererObj.drawString("持ち物", INV_X, INV_Y - 13, 0x404040)
-        if (tab == 0 && fares.isEmpty()) fontRendererObj.drawString("行き先なし", 4, 60, 0xFF0000)
+        fontRendererObj.drawString(tlc("gui.kaisatsu.vendor.lbl.inventory"), INV_X, INV_Y - 13, 0x404040)
+        if (tab == 0 && fares.isEmpty()) fontRendererObj.drawString(tlc("gui.kaisatsu.vendor.no_destination"), 4, 60, 0xFF0000)
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {

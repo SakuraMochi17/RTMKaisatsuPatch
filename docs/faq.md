@@ -1,5 +1,7 @@
 # よくある質問 (FAQ)
 
+**言語:** 日本語 | [English](en/faq.md) | [中文](zh/faq.md) | [한국어](ko/faq.md)
+
 ---
 
 ## 導入・起動

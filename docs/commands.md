@@ -1,5 +1,7 @@
 # 管理者コマンド
 
+**言語:** 日本語 | [English](en/commands.md) | [中文](zh/commands.md) | [한국어](ko/commands.md)
+
 すべてのコマンドは `/kaisatsu` から始まります。OP 権限が必要です。
 
 ---

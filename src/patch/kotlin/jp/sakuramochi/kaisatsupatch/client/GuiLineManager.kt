@@ -9,6 +9,7 @@ import jp.sakuramochi.kaisatsupatch.network.PacketOpenLineGui
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
+import net.minecraft.util.StatCollector
 import org.lwjgl.input.Keyboard
 
 @SideOnly(Side.CLIENT)
@@ -63,21 +64,22 @@ class GuiLineManager(private val data: PacketOpenLineGui) : GuiScreen() {
         @Suppress("UNCHECKED_CAST") (buttonList as MutableList<GuiButton>).clear()
         val cx = width / 2; val cy = height / 2
 
+        val tlc = StatCollector::translateToLocal
         when (page) {
             Page.TOP -> {
                 if (companyIsNew) {
-                    add(GuiButton(15, cx - 35, cy + 20, 70, 20, "会社を設定する"))
+                    add(GuiButton(15, cx - 35, cy + 20, 70, 20, tlc("gui.kaisatsu.line.btn.company_setup")))
                 } else {
-                    add(GuiButton(15, cx - 100, cy + 50, 60, 18, "会社設定"))
-                    add(GuiButton(18, cx - 30,  cy + 50, 60, 18, "メンバー"))
-                    add(GuiButton(19, cx + 40,  cy + 50, 60, 18, "相互利用"))
+                    add(GuiButton(15, cx - 100, cy + 50, 60, 18, tlc("gui.kaisatsu.line.btn.company_props")))
+                    add(GuiButton(18, cx - 30,  cy + 50, 60, 18, tlc("gui.kaisatsu.line.btn.members")))
+                    add(GuiButton(19, cx + 40,  cy + 50, 60, 18, tlc("gui.kaisatsu.line.btn.mutual")))
                     add(GuiButton(11, cx - 100, cy + 5,  20, 20, "<"))
                     add(GuiButton(12, cx + 80,  cy + 5,  20, 20, ">"))
-                    add(GuiButton(13, cx - 100, cy + 75, 90, 20, "設定画面へ ->").also {
+                    add(GuiButton(13, cx - 100, cy + 75, 90, 20, tlc("gui.kaisatsu.line.btn.edit_line")).also {
                         it.enabled = data.companyLines.isNotEmpty()
                     })
-                    add(GuiButton(14, cx + 10,  cy + 75, 90, 20, "+ 新規路線作成"))
-                    add(GuiButton(17, cx - 100, cy + 100, 90, 16, "OuDia テンプレ出力").also {
+                    add(GuiButton(14, cx + 10,  cy + 75, 90, 20, tlc("gui.kaisatsu.line.btn.new_line")))
+                    add(GuiButton(17, cx - 100, cy + 100, 90, 16, tlc("gui.kaisatsu.line.btn.oudia")).also {
                         it.enabled = data.companyLines.isNotEmpty()
                     })
                 }
@@ -103,15 +105,15 @@ class GuiLineManager(private val data: PacketOpenLineGui) : GuiScreen() {
                 }
                 add(GuiButton(1,  cx - 115, cy + 20, 20, 20, "<"))
                 add(GuiButton(2,  cx - 25,  cy + 20, 20, 20, ">"))
-                add(GuiButton(3,  cx - 100, cy + 50, 80, 20, "路線に追加 ->"))
+                add(GuiButton(3,  cx - 100, cy + 50, 80, 20, tlc("gui.kaisatsu.line.edit.btn.add_station")))
                 add(GuiButton(4,  cx + 95,  cy - 5,  20, 20, "∧"))
                 add(GuiButton(5,  cx + 95,  cy + 25, 20, 20, "∨"))
-                add(GuiButton(6,  cx + 120, cy - 5,  30, 20, "上へ"))
-                add(GuiButton(7,  cx + 120, cy + 25, 30, 20, "下へ"))
-                add(GuiButton(8,  cx + 95,  cy + 50, 55, 20, "削除"))
-                add(GuiButton(20, cx - 130, cy + 85, 70, 20, "<- トップへ"))
-                add(GuiButton(9,  cx - 50,  cy + 85, 60, 20, "路線を削除"))
-                add(GuiButton(0,  cx + 20,  cy + 85, 110, 20, "設定を保存して終了"))
+                add(GuiButton(6,  cx + 120, cy - 5,  30, 20, tlc("gui.kaisatsu.line.edit.btn.up")))
+                add(GuiButton(7,  cx + 120, cy + 25, 30, 20, tlc("gui.kaisatsu.line.edit.btn.down")))
+                add(GuiButton(8,  cx + 95,  cy + 50, 55, 20, tlc("gui.kaisatsu.btn.delete")))
+                add(GuiButton(20, cx - 130, cy + 85, 70, 20, tlc("gui.kaisatsu.line.edit.btn.back")))
+                add(GuiButton(9,  cx - 50,  cy + 85, 60, 20, tlc("gui.kaisatsu.line.edit.btn.delete_line")))
+                add(GuiButton(0,  cx + 20,  cy + 85, 110, 20, tlc("gui.kaisatsu.line.edit.btn.save")))
             }
 
             Page.COMPANY_PROPS -> {
@@ -128,29 +130,29 @@ class GuiLineManager(private val data: PacketOpenLineGui) : GuiScreen() {
                 fldIC.text    = data.icCardName
                 fldBase.text  = data.defaultBaseFare.toString()
                 fldRate.text  = data.defaultCostPerBlock.toString()
-                add(GuiButton(0,  cx - 35, cy + 20, 70, 18, "保存"))
-                add(GuiButton(99, cx - 35, cy + 44, 70, 18, "← 戻る"))
+                add(GuiButton(0,  cx - 35, cy + 20, 70, 18, tlc("gui.kaisatsu.btn.save")))
+                add(GuiButton(99, cx - 35, cy + 44, 70, 18, tlc("gui.kaisatsu.btn.back")))
             }
 
             Page.MEMBERS -> {
                 fldMember = GuiTextField(fontRendererObj, cx - 80, cy + 30, 130, 15)
                 fldMember.setFocused(true)
                 members.forEachIndexed { i, _ ->
-                    add(GuiButton(300 + i, cx + 60, cy - 60 + i * 20, 50, 16, "除名"))
+                    add(GuiButton(300 + i, cx + 60, cy - 60 + i * 20, 50, 16, tlc("gui.kaisatsu.line.members.btn.remove")))
                 }
-                add(GuiButton(31, cx + 60, cy + 28, 50, 18, "追加"))
-                add(GuiButton(99, cx - 35, cy + 60, 70, 18, "← 戻る"))
+                add(GuiButton(31, cx + 60, cy + 28, 50, 18, tlc("gui.kaisatsu.btn.add")))
+                add(GuiButton(99, cx - 35, cy + 60, 70, 18, tlc("gui.kaisatsu.btn.back")))
             }
 
             Page.MUTUAL -> {
                 allowedCompanies.forEachIndexed { i, _ ->
-                    add(GuiButton(400 + i, cx + 60, cy - 60 + i * 20, 50, 16, "解除"))
+                    add(GuiButton(400 + i, cx + 60, cy - 60 + i * 20, 50, 16, tlc("gui.kaisatsu.line.mutual.btn.revoke")))
                 }
                 val others = otherCandidates()
                 add(GuiButton(40, cx - 120, cy + 30, 20, 18, "<").also { it.enabled = others.isNotEmpty() })
                 add(GuiButton(41, cx - 20,  cy + 30, 20, 18, ">").also { it.enabled = others.isNotEmpty() })
-                add(GuiButton(42, cx + 10,  cy + 30, 50, 18, "許可").also  { it.enabled = others.isNotEmpty() })
-                add(GuiButton(99, cx - 35,  cy + 55, 70, 18, "← 戻る"))
+                add(GuiButton(42, cx + 10,  cy + 30, 50, 18, tlc("gui.kaisatsu.line.mutual.btn.allow")).also  { it.enabled = others.isNotEmpty() })
+                add(GuiButton(99, cx - 35,  cy + 55, 70, 18, tlc("gui.kaisatsu.btn.back")))
             }
         }
     }
@@ -397,39 +399,41 @@ class GuiLineManager(private val data: PacketOpenLineGui) : GuiScreen() {
     }
 
     private fun drawTopPage(cx: Int, cy: Int) {
-        drawCenteredString(fontRendererObj, "§e路線管理", cx, cy - 90, 0xFFFFFF)
+        val tlc = StatCollector::translateToLocal
+        drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.line.title"), cx, cy - 90, 0xFFFFFF)
         if (companyIsNew) {
-            drawCenteredString(fontRendererObj, "§7会社が未設定です", cx, cy - 10, 0xAAAAAA)
-            drawCenteredString(fontRendererObj, "§7まず「会社を設定する」ボタンを押してください", cx, cy + 5, 0x555555)
+            drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.line.company_new.msg"), cx, cy - 10, 0xAAAAAA)
+            drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.line.company_new.hint"), cx, cy + 5, 0x555555)
         } else {
-            drawString(fontRendererObj, "§7会社ID: §f${data.companyID}", cx - 100, cy - 70, 0xAAAAAA)
-            drawString(fontRendererObj, "§7会社名: §f${data.companyName}", cx - 100, cy - 55, 0xAAAAAA)
-            drawString(fontRendererObj, "§7IC: §f${data.icCardName.ifEmpty { "未設定" }}", cx - 100, cy - 40, 0xAAAAAA)
-            drawCenteredString(fontRendererObj, "§7─────── 路線 ───────", cx, cy - 20, 0x555555)
+            drawString(fontRendererObj, "${tlc("gui.kaisatsu.line.lbl.company_id")} §f${data.companyID}", cx - 100, cy - 70, 0xAAAAAA)
+            drawString(fontRendererObj, "${tlc("gui.kaisatsu.line.lbl.company_name")} §f${data.companyName}", cx - 100, cy - 55, 0xAAAAAA)
+            drawString(fontRendererObj, "${tlc("gui.kaisatsu.line.lbl.ic")} §f${data.icCardName.ifEmpty { tlc("gui.kaisatsu.line.ic.not_set") }}", cx - 100, cy - 40, 0xAAAAAA)
+            drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.line.divider"), cx, cy - 20, 0x555555)
             if (data.companyLines.isNotEmpty()) {
                 val info = data.companyLines[selectedLineIndex]
                 drawCenteredString(fontRendererObj, "§f${info.lineName} §7(${info.lineID})", cx, cy + 8, 0xFFFFFF)
                 drawCenteredString(fontRendererObj, "${selectedLineIndex + 1} / ${data.companyLines.size}", cx, cy + 22, 0x555555)
             } else {
-                drawCenteredString(fontRendererObj, "§7路線がありません", cx, cy + 8, 0xAAAAAA)
+                drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.line.no_lines"), cx, cy + 8, 0xAAAAAA)
             }
         }
     }
 
     private fun drawLineEditPage(cx: Int, cy: Int) {
+        val tlc = StatCollector::translateToLocal
         drawCenteredString(fontRendererObj,
-            if (currentOldLineID.isEmpty()) "路線管理 - 新規路線" else "路線管理 - 路線編集",
+            if (currentOldLineID.isEmpty()) tlc("gui.kaisatsu.line.edit.new_title") else tlc("gui.kaisatsu.line.edit.edit_title"),
             cx, cy - 110, 0xFFFF55)
-        drawString(fontRendererObj, "路線ID",       cx - 110, cy - 95, 0xAAAAAA)
-        drawString(fontRendererObj, "路線名",       cx + 10,  cy - 95, 0xAAAAAA)
-        drawString(fontRendererObj, "初乗り(円)",   cx - 85,  cy - 60, 0xAAAAAA)
-        drawString(fontRendererObj, "1B単価(円)",   cx - 5,   cy - 60, 0xAAAAAA)
-        drawString(fontRendererObj, "乗換料金(円)", cx + 75,  cy - 60, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.line.edit.lbl.id"),             cx - 110, cy - 95, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.line.edit.lbl.name"),           cx + 10,  cy - 95, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.line.edit.lbl.base_fare"),      cx - 85,  cy - 60, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.line.edit.lbl.cost_per_block"), cx - 5,   cy - 60, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.line.edit.lbl.transfer_fee"),   cx + 75,  cy - 60, 0xAAAAAA)
         idField.drawTextBox(); nameField.drawTextBox()
         baseField.drawTextBox(); costField.drawTextBox(); tfField.drawTextBox()
-        drawCenteredString(fontRendererObj, "[ 登録可能な駅 ]", cx - 60, cy, 0xAAFFFF)
+        drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.line.edit.lbl.available"), cx - 60, cy, 0xAAFFFF)
         drawCenteredString(fontRendererObj, globalStations[globalIndex], cx - 60, cy + 26, 0xFFFFFF)
-        drawCenteredString(fontRendererObj, "[ 路線の駅順 ]", cx + 50, cy - 25, 0xAAFFFF)
+        drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.line.edit.lbl.order"), cx + 50, cy - 25, 0xAAFFFF)
         if (editLineStations.isNotEmpty()) {
             val isLoop = editLineStations.first() == editLineStations.last() && editLineStations.size > 1
             val start = maxOf(0, stationIndex - 2)
@@ -438,26 +442,27 @@ class GuiLineManager(private val data: PacketOpenLineGui) : GuiScreen() {
             for (i in start..end) {
                 val prefix = if (i == stationIndex) "▶ " else "   "
                 var text = "$prefix${i + 1}. ${editLineStations[i]}"
-                if (isLoop && i == editLineStations.size - 1) text += " (環状)"
+                if (isLoop && i == editLineStations.size - 1) text += " ${tlc("gui.kaisatsu.line.edit.loop_suffix")}"
                 drawString(fontRendererObj, text, cx + 10, drawY, if (i == stationIndex) 0xFFFF55 else 0xDDDDDD)
                 drawY += 12
             }
         } else {
-            drawCenteredString(fontRendererObj, "未登録", cx + 50, cy + 5, 0xAAAAAA)
+            drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.line.edit.no_stations"), cx + 50, cy + 5, 0xAAAAAA)
         }
     }
 
     private fun drawCompanyPropsPage(cx: Int, cy: Int) {
+        val tlc = StatCollector::translateToLocal
         drawCenteredString(fontRendererObj,
-            if (companyIsNew) "§e会社を新規作成" else "§e会社設定",
+            if (companyIsNew) tlc("gui.kaisatsu.line.company.new_title") else tlc("gui.kaisatsu.line.company.edit_title"),
             cx, cy - 108, 0xFFFFFF)
         val ox = cx - 120
-        drawString(fontRendererObj, "会社ID" + if (!companyIsNew) " §7(変更不可)" else "", ox,      cy - 95, 0xAAAAAA)
-        drawString(fontRendererObj, "会社名",                   ox + 90, cy - 95, 0xAAAAAA)
-        drawString(fontRendererObj, "カラー(16進 例:FF0000)",   ox,      cy - 62, 0xAAAAAA)
-        drawString(fontRendererObj, "ICカード名",               ox + 90, cy - 62, 0xAAAAAA)
-        drawString(fontRendererObj, "デフォルト初乗り(円)",     ox,      cy - 29, 0xAAAAAA)
-        drawString(fontRendererObj, "加算レート(円/ブロック)",  ox + 90, cy - 29, 0xAAAAAA)
+        drawString(fontRendererObj, if (!companyIsNew) tlc("gui.kaisatsu.line.company.lbl.id_fixed") else tlc("gui.kaisatsu.line.company.lbl.id"), ox, cy - 95, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.line.company.lbl.name"),      ox + 90, cy - 95, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.line.company.lbl.color"),     ox,      cy - 62, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.line.company.lbl.ic"),        ox + 90, cy - 62, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.line.company.lbl.base_fare"), ox,      cy - 29, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.line.company.lbl.rate"),      ox + 90, cy - 29, 0xAAAAAA)
         if (::fldCID.isInitialized)   fldCID.drawTextBox()
         if (::fldCName.isInitialized) fldCName.drawTextBox()
         if (::fldColor.isInitialized) fldColor.drawTextBox()
@@ -467,32 +472,34 @@ class GuiLineManager(private val data: PacketOpenLineGui) : GuiScreen() {
     }
 
     private fun drawMembersPage(cx: Int, cy: Int) {
-        drawCenteredString(fontRendererObj, "§eメンバー管理 — ${data.companyName}", cx, cy - 80, 0xFFFFFF)
+        val tlc = StatCollector::translateToLocal
+        drawCenteredString(fontRendererObj, "${tlc("gui.kaisatsu.line.members.title")} — ${data.companyName}", cx, cy - 80, 0xFFFFFF)
         if (members.isEmpty()) {
-            drawString(fontRendererObj, "§7メンバーがいません", cx - 120, cy - 52, 0xAAAAAA)
+            drawString(fontRendererObj, tlc("gui.kaisatsu.line.members.none"), cx - 120, cy - 52, 0xAAAAAA)
         } else {
             members.forEachIndexed { i, m ->
                 drawString(fontRendererObj, "§f$m", cx - 120, cy - 60 + i * 20, 0xFFFFFF)
             }
         }
-        drawString(fontRendererObj, "追加(プレイヤー名):", cx - 80, cy + 17, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.line.members.lbl.add"), cx - 80, cy + 17, 0xAAAAAA)
         if (::fldMember.isInitialized) fldMember.drawTextBox()
     }
 
     private fun drawMutualPage(cx: Int, cy: Int) {
-        drawCenteredString(fontRendererObj, "§e相互利用設定 — ${data.companyName}", cx, cy - 80, 0xFFFFFF)
-        drawString(fontRendererObj, "§7許可済み:", cx - 120, cy - 62, 0xAAAAAA)
+        val tlc = StatCollector::translateToLocal
+        drawCenteredString(fontRendererObj, "${tlc("gui.kaisatsu.line.mutual.title")} — ${data.companyName}", cx, cy - 80, 0xFFFFFF)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.line.mutual.lbl.allowed"), cx - 120, cy - 62, 0xAAAAAA)
         if (allowedCompanies.isEmpty()) {
-            drawString(fontRendererObj, "§7なし", cx - 120, cy - 48, 0x555555)
+            drawString(fontRendererObj, tlc("gui.kaisatsu.line.mutual.none"), cx - 120, cy - 48, 0x555555)
         } else {
             allowedCompanies.forEachIndexed { i, id ->
                 drawString(fontRendererObj, "§f→ $id", cx - 120, cy - 60 + i * 20, 0xFFFFFF)
             }
         }
         val others = otherCandidates()
-        drawString(fontRendererObj, "§7追加:", cx - 120, cy + 18, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.line.mutual.lbl.add"), cx - 120, cy + 18, 0xAAAAAA)
         val sel = others.getOrNull(mutualIdx)
-        val label = if (sel != null) "${sel.first} §7${sel.second}" else "§7（追加可能な会社なし）"
+        val label = if (sel != null) "${sel.first} §7${sel.second}" else tlc("gui.kaisatsu.line.mutual.no_candidates")
         drawCenteredString(fontRendererObj, label, cx, cy + 33, if (others.isEmpty()) 0x555555 else 0xFFFF55)
     }
 
