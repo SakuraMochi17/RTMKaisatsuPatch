@@ -8,6 +8,7 @@ import jp.sakuramochi.kaisatsupatch.network.PacketOpenDepartureBoard
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
+import net.minecraft.util.StatCollector
 import org.lwjgl.input.Keyboard
 
 @SideOnly(Side.CLIENT)
@@ -37,7 +38,7 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
 
         when (page) {
             0 -> {
-                add(GuiButton(99, cx - 30, cy + 90, 60, 18, "閉じる"))
+                add(GuiButton(99, cx - 30, cy + 90, 60, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.close")))
             }
             1 -> {
                 fldTitle    = GuiTextField(fontRendererObj, cx - 80, cy - 90, 160, 14)
@@ -65,8 +66,8 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
                 add(GuiButton(20, cx - 80, cy + 58, 18, 14, "<"))
                 add(GuiButton(21, cx + 62, cy + 58, 18, 14, ">"))
 
-                add(GuiButton(0,  cx - 35, cy + 76, 70, 18, "保存"))
-                add(GuiButton(99, cx - 35, cy + 98, 70, 18, "キャンセル"))
+                add(GuiButton(0,  cx - 35, cy + 76, 70, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.save")))
+                add(GuiButton(99, cx - 35, cy + 98, 70, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.cancel")))
             }
         }
     }
@@ -155,15 +156,16 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
         drawCenteredString(fontRendererObj, "$diaLabel$dirLabel$lineLabel", cx, cy - 82, 0xAAAAAA)
 
         val colX0 = cx - 140
-        drawString(fontRendererObj, "§7時刻",    colX0,       cy - 66, 0xAAAAAA)
-        drawString(fontRendererObj, "§7行き先",  colX0 + 50,  cy - 66, 0xAAAAAA)
-        drawString(fontRendererObj, "§7種別",    colX0 + 160, cy - 66, 0xAAAAAA)
-        drawString(fontRendererObj, "§7列車番号", colX0 + 220, cy - 66, 0xAAAAAA)
+        val tlc = StatCollector::translateToLocal
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.col.time"),        colX0,       cy - 66, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.col.destination"), colX0 + 50,  cy - 66, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.col.type"),        colX0 + 160, cy - 66, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.col.number"),      colX0 + 220, cy - 66, 0xAAAAAA)
 
         if (data.departures.isEmpty()) {
             drawCenteredString(fontRendererObj,
-                if (data.stationName.isEmpty()) "§7発車標が設定されていません（設定ツールで右クリック）"
-                else "§7発車情報がありません", cx, cy, 0xAAAAAA)
+                if (data.stationName.isEmpty()) tlc("gui.kaisatsu.departure.msg.no_config")
+                else tlc("gui.kaisatsu.departure.msg.no_data"), cx, cy, 0xAAAAAA)
         } else {
             data.departures.forEachIndexed { i, row ->
                 val y = cy - 50 + i * 16
@@ -178,34 +180,35 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
     // ── 設定ページ ───────────────────────────────────────────────────
 
     private fun drawConfigPage(cx: Int, cy: Int) {
-        drawCenteredString(fontRendererObj, "§e発車標 — 設定", cx, cy - 108, 0xFFFFFF)
-        drawString(fontRendererObj, "タイトル（空欄=駅名）", cx - 60, cy - 102, 0xAAAAAA)
+        val tlc = StatCollector::translateToLocal
+        drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.departure.config.title"), cx, cy - 108, 0xFFFFFF)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.title_field"), cx - 60, cy - 102, 0xAAAAAA)
         if (::fldTitle.isInitialized) fldTitle.drawTextBox()
 
-        val stLabel   = data.availableStations.getOrElse(selStation) { "§7（駅なし）" }
-        val lineLabel = if (selLine == 0) "§7なし（フィルターなし）"
+        val stLabel   = data.availableStations.getOrElse(selStation) { tlc("gui.kaisatsu.departure.no_station") }
+        val lineLabel = if (selLine == 0) tlc("gui.kaisatsu.departure.no_line")
                         else data.availableLines.getOrElse(selLine - 1) { "" to "" }
                             .let { (id, name) -> "$name §8($id)" }
-        val diaLabel  = if (selDia == 0) "§7すべて" else data.availableDias.getOrElse(selDia - 1) { "" }
+        val diaLabel  = if (selDia == 0) tlc("gui.kaisatsu.departure.all_dia") else data.availableDias.getOrElse(selDia - 1) { "" }
         val dirLabel  = DIRS[selDir]
-        val rowsLabel = "${selRows + 1}行"
+        val rowsLabel = "${selRows + 1}${tlc("gui.kaisatsu.departure.rows_suffix")}"
 
         val labelX = cx - 130
 
-        drawString(fontRendererObj, "駅",       labelX,  cy - 66, 0xAAAAAA)
-        drawString(fontRendererObj, "路線",     labelX,  cy - 46, 0xAAAAAA)
-        drawString(fontRendererObj, "ダイヤ",   labelX,  cy - 26, 0xAAAAAA)
-        drawString(fontRendererObj, "方向",     labelX,  cy - 6,  0xAAAAAA)
-        drawString(fontRendererObj, "番線",     cx - 60, cy + 6,  0xAAAAAA)
-        drawString(fontRendererObj, "表示行数", labelX,  cy + 26, 0xAAAAAA)
-        drawString(fontRendererObj, "時刻モード", labelX, cy + 46, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.station"),   labelX,  cy - 66, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.line"),      labelX,  cy - 46, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.dia"),       labelX,  cy - 26, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.direction"), labelX,  cy - 6,  0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.platform"),  cx - 60, cy + 6,  0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.rows"),      labelX,  cy + 26, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.timemode"),  labelX,  cy + 46, 0xAAAAAA)
 
         drawCenteredString(fontRendererObj, stLabel,   cx, cy - 58, 0xFFFF55)
         drawCenteredString(fontRendererObj, lineLabel, cx, cy - 38, 0xFFFF55)
         drawCenteredString(fontRendererObj, diaLabel,  cx, cy - 18, 0xFFFF55)
         drawCenteredString(fontRendererObj, dirLabel,  cx, cy + 2,  0xFFFF55)
         drawCenteredString(fontRendererObj, rowsLabel, cx, cy + 34, 0xFFFF55)
-        drawCenteredString(fontRendererObj, TIME_MODES[selTimeMode].second, cx, cy + 54, 0xFFFF55)
+        drawCenteredString(fontRendererObj, StatCollector.translateToLocal(TIME_MODES[selTimeMode].second), cx, cy + 54, 0xFFFF55)
 
         if (::fldPlatform.isInitialized) fldPlatform.drawTextBox()
     }
@@ -219,6 +222,6 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
 
     companion object {
         val DIRS = listOf("両方", "下り", "上り")
-        val TIME_MODES = listOf("real" to "現実時刻", "game" to "ゲーム内時刻")
+        val TIME_MODES = listOf("real" to "gui.kaisatsu.departure.time.real", "game" to "gui.kaisatsu.departure.time.game")
     }
 }

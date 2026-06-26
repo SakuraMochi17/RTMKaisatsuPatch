@@ -8,6 +8,7 @@ import jp.sakuramochi.kaisatsupatch.network.PacketTrainUpdate
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
+import net.minecraft.util.StatCollector
 import org.lwjgl.input.Keyboard
 
 @SideOnly(Side.CLIENT)
@@ -71,10 +72,10 @@ class GuiTrainManager(private val msg: PacketOpenTrainManager) : GuiScreen() {
         add(GuiButton(10, cx - 120, cy + 16, 20, 18, "<"))
         add(GuiButton(11, cx + 100, cy + 16, 20, 18, ">"))
 
-        // ナビゲーション
-        add(GuiButton(20, cx - 55, cy + 60, 110, 18, "次へ: 停車駅 →"))
-        add(GuiButton(21, cx - 55, cy + 82, 110, 18, "削除").also { it.enabled = msg.hasTrain })
-        add(GuiButton(22, cx - 55, cy + 104, 110, 18, "閉じる"))
+        val tlc = StatCollector::translateToLocal
+        add(GuiButton(20, cx - 55, cy + 60, 110, 18, tlc("gui.kaisatsu.train.btn.next_station")))
+        add(GuiButton(21, cx - 55, cy + 82, 110, 18, tlc("gui.kaisatsu.btn.delete")).also { it.enabled = msg.hasTrain })
+        add(GuiButton(22, cx - 55, cy + 104, 110, 18, tlc("gui.kaisatsu.btn.close")))
     }
 
     private fun initPage1(cx: Int, cy: Int) {
@@ -88,24 +89,25 @@ class GuiTrainManager(private val msg: PacketOpenTrainManager) : GuiScreen() {
                 if (isSelected) "✓ $station" else station
             ).also { it.enabled = !isSelected })
         }
-        add(GuiButton(20, cx - 120, cy + 80, 110, 18, "← 戻る"))
-        add(GuiButton(21, cx + 10,  cy + 80, 110, 18, "次へ: 号車設定 →"))
+        add(GuiButton(20, cx - 120, cy + 80, 110, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.back")))
+        add(GuiButton(21, cx + 10,  cy + 80, 110, 18, StatCollector.translateToLocal("gui.kaisatsu.train.btn.next_car")))
     }
 
     private fun initPage2(cx: Int, cy: Int) {
         cars.forEachIndexed { i, (_, _, carClass) ->
             val baseY = cy - 80 + i * 22
             add(GuiButton(300 + i, cx - 120, baseY, 60, 18,
-                if (carClass == "グリーン") "グリーン" else "普通"
+                if (carClass == "グリーン") StatCollector.translateToLocal("gui.kaisatsu.train.btn.car_green")
+                else StatCollector.translateToLocal("gui.kaisatsu.train.btn.car_normal")
             ))
             add(GuiButton(400 + i * 2,     cx - 55,  baseY, 24, 18, "+"))
             add(GuiButton(400 + i * 2 + 1, cx - 28,  baseY, 24, 18, "-"))
         }
 
-        add(GuiButton(30, cx - 120, cy + 60, 110, 18, "+ 号車追加"))
-        add(GuiButton(31, cx + 10,  cy + 60, 110, 18, "- 号車削除").also { it.enabled = cars.isNotEmpty() })
-        add(GuiButton(20, cx - 55,  cy + 82, 110, 18, "← 戻る"))
-        add(GuiButton(0,  cx - 55,  cy + 104, 110, 18, "保存して終了"))
+        add(GuiButton(30, cx - 120, cy + 60, 110, 18, StatCollector.translateToLocal("gui.kaisatsu.train.btn.add_car")))
+        add(GuiButton(31, cx + 10,  cy + 60, 110, 18, StatCollector.translateToLocal("gui.kaisatsu.train.btn.remove_car")).also { it.enabled = cars.isNotEmpty() })
+        add(GuiButton(20, cx - 55,  cy + 82, 110, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.back")))
+        add(GuiButton(0,  cx - 55,  cy + 104, 110, 18, StatCollector.translateToLocal("gui.kaisatsu.train.btn.save_exit")))
     }
 
     override fun onGuiClosed() { Keyboard.enableRepeatEvents(false) }
@@ -254,27 +256,31 @@ class GuiTrainManager(private val msg: PacketOpenTrainManager) : GuiScreen() {
 
         when (page) {
             0 -> {
-                drawCenteredString(fontRendererObj, "列車管理ブロック 設定", cx, cy - 100, 0xFFFFFF)
+                val tlc = StatCollector::translateToLocal
+                drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.train.title"), cx, cy - 100, 0xFFFFFF)
                 if (::trainIDField.isInitialized) {
-                    drawString(fontRendererObj, "列車ID", cx - 100, cy - 85, 0xAAAAAA)
-                    drawString(fontRendererObj, "列車名", cx + 10, cy - 85, 0xAAAAAA)
-                    drawString(fontRendererObj, "指定席料金", cx - 100, cy - 55, 0xAAAAAA)
-                    drawString(fontRendererObj, "自由席料金", cx + 10, cy - 55, 0xAAAAAA)
-                    drawString(fontRendererObj, "種別:", cx - 120, cy - 25, 0xAAAAAA)
+                    drawString(fontRendererObj, tlc("gui.kaisatsu.train.lbl.id"), cx - 100, cy - 85, 0xAAAAAA)
+                    drawString(fontRendererObj, tlc("gui.kaisatsu.train.lbl.name"), cx + 10, cy - 85, 0xAAAAAA)
+                    drawString(fontRendererObj, tlc("gui.kaisatsu.train.lbl.reserved_fare"), cx - 100, cy - 55, 0xAAAAAA)
+                    drawString(fontRendererObj, tlc("gui.kaisatsu.train.lbl.unreserved_fare"), cx + 10, cy - 55, 0xAAAAAA)
+                    drawString(fontRendererObj, tlc("gui.kaisatsu.train.lbl.type"), cx - 120, cy - 25, 0xAAAAAA)
                     trainIDField.drawTextBox()
                     trainNameField.drawTextBox()
                     reservedFareField.drawTextBox()
                     unreservedFareField.drawTextBox()
 
-                    drawString(fontRendererObj, "路線: ${if (msg.lines.isNotEmpty()) msg.lines[selectedLineIndex].lineName else "なし"}", cx - 95, cy + 22, 0xFFFF55)
+                    val lineName = if (msg.lines.isNotEmpty()) msg.lines[selectedLineIndex].lineName else tlc("gui.kaisatsu.train.lbl.no_line")
+                    drawString(fontRendererObj, "${tlc("gui.kaisatsu.train.lbl.line")} $lineName", cx - 95, cy + 22, 0xFFFF55)
                 }
             }
             1 -> {
-                drawCenteredString(fontRendererObj, "停車駅を選択 (路線: ${if (msg.lines.isNotEmpty()) msg.lines[selectedLineIndex].lineName else "なし"})", cx, cy - 100, 0xFFFF55)
-                drawString(fontRendererObj, "選択済み: ${selectedStations.joinToString(", ").take(60)}", cx - 120, cy + 60, 0x55FF55)
+                val tlc = StatCollector::translateToLocal
+                val lineName = if (msg.lines.isNotEmpty()) msg.lines[selectedLineIndex].lineName else tlc("gui.kaisatsu.train.lbl.no_line")
+                drawCenteredString(fontRendererObj, String.format(tlc("gui.kaisatsu.train.page.station.title"), lineName), cx, cy - 100, 0xFFFF55)
+                drawString(fontRendererObj, "${tlc("gui.kaisatsu.train.lbl.selected")} ${selectedStations.joinToString(", ").take(60)}", cx - 120, cy + 60, 0x55FF55)
             }
             2 -> {
-                drawCenteredString(fontRendererObj, "号車設定", cx, cy - 100, 0xFFFF55)
+                drawCenteredString(fontRendererObj, StatCollector.translateToLocal("gui.kaisatsu.train.page.car.title"), cx, cy - 100, 0xFFFF55)
                 cars.forEachIndexed { i, (num, count, _) ->
                     val baseY = cy - 80 + i * 22
                     drawString(fontRendererObj, "${num}号車: ${count}席", cx + 5, baseY + 4, 0xFFFFFF)

@@ -8,6 +8,7 @@ import jp.sakuramochi.kaisatsupatch.network.PacketTurnstileConfig
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
+import net.minecraft.util.StatCollector
 import org.lwjgl.input.Keyboard
 
 @SideOnly(Side.CLIENT)
@@ -29,8 +30,13 @@ class GuiTurnstileConfig(
     private lateinit var openTicksBtn: GuiButton
     private lateinit var msgField: GuiTextField
 
-    // 開放時間の選択肢: ticks → 表示名
-    private val OPEN_TICKS_OPTIONS = listOf(20 to "1秒", 40 to "2秒", 60 to "3秒", 80 to "4秒", 100 to "5秒")
+    private val OPEN_TICKS_OPTIONS = listOf(
+        20 to "gui.kaisatsu.turnstile.time.1s",
+        40 to "gui.kaisatsu.turnstile.time.2s",
+        60 to "gui.kaisatsu.turnstile.time.3s",
+        80 to "gui.kaisatsu.turnstile.time.4s",
+        100 to "gui.kaisatsu.turnstile.time.5s"
+    )
 
     init {
         // openTicks が選択肢にない場合は最も近い値に丸める
@@ -46,7 +52,7 @@ class GuiTurnstileConfig(
         nextBtn      = GuiButton(1, cx + 100, cy - 8,  20,  20, ">")
         modeBtn      = GuiButton(2, cx - 60,  cy + 20, 120, 20, modeLabel())
         openTicksBtn = GuiButton(3, cx - 60,  cy + 44, 120, 20, openTicksLabel())
-        val applyBtn = GuiButton(4, cx - 55,  cy + 96, 110, 20, "適用 [Enter]")
+        val applyBtn = GuiButton(4, cx - 55,  cy + 96, 110, 20, StatCollector.translateToLocal("gui.kaisatsu.btn.apply"))
 
         @Suppress("UNCHECKED_CAST")
         (buttonList as MutableList<GuiButton>).addAll(listOf(prevBtn, nextBtn, modeBtn, openTicksBtn, applyBtn))
@@ -106,10 +112,11 @@ class GuiTurnstileConfig(
         val cx = width / 2
         val cy = height / 2
 
-        drawCenteredString(fontRendererObj, "改札機設定", cx, cy - 38, 0xFFFFFF)
-        drawCenteredString(fontRendererObj, "駅を選択:", cx, cy - 26, 0xAAAAAA)
+        val tlc = StatCollector::translateToLocal
+        drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.turnstile.title"), cx, cy - 38, 0xFFFFFF)
+        drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.turnstile.lbl.station"), cx, cy - 26, 0xAAAAAA)
 
-        val stationLabel = if (stationList.isEmpty()) "（駅が登録されていません）"
+        val stationLabel = if (stationList.isEmpty()) tlc("gui.kaisatsu.turnstile.no_station")
                            else stationList[selectedStationIndex]
         drawCenteredString(fontRendererObj, stationLabel, cx, cy - 3, 0xFFFF55)
 
@@ -117,8 +124,7 @@ class GuiTurnstileConfig(
             drawCenteredString(fontRendererObj, "${selectedStationIndex + 1} / ${stationList.size}", cx, cy + 9, 0x555555)
         }
 
-        // 通過メッセージラベル
-        drawString(fontRendererObj, "通過メッセージ（省略可）:", cx - 75, cy + 62, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.turnstile.lbl.message"), cx - 75, cy + 62, 0xAAAAAA)
         msgField.drawTextBox()
 
         super.drawScreen(mouseX, mouseY, partialTicks)
@@ -126,19 +132,21 @@ class GuiTurnstileConfig(
 
     override fun doesGuiPauseGame() = false
 
-    private fun modeLabel() = "モード: ${currentMode.displayName}"
+    private fun modeLabel() = String.format(
+        StatCollector.translateToLocal("gui.kaisatsu.turnstile.btn.mode"), currentMode.displayName)
     private fun openTicksLabel(): String {
-        val label = OPEN_TICKS_OPTIONS.firstOrNull { it.first == currentOpenTicks }?.second ?: "${currentOpenTicks}t"
-        return "開放時間: $label"
+        val key = OPEN_TICKS_OPTIONS.firstOrNull { it.first == currentOpenTicks }?.second ?: ""
+        val label = if (key.isNotEmpty()) StatCollector.translateToLocal(key) else "${currentOpenTicks}t"
+        return String.format(StatCollector.translateToLocal("gui.kaisatsu.turnstile.btn.open_ticks"), label)
     }
 }
 
 val GateMode.displayName: String
-    get() = when (this) {
-        GateMode.ENTRY        -> "入場専用（全種別）"
-        GateMode.EXIT         -> "出場専用（全種別）"
-        GateMode.BOTH         -> "入出場兼用（全種別）"
-        GateMode.IC_ONLY      -> "IC専用（入出場兼用）"
-        GateMode.TICKET_ONLY  -> "切符専用（入出場兼用）"
-        GateMode.PASS_ONLY    -> "定期専用（入出場兼用）"
-    }
+    get() = StatCollector.translateToLocal(when (this) {
+        GateMode.ENTRY        -> "gui.kaisatsu.turnstile.mode.entry_all"
+        GateMode.EXIT         -> "gui.kaisatsu.turnstile.mode.exit_all"
+        GateMode.BOTH         -> "gui.kaisatsu.turnstile.mode.both_all"
+        GateMode.IC_ONLY      -> "gui.kaisatsu.turnstile.mode.ic_only"
+        GateMode.TICKET_ONLY  -> "gui.kaisatsu.turnstile.mode.ticket_only"
+        GateMode.PASS_ONLY    -> "gui.kaisatsu.turnstile.mode.pass_only"
+    })
