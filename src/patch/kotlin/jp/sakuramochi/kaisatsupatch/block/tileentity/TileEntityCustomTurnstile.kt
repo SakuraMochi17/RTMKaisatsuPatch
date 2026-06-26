@@ -18,6 +18,10 @@ class TileEntityCustomTurnstile : TileEntityTurnstile() {
     var stationCode: String = "STATION_A"
     var gateMode: GateMode = GateMode.ENTRY
     var ownerCompanyID: String = ""
+    /** 改札開放時間（ticks）。20ticks=1秒 */
+    var openTicks: Int = 40
+    /** 通過時に表示するカスタムメッセージ（空の場合は非表示） */
+    var passMessage: String = ""
 
     override fun getBlockType(): Block = jp.ngt.rtm.RTMBlock.turnstile
 
@@ -26,6 +30,8 @@ class TileEntityCustomTurnstile : TileEntityTurnstile() {
         stationCode = tag.getString("StationCode").ifEmpty { "STATION_A" }
         gateMode = runCatching { GateMode.valueOf(tag.getString("GateMode")) }.getOrDefault(GateMode.ENTRY)
         ownerCompanyID = tag.getString("OwnerCompanyID")
+        openTicks = tag.getInteger("OpenTicks").let { if (it <= 0) 40 else it }
+        passMessage = tag.getString("PassMessage")
     }
 
     override fun writeToNBT(tag: NBTTagCompound) {
@@ -33,5 +39,7 @@ class TileEntityCustomTurnstile : TileEntityTurnstile() {
         tag.setString("StationCode", stationCode)
         tag.setString("GateMode", gateMode.name)
         tag.setString("OwnerCompanyID", ownerCompanyID)
+        tag.setInteger("OpenTicks", openTicks)
+        tag.setString("PassMessage", passMessage)
     }
 }

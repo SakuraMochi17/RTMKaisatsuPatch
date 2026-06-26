@@ -1,9 +1,7 @@
 package jp.sakuramochi.kaisatsupatch.network
 
 import cpw.mods.fml.common.network.simpleimpl.IMessage
-import jp.sakuramochi.kaisatsupatch.util.readCoords
 import jp.sakuramochi.kaisatsupatch.util.readStr
-import jp.sakuramochi.kaisatsupatch.util.writeCoords
 import jp.sakuramochi.kaisatsupatch.util.writeStr
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler
 import cpw.mods.fml.common.network.simpleimpl.MessageContext
@@ -14,34 +12,38 @@ import net.minecraft.util.EnumChatFormatting
 
 class PacketTurnstileConfig() : IMessage {
 
-    var x = 0
-    var y = 0
-    var z = 0
+    var x = 0; var y = 0; var z = 0
     var stationCode = ""
     var gateMode = ""
+    var openTicks = 40
+    var passMessage = ""
 
-    constructor(x: Int, y: Int, z: Int, stationCode: String, gateMode: String) : this() {
-        this.x = x
-        this.y = y
-        this.z = z
+    constructor(
+        x: Int, y: Int, z: Int,
+        stationCode: String, gateMode: String,
+        openTicks: Int = 40, passMessage: String = ""
+    ) : this() {
+        this.x = x; this.y = y; this.z = z
         this.stationCode = stationCode
         this.gateMode = gateMode
+        this.openTicks = openTicks
+        this.passMessage = passMessage
     }
 
     override fun fromBytes(buf: ByteBuf) {
-        x = buf.readInt()
-        y = buf.readInt()
-        z = buf.readInt()
+        x = buf.readInt(); y = buf.readInt(); z = buf.readInt()
         stationCode = buf.readStr()
         gateMode = buf.readStr()
+        openTicks = buf.readInt()
+        passMessage = buf.readStr()
     }
 
     override fun toBytes(buf: ByteBuf) {
-        buf.writeInt(x)
-        buf.writeInt(y)
-        buf.writeInt(z)
+        buf.writeInt(x); buf.writeInt(y); buf.writeInt(z)
         buf.writeStr(stationCode)
         buf.writeStr(gateMode)
+        buf.writeInt(openTicks)
+        buf.writeStr(passMessage)
     }
 
     class Handler : IMessageHandler<PacketTurnstileConfig, IMessage> {
@@ -57,6 +59,8 @@ class PacketTurnstileConfig() : IMessage {
 
             tile.stationCode = msg.stationCode.ifBlank { "STATION_A" }
             tile.gateMode = newMode
+            tile.openTicks = msg.openTicks.coerceIn(10, 200)
+            tile.passMessage = msg.passMessage
             tile.markDirty()
 
             player.addChatMessage(ChatComponentText(

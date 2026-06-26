@@ -19,6 +19,7 @@ class PacketDepartureBoardSave() : IMessage {
     var direction   = "両方"
     var displayRows = 5
     var title       = ""
+    var timeMode    = "real"
 
     override fun toBytes(buf: ByteBuf) {
         buf.writeInt(x); buf.writeInt(y); buf.writeInt(z)
@@ -29,6 +30,7 @@ class PacketDepartureBoardSave() : IMessage {
         buf.writeStr(direction)
         buf.writeInt(displayRows)
         buf.writeStr(title)
+        buf.writeStr(timeMode)
     }
 
     override fun fromBytes(buf: ByteBuf) {
@@ -40,6 +42,7 @@ class PacketDepartureBoardSave() : IMessage {
         direction   = buf.readStr()
         displayRows = buf.readInt()
         title       = buf.readStr()
+        timeMode    = buf.readStr()
     }
 
     class Handler : IMessageHandler<PacketDepartureBoardSave, IMessage> {
@@ -54,6 +57,7 @@ class PacketDepartureBoardSave() : IMessage {
             tile.direction    = msg.direction
             tile.displayRows  = msg.displayRows
             tile.title        = msg.title
+            tile.timeMode     = msg.timeMode
             tile.markDirty()
             tile.recomputeDepartures()
             return null

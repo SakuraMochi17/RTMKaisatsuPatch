@@ -22,6 +22,7 @@ class TileEntityDepartureBoard : TileEntity() {
     var direction    = "両方"
     var displayRows  = 5
     var title        = ""
+    var timeMode     = "real"   // "real" = 現実時刻, "game" = ゲーム内時刻
 
     // サーバー計算 → クライアントに同期される発車情報
     var cachedDepartures: List<DepartureRow> = emptyList()
@@ -42,8 +43,12 @@ class TileEntityDepartureBoard : TileEntity() {
     fun recomputeDepartures() {
         val data = KaisatsuNetworkData.get(worldObj) ?: return
         val tt = data.timetable ?: return
-        val now = java.time.LocalTime.now()
-        val nowMin = now.hour * 60 + now.minute
+        val nowMin = if (timeMode == "game") {
+            ((worldObj.worldTime % 24000L) * 1440L / 24000L + 360L).toInt() % 1440
+        } else {
+            val now = java.time.LocalTime.now()
+            now.hour * 60 + now.minute
+        }
         val lineStations = if (lineID.isNotEmpty())
             data.companyLines[lineID]?.stationOrder?.toSet() else null
         cachedDepartures = tt.getNextDepartures(stationName, diaName, direction, nowMin, displayRows, lineStations)
@@ -61,6 +66,7 @@ class TileEntityDepartureBoard : TileEntity() {
         tag.setString("Direction",    direction)
         tag.setInteger("DisplayRows", displayRows)
         tag.setString("Title",        title)
+        tag.setString("TimeMode",     timeMode)
 
         val list = NBTTagList()
         cachedDepartures.forEach { row ->
@@ -85,6 +91,7 @@ class TileEntityDepartureBoard : TileEntity() {
         direction    = tag.getString("Direction").ifEmpty { "両方" }
         displayRows  = tag.getInteger("DisplayRows").let { if (it == 0) 5 else it }
         title        = tag.getString("Title")
+        timeMode     = tag.getString("TimeMode").ifEmpty { "real" }
 
         val list = tag.getTagList("Departures", Constants.NBT.TAG_COMPOUND)
         cachedDepartures = (0 until list.tagCount()).map { i ->

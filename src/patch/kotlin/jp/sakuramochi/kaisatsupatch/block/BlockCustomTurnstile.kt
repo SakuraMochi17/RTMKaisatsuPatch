@@ -7,6 +7,7 @@ import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTurnstile
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTurnstile.GateMode
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkManager
+import jp.sakuramochi.kaisatsupatch.item.ItemBoardingCertificate
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomCouponTicket
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomICCard
 import jp.sakuramochi.kaisatsupatch.item.ItemCustomPass
@@ -78,7 +79,7 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
                 if (!world.isRemote) {
                     val stationList = KaisatsuNetworkData.get(world)?.globalStations?.keys?.sorted() ?: emptyList()
                     KaizPatchNetwork.CHANNEL.sendTo(
-                        PacketOpenTurnstileConfig(x, y, z, tile.stationCode, tile.gateMode.name, stationList),
+                        PacketOpenTurnstileConfig(x, y, z, tile.stationCode, tile.gateMode.name, stationList, tile.openTicks, tile.passMessage),
                         player as EntityPlayerMP
                     )
                 }
@@ -136,6 +137,10 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
                 if (!gm.allowsTicket) { deny(world, player, "この改札は切符専用ではありません（${gm.displayName}）"); return true }
                 handleRTMTicket(world, x, y, z, player, heldItem, tile, item)
             }
+            is ItemBoardingCertificate -> {
+                if (gm == GateMode.ENTRY) { deny(world, player, "この改札は入場専用です。精算機または出場改札をご利用ください"); return true }
+                if (!world.isRemote) handleBoardingCertificate(world, x, y, z, player, heldItem, tile)
+            }
             else -> deny(world, player, "切符・ICカード・定期券を手に持ってください")
         }
         return true
@@ -160,33 +165,39 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             ItemCustomICCard.setEntryStation(stack, tile.stationCode)
             ItemCustomICCard.addHistory(stack, "入場", tile.stationCode, 0)
             openGate(world, x, y, z, tile)
-            allow(world, player)
+            allow(world, player, tile)
             KaisatsuNetworkData.get(world)?.addGateLog(tile.stationCode, player.gameProfile.name, "入場", "IC")
             player.addChatMessage(ChatComponentText(
-                "${EnumChatFormatting.GREEN}【入場】${tile.stationCode}　残高: ${ItemCustomICCard.getBalance(stack)}円"
+                "§a[入場] ${tile.stationCode}  残高 ${ItemCustomICCard.getBalance(stack).yen()}"
             ))
             return
         }
 
         // 入場済み → 出場処理
         if (entryStation.isNotEmpty() && canExit) {
+            // 入場駅がネットワーク上に存在するか確認（駅削除・リネーム後のスタック防止）
+            if (KaisatsuNetworkData.get(world)?.globalStations?.containsKey(entryStation) == false) {
+                ItemCustomICCard.clearEntryStation(stack)
+                deny(world, player, "入場駅「${entryStation}」が削除されています。入場記録をリセットしました")
+                return
+            }
             val fare = KaisatsuNetworkManager.calculateFare(world, entryStation, tile.stationCode, isICCard = true)
             if (fare < 0) {
-                deny(world, player, "この区間の運賃データがありません（${entryStation} → ${tile.stationCode}）")
+                deny(world, player, KaisatsuNetworkManager.fareErrorReason(world, entryStation, tile.stationCode))
                 return
             }
             if (!ItemCustomICCard.deduct(stack, fare)) {
                 val balance = ItemCustomICCard.getBalance(stack)
-                deny(world, player, "残高不足です（運賃: ${fare}円 / 残高: ${balance}円 / 不足: ${fare - balance}円）")
+                deny(world, player, "残高不足 ${balance.yen()} / 必要 ${fare.yen()}")
                 return
             }
             ItemCustomICCard.addHistory(stack, "出場", tile.stationCode, -fare)
             ItemCustomICCard.clearEntryStation(stack)
             openGate(world, x, y, z, tile)
-            allow(world, player)
+            allow(world, player, tile)
             KaisatsuNetworkData.get(world)?.addGateLog(tile.stationCode, player.gameProfile.name, "出場", "IC")
             player.addChatMessage(ChatComponentText(
-                "${EnumChatFormatting.GREEN}【出場】${tile.stationCode}　運賃: ${fare}円　残高: ${ItemCustomICCard.getBalance(stack)}円"
+                "§a[出場] ${tile.stationCode}  -${fare.yen()} 残高 ${ItemCustomICCard.getBalance(stack).yen()}"
             ))
             return
         }
@@ -229,10 +240,10 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             }
             ItemCustomCouponTicket.markEntry(stack, tile.stationCode)
             openGate(world, x, y, z, tile)
-            allow(world, player)
+            allow(world, player, tile)
             KaisatsuNetworkData.get(world)?.addGateLog(tile.stationCode, player.gameProfile.name, "入場", "回数券")
             player.addChatMessage(ChatComponentText(
-                "${EnumChatFormatting.GREEN}【入場】${tile.stationCode}　残り ${uses} 回"))
+                "§a[入場] ${tile.stationCode}  残り ${uses} 回"))
         } else {
             // 出場
             if (!canExit) { deny(world, player, "この改札は入場専用です"); return }
@@ -243,14 +254,14 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             ItemCustomCouponTicket.clearEntry(stack)
             val remaining = ItemCustomCouponTicket.consumeUse(stack)
             openGate(world, x, y, z, tile)
-            allow(world, player)
+            allow(world, player, tile)
             KaisatsuNetworkData.get(world)?.addGateLog(tile.stationCode, player.gameProfile.name, "出場", "回数券")
             if (remaining <= 0) {
                 player.inventory.setInventorySlotContents(player.inventory.currentItem, null)
-                player.addChatMessage(ChatComponentText("${EnumChatFormatting.GREEN}【出場】${to}　回数券を使い切りました"))
+                player.addChatMessage(ChatComponentText("§a[出場] ${to}  回数券を使い切りました"))
             } else {
                 player.addChatMessage(ChatComponentText(
-                    "${EnumChatFormatting.GREEN}【出場】${to}　残り ${remaining} 回"))
+                    "§a[出場] ${to}  残り ${remaining} 回"))
             }
         }
     }
@@ -277,18 +288,18 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             }
             ItemCustomTicket.markUsed(stack)
             openGate(world, x, y, z, tile)
-            allow(world, player)
+            allow(world, player, tile)
             KaisatsuNetworkData.get(world)?.addGateLog(tile.stationCode, player.gameProfile.name, "入場", "切符")
-            player.addChatMessage(ChatComponentText("${EnumChatFormatting.GREEN}【入場】${from} → ${to}"))
+            player.addChatMessage(ChatComponentText("§a[入場] ${from} → ${to}"))
         } else if (used && canExit) {
             if (to != tile.stationCode) {
                 deny(world, player, "この切符の着駅は ${to} です（現在の駅: ${tile.stationCode}）"); return
             }
             if (!player.capabilities.isCreativeMode) stack.stackSize--
             openGate(world, x, y, z, tile)
-            allow(world, player)
+            allow(world, player, tile)
             KaisatsuNetworkData.get(world)?.addGateLog(tile.stationCode, player.gameProfile.name, "出場", "切符")
-            player.addChatMessage(ChatComponentText("${EnumChatFormatting.GREEN}【出場】${to}　ご利用ありがとうございました"))
+            player.addChatMessage(ChatComponentText("§a[出場] ${to}  ご乗車ありがとうございました"))
         } else if (used && !canExit) {
             deny(world, player, "この改札は入場専用です")
         } else if (!used && !canEntry) {
@@ -317,11 +328,11 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
             return
         }
         openGate(world, x, y, z, tile)
-        allow(world, player)
+        allow(world, player, tile)
         KaisatsuNetworkData.get(world)?.addGateLog(tile.stationCode, player.gameProfile.name, "通過", "定期券")
         val remaining = ItemCustomPass.remainingDays(stack, currentDay)
         player.addChatMessage(ChatComponentText(
-            "${EnumChatFormatting.GREEN}【定期】${tile.stationCode}　残り ${remaining} 日"
+            "§a[定期] ${tile.stationCode}  残り ${remaining} 日"
         ))
     }
 
@@ -334,12 +345,65 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
         ticketItem: ItemTicket
     ) {
         openGate(world, x, y, z, tile)
-        allow(world, player)
+        allow(world, player, tile)
         if (!world.isRemote) KaisatsuNetworkData.get(world)?.addGateLog(tile.stationCode, player.gameProfile.name, "通過", "RTM切符")
         if (!world.isRemote && ticketItem.ticketType != 2) {
             val returned = ItemTicket.consumeTicket(stack)
             if (returned != null) dropBlockAsItem(world, x, y + 1, z, returned)
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // 乗車駅証明書 出場処理
+    // -----------------------------------------------------------------------
+    private fun handleBoardingCertificate(
+        world: World, x: Int, y: Int, z: Int,
+        player: EntityPlayer, stack: ItemStack, tile: TileEntityCustomTurnstile
+    ) {
+        val boardingStation = ItemBoardingCertificate.getBoardingStation(stack)
+        if (boardingStation.isEmpty()) {
+            deny(world, player, "無効な乗車駅証明書です"); return
+        }
+        val fare = KaisatsuNetworkManager.calculateFare(world, boardingStation, tile.stationCode)
+        if (fare < 0) {
+            deny(world, player, KaisatsuNetworkManager.fareErrorReason(world, boardingStation, tile.stationCode)); return
+        }
+        if (!deductMoney(player, fare)) {
+            deny(world, player, "残高不足です（運賃: ${fare}円）"); return
+        }
+        stack.stackSize--
+        KaisatsuNetworkData.get(world)?.addGateLog(tile.stationCode, player.gameProfile.name, "出場", "証明書")
+        openGate(world, x, y, z, tile)
+        allow(world, player, tile)
+        player.addChatMessage(net.minecraft.util.ChatComponentText(
+            "§a[出場] ${boardingStation} → ${tile.stationCode}  ${fare.yen()}"))
+    }
+
+    private fun deductMoney(player: EntityPlayer, amount: Int): Boolean {
+        if (amount <= 0) return true
+        val inv = player.inventory
+        var total = 0
+        for (i in 0 until inv.sizeInventory) {
+            val s = inv.getStackInSlot(i) ?: continue
+            if (s.item != jp.ngt.rtm.RTMItem.money) continue
+            total += jp.ngt.rtm.RTMItem.MoneyType.getPrice(s.itemDamage) * s.stackSize
+        }
+        if (total < amount) return false
+        for (i in 0 until inv.sizeInventory) {
+            val s = inv.getStackInSlot(i) ?: continue
+            if (s.item != jp.ngt.rtm.RTMItem.money) continue
+            inv.setInventorySlotContents(i, null)
+        }
+        var change = total - amount
+        for ((id, value) in jp.sakuramochi.kaisatsupatch.gui.InventoryCustomVendor.DENOMINATIONS) {
+            val count = change / value
+            if (count > 0) {
+                val s = net.minecraft.item.ItemStack(jp.ngt.rtm.RTMItem.money, count, id)
+                if (!inv.addItemStackToInventory(s)) player.dropPlayerItemWithRandomChoice(s, false)
+                change -= count * value
+            }
+        }
+        return true
     }
 
     // -----------------------------------------------------------------------
@@ -349,12 +413,17 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
         val meta = world.getBlockMetadata(x, y, z)
         if (!isOpen(meta) && !tile.canThrough()) {
             world.setBlockMetadataWithNotify(x, y, z, meta + 4, 2)
-            tile.setCount(40)
+            tile.setCount(tile.openTicks)
         }
     }
 
-    private fun allow(world: World, player: EntityPlayer) {
-        if (!world.isRemote) world.playSoundAtEntity(player, "note.pling", 1.0f, 2.0f)
+    private fun allow(world: World, player: EntityPlayer, tile: TileEntityCustomTurnstile? = null) {
+        if (!world.isRemote) {
+            world.playSoundAtEntity(player, "note.pling", 1.0f, 2.0f)
+            if (tile?.passMessage?.isNotEmpty() == true) {
+                player.addChatMessage(net.minecraft.util.ChatComponentText("§7${tile.passMessage}"))
+            }
+        }
     }
 
     private fun deny(world: World, player: EntityPlayer, reason: String) {
@@ -390,6 +459,8 @@ class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
     override fun isOpaqueCube(): Boolean = false
     override fun renderAsNormalBlock(): Boolean = false
 }
+
+private fun Int.yen() = "%,d円".format(this)
 
 private val TileEntityCustomTurnstile.GateMode.allowsIC: Boolean
     get() = this != TileEntityCustomTurnstile.GateMode.TICKET_ONLY && this != TileEntityCustomTurnstile.GateMode.PASS_ONLY

@@ -17,6 +17,7 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
 
     // 設定ページの状態
     private var selStation = data.availableStations.indexOfFirst { it == data.stationName }.coerceAtLeast(0)
+    private var selTimeMode = if (data.timeMode == "game") 1 else 0  // 0=現実, 1=ゲーム
     // 路線: index 0 = フィルターなし、1以降 = availableLines[i-1]
     private var selLine    = run {
         val idx = data.availableLines.indexOfFirst { it.first == data.lineID }
@@ -39,30 +40,33 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
                 add(GuiButton(99, cx - 30, cy + 90, 60, 18, "閉じる"))
             }
             1 -> {
-                fldTitle    = GuiTextField(fontRendererObj, cx - 60, cy - 88, 120, 14)
-                fldPlatform = GuiTextField(fontRendererObj, cx + 5,  cy + 18, 60,  14)
+                fldTitle    = GuiTextField(fontRendererObj, cx - 80, cy - 90, 160, 14)
+                fldPlatform = GuiTextField(fontRendererObj, cx - 30, cy + 18, 80,  14)
                 fldTitle.text    = data.title
                 fldPlatform.text = data.platform
                 fldPlatform.setMaxStringLength(8)
 
                 // 駅
-                add(GuiButton(10, cx - 112, cy - 54, 18, 14, "<"))
-                add(GuiButton(11, cx + 94,  cy - 54, 18, 14, ">"))
+                add(GuiButton(10, cx - 80, cy - 54, 18, 14, "<"))
+                add(GuiButton(11, cx + 62, cy - 54, 18, 14, ">"))
                 // 路線
-                add(GuiButton(18, cx - 112, cy - 34, 18, 14, "<"))
-                add(GuiButton(19, cx + 94,  cy - 34, 18, 14, ">"))
+                add(GuiButton(18, cx - 80, cy - 34, 18, 14, "<"))
+                add(GuiButton(19, cx + 62, cy - 34, 18, 14, ">"))
                 // ダイヤ
-                add(GuiButton(12, cx - 112, cy - 14, 18, 14, "<"))
-                add(GuiButton(13, cx + 94,  cy - 14, 18, 14, ">"))
+                add(GuiButton(12, cx - 80, cy - 14, 18, 14, "<"))
+                add(GuiButton(13, cx + 62, cy - 14, 18, 14, ">"))
                 // 方向
-                add(GuiButton(14, cx - 112, cy + 6,  18, 14, "<"))
-                add(GuiButton(15, cx + 94,  cy + 6,  18, 14, ">"))
+                add(GuiButton(14, cx - 80, cy + 6,  18, 14, "<"))
+                add(GuiButton(15, cx + 62, cy + 6,  18, 14, ">"))
                 // 表示行数
                 add(GuiButton(16, cx - 50,  cy + 38, 18, 14, "-"))
                 add(GuiButton(17, cx + 32,  cy + 38, 18, 14, "+"))
+                // 時刻モード切り替え
+                add(GuiButton(20, cx - 80, cy + 58, 18, 14, "<"))
+                add(GuiButton(21, cx + 62, cy + 58, 18, 14, ">"))
 
-                add(GuiButton(0,  cx - 35, cy + 58, 70, 18, "保存"))
-                add(GuiButton(99, cx - 35, cy + 80, 70, 18, "キャンセル"))
+                add(GuiButton(0,  cx - 35, cy + 76, 70, 18, "保存"))
+                add(GuiButton(99, cx - 35, cy + 98, 70, 18, "キャンセル"))
             }
         }
     }
@@ -85,6 +89,8 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
                 15 -> { selDir = cycle(selDir + 1, DIRS.size); initGui() }
                 16 -> { selRows = (selRows - 1).coerceAtLeast(0); initGui() }
                 17 -> { selRows = (selRows + 1).coerceAtMost(7); initGui() }
+                20 -> { selTimeMode = (selTimeMode - 1 + TIME_MODES.size) % TIME_MODES.size; initGui() }
+                21 -> { selTimeMode = (selTimeMode + 1) % TIME_MODES.size; initGui() }
                 0 -> {
                     val station = data.availableStations.getOrElse(selStation) { "" }
                     val lineID  = if (selLine == 0) "" else data.availableLines.getOrElse(selLine - 1) { "" to "" }.first
@@ -98,6 +104,7 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
                         pkt.direction    = DIRS[selDir]
                         pkt.displayRows  = selRows + 1
                         pkt.title        = if (::fldTitle.isInitialized) fldTitle.text.trim() else ""
+                        pkt.timeMode     = TIME_MODES[selTimeMode].first
                     })
                     mc.thePlayer.closeScreen()
                 }
@@ -127,11 +134,12 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawDefaultBackground()
         val cx = width / 2; val cy = height / 2
+        if (page == 1) drawRect(cx - 140, cy - 118, cx + 140, cy + 106, 0xF0202030.toInt())
+        super.drawScreen(mouseX, mouseY, partialTicks)
         when (page) {
             0 -> drawDisplayPage(cx, cy)
             1 -> drawConfigPage(cx, cy)
         }
-        super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
     // ── 表示ページ ───────────────────────────────────────────────────
@@ -182,7 +190,7 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
         val dirLabel  = DIRS[selDir]
         val rowsLabel = "${selRows + 1}行"
 
-        val labelX = cx - 112
+        val labelX = cx - 130
 
         drawString(fontRendererObj, "駅",       labelX,  cy - 66, 0xAAAAAA)
         drawString(fontRendererObj, "路線",     labelX,  cy - 46, 0xAAAAAA)
@@ -190,12 +198,14 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
         drawString(fontRendererObj, "方向",     labelX,  cy - 6,  0xAAAAAA)
         drawString(fontRendererObj, "番線",     cx - 60, cy + 6,  0xAAAAAA)
         drawString(fontRendererObj, "表示行数", labelX,  cy + 26, 0xAAAAAA)
+        drawString(fontRendererObj, "時刻モード", labelX, cy + 46, 0xAAAAAA)
 
         drawCenteredString(fontRendererObj, stLabel,   cx, cy - 58, 0xFFFF55)
         drawCenteredString(fontRendererObj, lineLabel, cx, cy - 38, 0xFFFF55)
         drawCenteredString(fontRendererObj, diaLabel,  cx, cy - 18, 0xFFFF55)
         drawCenteredString(fontRendererObj, dirLabel,  cx, cy + 2,  0xFFFF55)
         drawCenteredString(fontRendererObj, rowsLabel, cx, cy + 34, 0xFFFF55)
+        drawCenteredString(fontRendererObj, TIME_MODES[selTimeMode].second, cx, cy + 54, 0xFFFF55)
 
         if (::fldPlatform.isInitialized) fldPlatform.drawTextBox()
     }
@@ -209,5 +219,6 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
 
     companion object {
         val DIRS = listOf("両方", "下り", "上り")
+        val TIME_MODES = listOf("real" to "現実時刻", "game" to "ゲーム内時刻")
     }
 }

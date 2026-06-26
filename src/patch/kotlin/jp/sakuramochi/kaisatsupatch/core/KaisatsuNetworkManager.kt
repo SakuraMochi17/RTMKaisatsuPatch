@@ -64,6 +64,25 @@ object KaisatsuNetworkManager {
         return -1
     }
 
+    /**
+     * 運賃計算失敗の原因を人間が読める文字列で返す。
+     * calculateFare が -1 を返した後に呼び出して原因特定に使う。
+     */
+    fun fareErrorReason(world: World, from: String, to: String): String {
+        val data = KaisatsuNetworkData.get(world)
+            ?: return "ワールドデータが読み込めません"
+        val fromInRoute = data.companyLines.values.any { it.stationOrder.contains(from) }
+        val toInRoute   = data.companyLines.values.any { it.stationOrder.contains(to) }
+        return when {
+            !data.globalStations.containsKey(from) -> "駅「${from}」が登録されていません"
+            !data.globalStations.containsKey(to)   -> "駅「${to}」が登録されていません"
+            !fromInRoute && !toInRoute -> "「${from}」「${to}」がどの路線にも含まれていません（路線管理ブロックで追加してください）"
+            !fromInRoute -> "「${from}」がどの路線にも含まれていません"
+            !toInRoute   -> "「${to}」がどの路線にも含まれていません"
+            else         -> "「${from}」→「${to}」の経路が見つかりません（路線が接続されているか確認してください）"
+        }
+    }
+
     /** この駅から行ける全駅と運賃の一覧を返す（重複なし・昇順）。 */
     fun getAvailableFares(world: World, fromStation: String, isICCard: Boolean = false): List<Pair<String, Int>> {
         val data = KaisatsuNetworkData.get(world) ?: return emptyList()

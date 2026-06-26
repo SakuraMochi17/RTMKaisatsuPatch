@@ -12,11 +12,13 @@ import jp.sakuramochi.kaisatsupatch.gui.ContainerCustomVendor.Companion.INV_X
 import jp.sakuramochi.kaisatsupatch.gui.ContainerCustomVendor.Companion.INV_Y
 import jp.sakuramochi.kaisatsupatch.gui.ContainerCustomVendor.Companion.MONEY_POSITIONS
 import jp.sakuramochi.kaisatsupatch.gui.ContainerCustomVendor.Companion.RIGHT_PANEL_X
+import jp.sakuramochi.kaisatsupatch.item.ItemCustomPass
 import jp.sakuramochi.kaisatsupatch.network.KaizPatchNetwork
 import jp.sakuramochi.kaisatsupatch.network.PacketPurchaseTicket
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.entity.player.InventoryPlayer
+import net.minecraft.item.ItemStack
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
 
@@ -36,18 +38,42 @@ class GuiCustomTicketVendor(
     private var icMode = 0
     // 切符タブのサブモード: false=普通切符, true=回数券
     private var couponMode = false
+    // 定期券タブのサブモード: 0=新規, 1=継続
+    private var passSubMode = 0
 
     // スクロール
     private var ticketScrollOffset = 0
     private var passScrollOffset   = 0
     private val TICKET_VISIBLE = 8
-    private val PASS_VISIBLE   = 6
+    private val PASS_VISIBLE   = 4
 
     private val rightPanelWidth get() = xSize - RIGHT_PANEL_X - 4
 
     init { xSize = GUI_WIDTH; ySize = GUI_HEIGHT }
 
     override fun initGui() { super.initGui(); buildButtons() }
+
+    /** プレイヤーインベントリから期限切れ間近（残り7日以下）または期限切れの定期券を返す（フリーパス除く） */
+    private fun getExpiringPasses(): List<Pair<Int, ItemStack>> {
+        val world = playerInv.player?.worldObj ?: return emptyList()
+        val currentDay = ItemCustomPass.currentDay(world)
+        val result = mutableListOf<Pair<Int, ItemStack>>()
+        for (i in 0 until playerInv.getSizeInventory()) {
+            val stack = playerInv.getStackInSlot(i) ?: continue
+            if (stack.item !is ItemCustomPass) continue
+            if (ItemCustomPass.isFreePast(stack)) continue
+            val remaining = ItemCustomPass.remainingDays(stack, currentDay)
+            if (remaining <= 7) result.add(i to stack)
+        }
+        return result
+    }
+
+    /** 定期券の「もう一方の駅」を返す（fromStation が当駅なら toStation、そうでなければ fromStation） */
+    private fun passOtherStation(stack: ItemStack): String {
+        val from = ItemCustomPass.getFromStation(stack)
+        val to   = ItemCustomPass.getToStation(stack)
+        return if (from == stationName) to else from
+    }
 
     @Suppress("UNCHECKED_CAST")
     private fun buildButtons() {
@@ -115,22 +141,49 @@ class GuiCustomTicketVendor(
                 }
             }
             2 -> {
-                val visible = fares.drop(passScrollOffset).take(PASS_VISIBLE)
-                for (i in visible.indices) {
-                    val (dest, _) = visible[i]
-                    add(GuiButton(400 + i, if (i % 2 == 0) col0 else col1, ty + 28 + (i / 2) * 24, btnW, btnH, dest))
+                // 新規/継続 サブモード切り替え
+                val smW2 = (RIGHT_PANEL_X - 6) / 2
+                add(GuiButton(570, lx + 2,        ty + 25, smW2, 14, "新規").also { it.enabled = passSubMode != 0 })
+                add(GuiButton(571, lx + 2 + smW2, ty + 25, smW2, 14, "継続").also { it.enabled = passSubMode != 1 })
+
+                if (passSubMode == 0) {
+                    // ── 新規定期券 ──────────────────────────────────
+                    val visible = fares.drop(passScrollOffset).take(PASS_VISIBLE)
+                    for (i in visible.indices) {
+                        val (dest, _) = visible[i]
+                        add(GuiButton(400 + i, if (i % 2 == 0) col0 else col1, ty + 42 + (i / 2) * 22, btnW, btnH, dest))
+                    }
+                    if (fares.size > PASS_VISIBLE) {
+                        add(GuiButton(602, lx + 172, ty + 42, 10, 18, "▲").also { it.enabled = passScrollOffset > 0 })
+                        add(GuiButton(603, lx + 172, ty + 64, 10, 18, "▼").also { it.enabled = passScrollOffset + PASS_VISIBLE < fares.size })
+                    }
+                    for ((i, pair) in passDurations.withIndex()) {
+                        val (days, _) = pair
+                        add(GuiButton(500 + i, col0 + i * 56, ty + 92, 52, btnH, "${days}日"))
+                    }
+                    add(GuiButton(550, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "定期購入"))
+                    val dayPassPrice = calcDayPassPrice()
+                    add(GuiButton(560, col0, ty + 114, btnW * 2 + 4, 18, "フリーパス（1日）  ${dayPassPrice}円"))
+                } else {
+                    // ── 継続定期券 ──────────────────────────────────
+                    val expiring = getExpiringPasses()
+                    if (expiring.isNotEmpty()) {
+                        val world = playerInv.player?.worldObj
+                        val currentDay = if (world != null) ItemCustomPass.currentDay(world) else 0L
+                        for ((i, pair) in expiring.take(4).withIndex()) {
+                            val (_, stack) = pair
+                            val dest = passOtherStation(stack)
+                            val remaining = ItemCustomPass.remainingDays(stack, currentDay)
+                            val label = if (remaining > 0) "$dest (残${remaining}日)" else "$dest (期限切れ)"
+                            add(GuiButton(580 + i, if (i % 2 == 0) col0 else col1, ty + 42 + (i / 2) * 22, btnW, btnH, label))
+                        }
+                    }
+                    for ((i, pair) in passDurations.withIndex()) {
+                        val (days, _) = pair
+                        add(GuiButton(500 + i, col0 + i * 56, ty + 92, 52, btnH, "${days}日"))
+                    }
+                    add(GuiButton(550, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "継続購入"))
                 }
-                if (fares.size > PASS_VISIBLE) {
-                    add(GuiButton(602, lx + 172, ty + 28, 10, 18, "▲").also { it.enabled = passScrollOffset > 0 })
-                    add(GuiButton(603, lx + 172, ty + 50, 10, 18, "▼").also { it.enabled = passScrollOffset + PASS_VISIBLE < fares.size })
-                }
-                for ((i, pair) in passDurations.withIndex()) {
-                    val (days, _) = pair
-                    add(GuiButton(500 + i, col0 + i * 56, ty + 106, 52, btnH, "${days}日"))
-                }
-                add(GuiButton(550, lx + RIGHT_PANEL_X, ty + INV_Y + 60, rightPanelWidth, 18, "定期購入"))
-                val dayPassPrice = calcDayPassPrice()
-                add(GuiButton(560, col0, ty + 128, btnW * 2 + 4, 18, "フリーパス（1日）  ${dayPassPrice}円"))
             }
         }
     }
@@ -148,11 +201,13 @@ class GuiCustomTicketVendor(
                 resetSelection(); buildButtons()
             }
             2 -> {
-                passScrollOffset = if (wheel > 0)
-                    maxOf(0, passScrollOffset - 1)
-                else
-                    minOf(maxOf(0, fares.size - PASS_VISIBLE), passScrollOffset + 1)
-                resetSelection(); buildButtons()
+                if (passSubMode == 0) {
+                    passScrollOffset = if (wheel > 0)
+                        maxOf(0, passScrollOffset - 1)
+                    else
+                        minOf(maxOf(0, fares.size - PASS_VISIBLE), passScrollOffset + 1)
+                    resetSelection(); buildButtons()
+                }
             }
         }
     }
@@ -202,6 +257,11 @@ class GuiCustomTicketVendor(
             button.id == 602 -> { passScrollOffset = maxOf(0, passScrollOffset - 1); resetSelection(); buildButtons() }
             button.id == 603 -> { passScrollOffset = minOf(maxOf(0, fares.size - PASS_VISIBLE), passScrollOffset + 1); resetSelection(); buildButtons() }
 
+            // 定期券タブ: 新規/継続 切り替え
+            button.id == 570 -> { passSubMode = 0; resetSelection(); buildButtons() }
+            button.id == 571 -> { passSubMode = 1; resetSelection(); buildButtons() }
+
+            // 新規定期券: 行き先選択
             button.id in 400..405 -> {
                 val actualIdx = passScrollOffset + (button.id - 400)
                 if (actualIdx < fares.size) {
@@ -210,6 +270,19 @@ class GuiCustomTicketVendor(
                     dimOthers(button, 400..405)
                 }
             }
+
+            // 継続定期券: 更新対象の定期券選択
+            button.id in 580..583 -> {
+                val expiring = getExpiringPasses()
+                val idx = button.id - 580
+                if (idx < expiring.size) {
+                    val (_, stack) = expiring[idx]
+                    selectedPassDest = passOtherStation(stack)
+                    updatePassFare()
+                    dimOthers(button, 580..583)
+                }
+            }
+
             button.id in 500..502 -> {
                 selectedPassDays = passDurations[button.id - 500].first
                 updatePassFare()
@@ -251,10 +324,22 @@ class GuiCustomTicketVendor(
                 }
             }
             button.id == 550 -> {
-                if (selectedPassFare > 0 && selectedPassDays > 0 && selectedPassDest.isNotEmpty())
-                    KaizPatchNetwork.CHANNEL.sendToServer(
-                        PacketPurchaseTicket(tile.xCoord, tile.yCoord, tile.zCoord,
-                            selectedPassDest, selectedPassFare, selectedPassDays, true))
+                if (selectedPassFare > 0 && selectedPassDays > 0 && selectedPassDest.isNotEmpty()) {
+                    if (passSubMode == 1) {
+                        // 継続購入: 既存定期券の有効期限を延長
+                        val pkt = PacketPurchaseTicket()
+                        pkt.x = tile.xCoord; pkt.y = tile.yCoord; pkt.z = tile.zCoord
+                        pkt.mode = PacketPurchaseTicket.Mode.RENEW_PASS
+                        pkt.destStation = selectedPassDest
+                        pkt.fare = selectedPassFare
+                        pkt.passDays = selectedPassDays
+                        KaizPatchNetwork.CHANNEL.sendToServer(pkt)
+                    } else {
+                        KaizPatchNetwork.CHANNEL.sendToServer(
+                            PacketPurchaseTicket(tile.xCoord, tile.yCoord, tile.zCoord,
+                                selectedPassDest, selectedPassFare, selectedPassDays, true))
+                    }
+                }
             }
             button.id == 560 -> {
                 val dayPassPrice = calcDayPassPrice()
@@ -334,7 +419,7 @@ class GuiCustomTicketVendor(
             val end = minOf(ticketScrollOffset + TICKET_VISIBLE, fares.size)
             fontRendererObj.drawString("${ticketScrollOffset + 1}-${end} / ${fares.size}", 4, 22, 0x888888)
         }
-        if (tab == 2 && fares.size > PASS_VISIBLE) {
+        if (tab == 2 && passSubMode == 0 && fares.size > PASS_VISIBLE) {
             val end = minOf(passScrollOffset + PASS_VISIBLE, fares.size)
             fontRendererObj.drawString("${passScrollOffset + 1}-${end} / ${fares.size}", 4, 22, 0x888888)
         }
@@ -368,15 +453,24 @@ class GuiCustomTicketVendor(
                     } else fontRendererObj.drawString("ICカードをスロットへ", rpx, selY, 0x888888)
             }
             2 -> {
-                if (selectedPassFare > 0)
-                    fontRendererObj.drawString("${selectedPassDest} ${selectedPassDays}日 ${selectedPassFare}円", rpx, selY - 8, 0x0000CC)
-                else {
-                    val destStr = if (selectedPassDest.isEmpty()) "行き先を選択" else selectedPassDest
-                    val dayStr  = if (selectedPassDays == 0) "期間を選択" else "${selectedPassDays}日"
-                    fontRendererObj.drawString("$destStr  $dayStr", rpx, selY - 8, 0x888888)
+                if (selectedPassFare > 0) {
+                    val prefix = if (passSubMode == 1) "継続 " else ""
+                    fontRendererObj.drawString("${prefix}${selectedPassDest} ${selectedPassDays}日 ${selectedPassFare}円", rpx, selY - 8, 0x0000CC)
+                } else {
+                    if (passSubMode == 1 && getExpiringPasses().isEmpty()) {
+                        fontRendererObj.drawString("対象の定期券なし", rpx, selY - 8, 0x888888)
+                    } else {
+                        val destStr = if (selectedPassDest.isEmpty()) "定期券を選択" else selectedPassDest
+                        val dayStr  = if (selectedPassDays == 0) "期間を選択" else "${selectedPassDays}日"
+                        fontRendererObj.drawString("$destStr  $dayStr", rpx, selY - 8, 0x888888)
+                    }
                 }
-                fontRendererObj.drawString("7日:10%割引", rpx, selY + 4, 0x555555)
-                fontRendererObj.drawString("30日:25%  90日:40%", rpx, selY + 14, 0x555555)
+                if (passSubMode == 0) {
+                    fontRendererObj.drawString("7日:10%割引", rpx, selY + 4, 0x555555)
+                    fontRendererObj.drawString("30日:25%  90日:40%", rpx, selY + 14, 0x555555)
+                } else {
+                    fontRendererObj.drawString("期限切れ間近の定期を延長", rpx, selY + 4, 0x555555)
+                }
             }
         }
 

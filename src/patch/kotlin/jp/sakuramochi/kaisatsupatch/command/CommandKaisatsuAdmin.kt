@@ -62,6 +62,11 @@ class CommandKaisatsuAdmin : CommandBase() {
                 val data = data(sender, world) ?: return
                 handleTimetable(sender, args.drop(1).toTypedArray(), data)
             }
+            "sales" -> {
+                checkOp(sender) ?: return
+                val data = data(sender, world) ?: return
+                handleSales(sender, args.drop(1).toTypedArray(), data)
+            }
             else      -> printHelp(sender)
         }
     }
@@ -369,12 +374,48 @@ class CommandKaisatsuAdmin : CommandBase() {
         }
     }
 
+    // ── 売上確認 ──────────────────────────────────────────────────────
+
+    private fun handleSales(sender: ICommandSender, args: Array<String>, data: KaisatsuNetworkData) {
+        if (args.isEmpty()) {
+            // 全駅の売上一覧（降順）
+            val sorted = data.stationSales.entries.sortedByDescending { it.value }
+            if (sorted.isEmpty()) {
+                sender.addChatMessage(ChatComponentText("§7売上データがありません"))
+                return
+            }
+            sender.addChatMessage(ChatComponentText("§e[売上] 全駅一覧（上位${minOf(sorted.size, 20)}件）"))
+            sorted.take(20).forEachIndexed { i, (name, total) ->
+                sender.addChatMessage(ChatComponentText(
+                    "  §f${i + 1}. $name  §a${"%,d".format(total)}円"
+                ))
+            }
+        } else {
+            val stationName = args.joinToString(" ")
+            val total = data.stationSales[stationName]
+            if (total == null) {
+                sender.addChatMessage(ChatComponentText("§c駅「$stationName」の売上データがありません"))
+                return
+            }
+            val bd = data.stationSalesDetail[stationName]
+            sender.addChatMessage(ChatComponentText("§e[売上] $stationName"))
+            sender.addChatMessage(ChatComponentText("  合計: §a${"%,d".format(total)}円"))
+            if (bd != null) {
+                if (bd.ticket  > 0) sender.addChatMessage(ChatComponentText("  切符: §f${"%,d".format(bd.ticket)}円"))
+                if (bd.ic      > 0) sender.addChatMessage(ChatComponentText("  IC:   §f${"%,d".format(bd.ic)}円"))
+                if (bd.pass    > 0) sender.addChatMessage(ChatComponentText("  定期: §f${"%,d".format(bd.pass)}円"))
+                if (bd.express > 0) sender.addChatMessage(ChatComponentText("  特急: §f${"%,d".format(bd.express)}円"))
+            }
+        }
+    }
+
     // ── ヘルプ ────────────────────────────────────────────────────────
 
     private fun printHelp(sender: ICommandSender) {
         sender.addChatMessage(ChatComponentText("§e[KaizPatch] コマンド一覧"))
         sender.addChatMessage(ChatComponentText("  §f/kaisatsu web §7— 空席情報ページURLを表示"))
         sender.addChatMessage(ChatComponentText("  §f/kaisatsu log §7[駅名] — 改札通過ログ表示 §c(OP)"))
+        sender.addChatMessage(ChatComponentText("  §f/kaisatsu sales §7[駅名] — 駅売上表示 §c(OP)"))
         sender.addChatMessage(ChatComponentText("  §f/kaisatsu company §7<create|list|delete|info|member|mutual|fare> §c(OP)"))
         sender.addChatMessage(ChatComponentText("  §f/kaisatsu line §7<assign|list> §c(OP)"))
         sender.addChatMessage(ChatComponentText("  §f/kaisatsu timetable §7<load|info|list|unload> §c(OP)"))
@@ -391,10 +432,10 @@ class CommandKaisatsuAdmin : CommandBase() {
 
         return when {
             args.size == 1 ->
-                getListOfStringsMatchingLastWord(args, "web", "log", "company", "line", "timetable")
+                getListOfStringsMatchingLastWord(args, "web", "log", "sales", "company", "line", "timetable")
             args.size == 2 && args[0] == "timetable" ->
                 getListOfStringsMatchingLastWord(args, "load", "info", "list", "unload", "export")
-            args.size == 2 && args[0] == "log" ->
+            args.size == 2 && args[0] in listOf("log", "sales") ->
                 getListOfStringsMatchingLastWord(args, *stationIDs)
             args.size == 2 && args[0] == "company" ->
                 getListOfStringsMatchingLastWord(args, "create", "list", "delete", "info", "member", "mutual", "fare")

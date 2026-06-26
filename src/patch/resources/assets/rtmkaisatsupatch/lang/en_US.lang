@@ -5,6 +5,10 @@ tile.station_manager.name=Station Manager
 tile.line_manager.name=Line Manager
 tile.train_manager.name=Train Manager Block
 tile.reserved_seat_vendor.name=Reserved Seat Vending Machine
+tile.fare_adjustment.name=Fare Adjustment Machine
+tile.departure_board.name=Departure Board
+tile.boarding_cert_machine.name=Boarding Certificate Machine
+tile.simple_ic_reader.name=Simple IC Reader
 
 # Items
 item.custom_ticket.name=Ticket
@@ -12,6 +16,9 @@ item.custom_ic_card.name=IC Card
 item.custom_pass.name=Commuter Pass
 item.settings_tool.name=Settings Tool
 item.express_ticket.name=Express Ticket
+item.coupon_ticket.name=Coupon Ticket
+item.custom_coupon_ticket.name=Coupon Ticket
+item.boarding_certificate.name=Boarding Certificate
 
 # Creative Tab
 itemGroup.tabKaisatsuPatch=Kaisatsu Patch

@@ -26,7 +26,7 @@ import net.minecraft.util.EnumChatFormatting
  */
 class PacketPurchaseTicket() : IMessage {
 
-    enum class Mode { TICKET, CHARGE, PASS, BUY_IC, RETURN_IC, COUPON, DAY_PASS }
+    enum class Mode { TICKET, CHARGE, PASS, BUY_IC, RETURN_IC, COUPON, DAY_PASS, RENEW_PASS }
 
     var x = 0; var y = 0; var z = 0
     var mode = Mode.TICKET
@@ -243,6 +243,40 @@ class PacketPurchaseTicket() : IMessage {
                     addSales(world, fromStation, msg.fare.toLong(), SaleType.PASS)
                     player.addChatMessage(ChatComponentText(
                         "${EnumChatFormatting.GREEN}定期券を発行しました（${fromStation}⇔${msg.destStation} / ${msg.passDays}日間 / ${msg.fare}円）"))
+                }
+
+                PacketPurchaseTicket.Mode.RENEW_PASS -> {
+                    // ── 定期券継続購入（既存定期券の有効期限を延長） ────────
+                    val currentDay = ItemCustomPass.currentDay(world)
+                    // プレイヤーのインベントリから対象定期券を検索（残り30日以内を対象）
+                    val passStack = (0 until player.inventory.getSizeInventory())
+                        .mapNotNull { player.inventory.getStackInSlot(it) }
+                        .firstOrNull { stack ->
+                            stack.item is ItemCustomPass &&
+                            !ItemCustomPass.isFreePast(stack) &&
+                            ItemCustomPass.remainingDays(stack, currentDay) <= 30 &&
+                            run {
+                                val from = ItemCustomPass.getFromStation(stack)
+                                val to   = ItemCustomPass.getToStation(stack)
+                                (from == fromStation && to == msg.destStation) ||
+                                (to == fromStation && from == msg.destStation)
+                            }
+                        }
+                    if (passStack == null) {
+                        player.addChatMessage(ChatComponentText(
+                            "${EnumChatFormatting.RED}対象の定期券が見つかりません（残り7日以内のものが必要です）"))
+                        return null
+                    }
+                    if (!vendorInv.payAndChange(msg.fare, player)) {
+                        player.addChatMessage(ChatComponentText(
+                            "${EnumChatFormatting.RED}お金が不足しています（必要: ${msg.fare}円 / 所持: ${vendorInv.getMoneyYen()}円）"))
+                        return null
+                    }
+                    // 現在の有効期限から延長（期限切れなら今日から）
+                    ItemCustomPass.renewExpiry(passStack, msg.passDays, currentDay)
+                    addSales(world, fromStation, msg.fare.toLong(), SaleType.PASS)
+                    player.addChatMessage(ChatComponentText(
+                        "${EnumChatFormatting.GREEN}定期券を継続しました（${fromStation}⇔${msg.destStation} / +${msg.passDays}日 / ${msg.fare}円）"))
                 }
             }
             return null

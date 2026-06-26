@@ -51,8 +51,14 @@ class RenderICCard : IItemRenderer {
                 GL11.glTranslatef(-0.5f, -0.25f, 0f)
                 renderFlat(texture, companyColor, companyID.isEmpty())
             }
-            ItemRenderType.EQUIPPED, ItemRenderType.EQUIPPED_FIRST_PERSON -> {
-                GL11.glTranslatef(0.5f, 0.5f, 0f)
+            ItemRenderType.EQUIPPED -> {
+                GL11.glTranslatef(0f, 0.1f, 0f)
+                GL11.glScalef(0.9f, 0.9f, 0.9f)
+                renderFlat(texture, companyColor, companyID.isEmpty())
+            }
+            ItemRenderType.EQUIPPED_FIRST_PERSON -> {
+                GL11.glTranslatef(0.1f, 0.1f, 0f)
+                GL11.glScalef(0.8f, 0.8f, 0.8f)
                 renderFlat(texture, companyColor, companyID.isEmpty())
             }
             else -> {}
