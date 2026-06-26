@@ -6,6 +6,7 @@ import jp.sakuramochi.kaisatsupatch.network.KaizPatchNetwork
 import jp.sakuramochi.kaisatsupatch.network.PacketExportTemplate
 import jp.sakuramochi.kaisatsupatch.network.PacketLineUpdate
 import jp.sakuramochi.kaisatsupatch.network.PacketOpenLineGui
+import jp.sakuramochi.kaisatsupatch.network.PacketRequestCompanyManager
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -51,6 +52,7 @@ class GuiLineManager(private val data: PacketOpenLineGui) : GuiScreen() {
                 add(GuiButton(17, cx - 100, cy + 65, 90, 16, "OuDia テンプレ出力").also {
                     it.enabled = data.companyLines.isNotEmpty()
                 })
+                add(GuiButton(18, cx + 10, cy + 65, 90, 16, "会社管理 →"))
             }
             1 -> {
                 idField   = GuiTextField(fontRendererObj, cx - 110, cy - 80, 90, 15)
@@ -137,6 +139,7 @@ class GuiLineManager(private val data: PacketOpenLineGui) : GuiScreen() {
                 KaizPatchNetwork.CHANNEL.sendToServer(PacketExportTemplate().also { it.lineID = lineID })
                 // サーバーからチャットでファイルパスが通知される
             }
+            18 -> KaizPatchNetwork.CHANNEL.sendToServer(PacketRequestCompanyManager())
             // 会社名編集
             10 -> {
                 send(PacketLineUpdate().also {

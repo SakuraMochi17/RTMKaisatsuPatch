@@ -6,6 +6,10 @@
 
 ## 必要環境
 
+以下のいずれかの構成が必要です。
+
+**構成 A: RTM + NGTLib**
+
 | 項目 | バージョン |
 |---|---|
 | Minecraft | 1.7.10 |
@@ -13,7 +17,15 @@
 | [RealTrainMod (RTM)](https://www.curseforge.com/minecraft/mc-mods/realtrainmod) | 1.7.10.41 以上 |
 | [NGTLib](https://www.curseforge.com/minecraft/mc-mods/ngtlib) | 1.7.10.32 以上 |
 
-> RTM・NGTLib は必須です。どちらかが欠けると起動時にクラッシュします。
+**構成 B: KaizPatchX（推奨）**
+
+| 項目 | バージョン |
+|---|---|
+| Minecraft | 1.7.10 |
+| Forge | 10.13.4.1614 以上 |
+| [KaizPatchX](https://github.com/Kai-Z-JP/KaizPatchX/releases/latest) | 最新版 |
+
+> RTM + NGTLib の代わりに **[KaizPatchX](https://github.com/Kai-Z-JP/KaizPatchX/releases/latest)** 単体でも動作します。KaizPatchX は RTM・NGTLib のバグ修正・機能拡張を統合したオールインワン版です。
 
 ---
 
