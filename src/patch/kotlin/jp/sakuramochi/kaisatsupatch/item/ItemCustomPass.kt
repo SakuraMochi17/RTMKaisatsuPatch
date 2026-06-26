@@ -71,6 +71,12 @@ class ItemCustomPass : Item() {
 
         fun remainingDays(stack: ItemStack, currentDay: Long): Long = maxOf(0L, getExpiryDay(stack) - currentDay)
 
+        fun renewExpiry(stack: ItemStack, addDays: Int, currentDay: Long) {
+            ensureTag(stack)
+            val baseDay = maxOf(currentDay, getExpiryDay(stack))
+            stack.tagCompound.setLong(TAG_EXPIRY, baseDay + addDays)
+        }
+
         private fun ensureTag(stack: ItemStack) {
             if (!stack.hasTagCompound()) stack.tagCompound = NBTTagCompound()
         }
@@ -96,10 +102,10 @@ class ItemCustomPass : Item() {
         val currentDay = if (player.worldObj != null) currentDay(player.worldObj) else 0L
         val remaining  = remainingDays(stack, currentDay)
         val expiry     = getExpiryDay(stack)
-        if (remaining > 0) {
-            list.add("残り ${remaining} 日（Day ${expiry} まで有効）")
-        } else {
-            list.add("§c期限切れ")
+        when {
+            remaining > 7  -> list.add("§a残り ${remaining} 日")
+            remaining in 1..7 -> list.add("§e残り ${remaining} 日（まもなく期限切れ）")
+            else           -> list.add("§c期限切れ")
         }
         if (isFreePast(stack)) list.add("全区間乗り放題")
         else list.add("${getFromStation(stack)} ⇔ ${getToStation(stack)}")

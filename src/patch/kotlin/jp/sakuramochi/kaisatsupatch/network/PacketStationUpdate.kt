@@ -56,6 +56,14 @@ class PacketStationUpdate() : IMessage {
                 return null
             }
 
+            // 別の場所にすでに同名の駅が登録されていたら拒否
+            if (msg.newName != msg.oldName && data.globalStations.containsKey(msg.newName)) {
+                player.addChatMessage(ChatComponentText(
+                    "${EnumChatFormatting.RED}駅名「${msg.newName}」はすでに別の場所に登録されています"
+                ))
+                return null
+            }
+
             val coords = data.globalStations[msg.oldName]
                 ?: KaisatsuNetworkData.StationCoords(msg.x, msg.y, msg.z)
 

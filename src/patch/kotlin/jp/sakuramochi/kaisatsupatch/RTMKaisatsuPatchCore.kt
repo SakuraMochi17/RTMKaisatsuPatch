@@ -18,6 +18,7 @@ import jp.sakuramochi.kaisatsupatch.client.KaizPatchClientEvents
 import jp.sakuramochi.kaisatsupatch.client.RenderICCard
 import jp.sakuramochi.kaisatsupatch.block.*
 import jp.sakuramochi.kaisatsupatch.block.tileentity.*
+import jp.sakuramochi.kaisatsupatch.client.RenderBoardingCertMachine
 import jp.sakuramochi.kaisatsupatch.client.RenderDepartureBoard
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityTrainManager
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityReservedVendor
@@ -92,24 +93,26 @@ class RTMKaisatsuPatchCore {
         listOf(itemTicket, itemICCard, itemPass, itemSettingsTool, itemExpressTicket, itemCouponTicket, itemBoardingCertificate).forEach { it.creativeTab = myTab }
         listOf(blockTurnstile, blockVendor, blockStationManager, blockLineManager, blockTrainManager, blockReservedVendor, blockFareAdjustment, blockDepartureBoard, blockBoardingCertMachine, blockSimpleICReader).forEach { it.setCreativeTab(myTab) }
 
-        GameRegistry.registerItem(itemTicket,              "custom_ticket")
-        GameRegistry.registerItem(itemICCard,              "custom_ic_card")
-        GameRegistry.registerItem(itemPass,                "custom_pass")
-        GameRegistry.registerItem(itemSettingsTool,        "settings_tool")
-        GameRegistry.registerItem(itemExpressTicket,       "express_ticket")
-        GameRegistry.registerItem(itemCouponTicket,        "coupon_ticket")
-        GameRegistry.registerItem(itemBoardingCertificate, "boarding_certificate")
-
+        // ── ブロック登録（クリエイティブタブ表示順：有人駅設備 → 無人駅設備 → 情報表示 → 管理）──
         GameRegistry.registerBlock(blockTurnstile,           ItemBlockCustomTurnstile::class.java,     "custom_turnstile")
         GameRegistry.registerBlock(blockVendor,              ItemBlockCustomTicketVendor::class.java,  "custom_ticket_vendor")
+        GameRegistry.registerBlock(blockReservedVendor,      ItemBlockReservedVendor::class.java,      "reserved_seat_vendor")
+        GameRegistry.registerBlock(blockFareAdjustment,      ItemBlockFareAdjustment::class.java,      "fare_adjustment")
+        GameRegistry.registerBlock(blockBoardingCertMachine, ItemBlockBoardingCertMachine::class.java, "boarding_cert_machine")
+        GameRegistry.registerBlock(blockSimpleICReader,      ItemBlockSimpleICReader::class.java,      "simple_ic_reader")
+        GameRegistry.registerBlock(blockDepartureBoard,      ItemBlockDepartureBoard::class.java,      "departure_board")
         GameRegistry.registerBlock(blockStationManager,      ItemBlockStationManager::class.java,      "station_manager")
         GameRegistry.registerBlock(blockLineManager,         ItemBlockLineManager::class.java,         "line_manager")
         GameRegistry.registerBlock(blockTrainManager,        ItemBlockTrainManager::class.java,        "train_manager")
-        GameRegistry.registerBlock(blockReservedVendor,      ItemBlockReservedVendor::class.java,      "reserved_seat_vendor")
-        GameRegistry.registerBlock(blockFareAdjustment,      ItemBlockFareAdjustment::class.java,      "fare_adjustment")
-        GameRegistry.registerBlock(blockDepartureBoard,      ItemBlockDepartureBoard::class.java,      "departure_board")
-        GameRegistry.registerBlock(blockBoardingCertMachine, ItemBlockBoardingCertMachine::class.java, "boarding_cert_machine")
-        GameRegistry.registerBlock(blockSimpleICReader,      ItemBlockSimpleICReader::class.java,      "simple_ic_reader")
+
+        // ── アイテム登録（切符類 → IC → 証明書 → ツール）──
+        GameRegistry.registerItem(itemTicket,              "custom_ticket")
+        GameRegistry.registerItem(itemCouponTicket,        "coupon_ticket")
+        GameRegistry.registerItem(itemPass,                "custom_pass")
+        GameRegistry.registerItem(itemExpressTicket,       "express_ticket")
+        GameRegistry.registerItem(itemICCard,              "custom_ic_card")
+        GameRegistry.registerItem(itemBoardingCertificate, "boarding_certificate")
+        GameRegistry.registerItem(itemSettingsTool,        "settings_tool")
 
         GameRegistry.registerTileEntity(TileEntityCustomTurnstile::class.java,    "TileEntityCustomTurnstile")
         GameRegistry.registerTileEntity(TileEntityCustomTicketVendor::class.java, "TileEntityCustomTicketVendor")
@@ -167,5 +170,6 @@ class RTMKaisatsuPatchCore {
         )
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(KaizPatchClientEvents)
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityDepartureBoard::class.java, RenderDepartureBoard())
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityBoardingCertMachine::class.java, RenderBoardingCertMachine())
     }
 }

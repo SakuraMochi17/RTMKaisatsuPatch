@@ -6,6 +6,8 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.nbt.NBTTagList
+import net.minecraft.util.ChatComponentText
+import net.minecraft.world.World
 import net.minecraftforge.common.util.Constants
 
 class ItemCustomICCard : Item() {
@@ -129,6 +131,33 @@ class ItemCustomICCard : Item() {
         setTextureName("rtm:icCard")
         creativeTab = CreativeTabs.tabTransport
         maxStackSize = 1
+    }
+
+    override fun onItemRightClick(stack: ItemStack, world: World, player: EntityPlayer): ItemStack {
+        if (!world.isRemote) {
+            val balance = getBalance(stack)
+            val entry = getEntryStation(stack)
+            val history = getHistory(stack)
+            val fmt = java.text.SimpleDateFormat("MM/dd HH:mm")
+            player.addChatMessage(ChatComponentText("§b=== IC 履歴 ==="))
+            val entryStr = if (entry.isNotEmpty()) " §e(入場中: $entry)" else ""
+            player.addChatMessage(ChatComponentText("残高: §f${"%,d".format(balance)}円$entryStr"))
+            if (history.isEmpty()) {
+                player.addChatMessage(ChatComponentText("§7（履歴なし）"))
+            } else {
+                history.forEach { h ->
+                    val time = fmt.format(java.util.Date(h.time))
+                    val amount = when {
+                        h.amount > 0 -> " §a+${"%,d".format(h.amount)}円"
+                        h.amount < 0 -> " §c${"%,d".format(h.amount)}円"
+                        else -> ""
+                    }
+                    val st = if (h.station.isNotEmpty()) " ${h.station}" else ""
+                    player.addChatMessage(ChatComponentText("§7[$time] §f${h.type}${st}${amount}"))
+                }
+            }
+        }
+        return stack
     }
 
     override fun getItemStackDisplayName(stack: ItemStack): String {

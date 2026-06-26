@@ -85,7 +85,8 @@ class BlockFareAdjustment : BlockContainer(Material.iron) {
         }
         val fare = KaisatsuNetworkManager.calculateFare(world, boardingStation, current)
         if (fare < 0) {
-            player.addChatMessage(ChatComponentText("${EnumChatFormatting.RED}運賃データが見つかりません（${boardingStation} → ${current}）"))
+            player.addChatMessage(ChatComponentText(
+                "§c${KaisatsuNetworkManager.fareErrorReason(world, boardingStation, current)}"))
             return
         }
         if (!deductMoney(player, fare)) {
@@ -120,7 +121,9 @@ class BlockFareAdjustment : BlockContainer(Material.iron) {
         val originalFare = KaisatsuNetworkManager.calculateFare(world, from, to)
         val newFare      = KaisatsuNetworkManager.calculateFare(world, from, current)
         if (originalFare < 0 || newFare < 0) {
-            player.addChatMessage(ChatComponentText("${EnumChatFormatting.RED}運賃データが見つかりません（路線設定を確認してください）"))
+            val target = if (originalFare < 0) to else current
+            player.addChatMessage(ChatComponentText(
+                "§c${KaisatsuNetworkManager.fareErrorReason(world, from, target)}"))
             return
         }
         val extraFare = newFare - originalFare

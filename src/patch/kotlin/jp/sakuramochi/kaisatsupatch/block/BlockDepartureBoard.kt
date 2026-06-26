@@ -55,14 +55,24 @@ class BlockDepartureBoard : BlockContainer(Material.iron) {
                 pkt.direction          = tile.direction
                 pkt.displayRows        = tile.displayRows
                 pkt.title              = tile.title
+                pkt.timeMode           = tile.timeMode
                 pkt.availableDias      = dias
                 pkt.availableStations  = stations
                 pkt.availableLines     = lines
             }, mp)
         } else {
             // 表示GUI（発車情報をサーバーで計算して送る）
-            val now = java.time.LocalTime.now()
-            val nowMin = now.hour * 60 + now.minute
+            val nowMin: Int
+            val currentTimeStr: String
+            if (tile.timeMode == "game") {
+                val gameMin = ((world.worldTime % 24000L) * 1440L / 24000L + 360L).toInt() % 1440
+                nowMin = gameMin
+                currentTimeStr = "%02d:%02d".format(gameMin / 60, gameMin % 60)
+            } else {
+                val now = java.time.LocalTime.now()
+                nowMin = now.hour * 60 + now.minute
+                currentTimeStr = "%02d:%02d".format(now.hour, now.minute)
+            }
             val lineStations = if (tile.lineID.isNotEmpty())
                 data.companyLines[tile.lineID]?.stationOrder?.toSet() else null
             val rows = data.timetable
@@ -76,7 +86,8 @@ class BlockDepartureBoard : BlockContainer(Material.iron) {
                 pkt.platform      = tile.platform
                 pkt.diaName       = tile.diaName
                 pkt.direction     = tile.direction
-                pkt.currentTime   = "%02d:%02d".format(now.hour, now.minute)
+                pkt.timeMode      = tile.timeMode
+                pkt.currentTime   = currentTimeStr
                 pkt.departures    = rows
             }, mp)
         }
