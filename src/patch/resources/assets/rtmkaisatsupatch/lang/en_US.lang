@@ -17,6 +17,7 @@ item.custom_pass.name=Commuter Pass
 item.settings_tool.name=Settings Tool
 item.express_ticket.name=Express Ticket
 item.coupon_ticket.name=Coupon Ticket
+item.custom_coupon_ticket.name=Coupon Ticket
 item.boarding_certificate.name=Boarding Certificate
 
 # Creative Tab

@@ -17,6 +17,7 @@ item.custom_pass.name=定期券
 item.settings_tool.name=設定ツール
 item.express_ticket.name=特急券
 item.coupon_ticket.name=回数券
+item.custom_coupon_ticket.name=回数券
 item.boarding_certificate.name=乗車駅証明書
 
 # クリエイブタブ
