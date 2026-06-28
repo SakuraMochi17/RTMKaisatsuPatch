@@ -3,11 +3,26 @@ package jp.sakuramochi.kaisatsupatch.util
 import cpw.mods.fml.common.network.ByteBufUtils
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayerMP
+import net.minecraft.item.Item
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.nbt.NBTTagList
 import net.minecraft.nbt.NBTTagString
 import net.minecraft.util.ChatComponentText
 import net.minecraftforge.common.util.Constants
+
+// ── Item ─────────────────────────────────────────────────────────
+
+// KaizPatchX では Item.setUnlocalizedName() の戻り値型が void に変わっているため
+// 通常の呼び出しで NoSuchMethodError が発生する。リフレクション経由で回避する。
+private val setUnlocalizedNameMethod by lazy {
+    Item::class.java.declaredMethods
+        .first { it.name == "setUnlocalizedName" && it.parameterCount == 1 }
+        .also { it.isAccessible = true }
+}
+
+fun Item.initName(name: String) {
+    setUnlocalizedNameMethod.invoke(this, name)
+}
 
 // ── ByteBuf ─────────────────────────────────────────────────────
 

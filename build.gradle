@@ -124,6 +124,11 @@ tasks.register('patchJar', Jar) {
     from("$buildDir/patchMcmodInfo") {
         include 'mcmod.info'
     }
+    configurations.embed.each { dep ->
+        from(project.zipTree(dep)) {
+            exclude 'META-INF', 'META-INF/versions/**', 'META-INF/maven/**'
+        }
+    }
 
     //出力されるファイル名の設定（Gradle 7.x 向けの正しいプロパティ名）
     archiveBaseName = "RTMKaisatsuPatch"

@@ -1,5 +1,6 @@
 package jp.sakuramochi.kaisatsupatch.item
 
+import jp.sakuramochi.kaisatsupatch.util.initName
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -54,7 +55,7 @@ class ItemCustomExpressTicket : Item() {
     }
 
     init {
-        (this as net.minecraft.item.Item).setUnlocalizedName("express_ticket")
+        initName("express_ticket")
         setTextureName("rtm:ticket")
         maxStackSize = 1
     }

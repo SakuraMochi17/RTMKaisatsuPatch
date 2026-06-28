@@ -1,5 +1,6 @@
 package jp.sakuramochi.kaisatsupatch.item
 
+import jp.sakuramochi.kaisatsupatch.util.initName
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -55,7 +56,7 @@ class ItemCustomTicket : Item() {
     }
 
     init {
-        (this as net.minecraft.item.Item).setUnlocalizedName("custom_ticket")
+        initName("custom_ticket")
         setTextureName("rtm:ticket")
         creativeTab = CreativeTabs.tabTransport
         maxStackSize = 1

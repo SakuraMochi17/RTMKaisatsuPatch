@@ -2,6 +2,7 @@ package jp.sakuramochi.kaisatsupatch.item
 
 import cpw.mods.fml.relauncher.Side
 import cpw.mods.fml.relauncher.SideOnly
+import jp.sakuramochi.kaisatsupatch.util.initName
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.Item
@@ -9,7 +10,7 @@ import net.minecraft.item.ItemStack
 
 class ItemSettingsTool : Item() {
     init {
-        (this as net.minecraft.item.Item).setUnlocalizedName("settings_tool")
+        initName("settings_tool")
         setTextureName("rtmkaisatsupatch:settings_tool")
         creativeTab = CreativeTabs.tabTransport
         maxStackSize = 1

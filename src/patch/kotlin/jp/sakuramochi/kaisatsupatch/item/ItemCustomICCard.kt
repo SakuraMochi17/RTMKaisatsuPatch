@@ -1,5 +1,6 @@
 package jp.sakuramochi.kaisatsupatch.item
 
+import jp.sakuramochi.kaisatsupatch.util.initName
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.Item
@@ -127,7 +128,7 @@ class ItemCustomICCard : Item() {
     }
 
     init {
-        (this as net.minecraft.item.Item).setUnlocalizedName("custom_ic_card")
+        initName("custom_ic_card")
         setTextureName("rtm:icCard")
         creativeTab = CreativeTabs.tabTransport
         maxStackSize = 1

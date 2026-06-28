@@ -1,6 +1,7 @@
 package jp.sakuramochi.kaisatsupatch.item
 
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
+import jp.sakuramochi.kaisatsupatch.util.initName
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.Item
@@ -83,7 +84,7 @@ class ItemCustomPass : Item() {
     }
 
     init {
-        (this as net.minecraft.item.Item).setUnlocalizedName("custom_pass")
+        initName("custom_pass")
         setTextureName("rtm:ticket")
         creativeTab = CreativeTabs.tabTransport
         maxStackSize = 1

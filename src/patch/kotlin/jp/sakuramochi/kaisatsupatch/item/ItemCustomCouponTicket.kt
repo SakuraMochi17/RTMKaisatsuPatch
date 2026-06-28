@@ -1,5 +1,6 @@
 package jp.sakuramochi.kaisatsupatch.item
 
+import jp.sakuramochi.kaisatsupatch.util.initName
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.Item
@@ -51,7 +52,7 @@ class ItemCustomCouponTicket : Item() {
     }
 
     init {
-        (this as net.minecraft.item.Item).setUnlocalizedName("custom_coupon_ticket")
+        initName("custom_coupon_ticket")
         setTextureName("rtm:ticket")
         creativeTab = CreativeTabs.tabTransport
         maxStackSize = 1
