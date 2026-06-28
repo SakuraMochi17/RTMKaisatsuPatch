@@ -12,12 +12,14 @@ import net.minecraftforge.common.util.Constants
 
 // ── Item ─────────────────────────────────────────────────────────
 
-// KaizPatchX では Item.setUnlocalizedName() の戻り値型が void に変わっているため
-// 通常の呼び出しで NoSuchMethodError が発生する。リフレクション経由で回避する。
+// 本番 Minecraft では MCP 名 "setUnlocalizedName" が SRG 名 "func_77655_b" のままになる。
+// KaizPatchX では戻り値型が void に変わり通常呼び出しで NoSuchMethodError になる。
+// どちらの名前でも動くようにリフレクションで検索する。
 private val setUnlocalizedNameMethod by lazy {
     Item::class.java.declaredMethods
-        .first { it.name == "setUnlocalizedName" && it.parameterCount == 1 }
-        .also { it.isAccessible = true }
+        .firstOrNull { it.name in setOf("setUnlocalizedName", "func_77655_b") && it.parameterCount == 1 }
+        ?.also { it.isAccessible = true }
+        ?: error("Item.setUnlocalizedName / func_77655_b が見つかりません。RTM バージョンを確認してください。")
 }
 
 fun Item.initName(name: String) {
