@@ -83,7 +83,7 @@ class ItemCustomPass : Item() {
     }
 
     init {
-        unlocalizedName = "custom_pass"
+        (this as net.minecraft.item.Item).setUnlocalizedName("custom_pass")
         setTextureName("rtm:ticket")
         creativeTab = CreativeTabs.tabTransport
         maxStackSize = 1

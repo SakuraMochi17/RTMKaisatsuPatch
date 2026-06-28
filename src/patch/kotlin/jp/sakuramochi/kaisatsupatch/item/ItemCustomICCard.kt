@@ -127,7 +127,7 @@ class ItemCustomICCard : Item() {
     }
 
     init {
-        unlocalizedName = "custom_ic_card"
+        (this as net.minecraft.item.Item).setUnlocalizedName("custom_ic_card")
         setTextureName("rtm:icCard")
         creativeTab = CreativeTabs.tabTransport
         maxStackSize = 1

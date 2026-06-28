@@ -55,7 +55,7 @@ class ItemCustomTicket : Item() {
     }
 
     init {
-        unlocalizedName = "custom_ticket"
+        (this as net.minecraft.item.Item).setUnlocalizedName("custom_ticket")
         setTextureName("rtm:ticket")
         creativeTab = CreativeTabs.tabTransport
         maxStackSize = 1

@@ -24,7 +24,7 @@ class ItemBoardingCertificate : Item() {
     }
 
     init {
-        unlocalizedName = "boarding_certificate"
+        (this as net.minecraft.item.Item).setUnlocalizedName("boarding_certificate")
         setTextureName("rtm:ticket")
         maxStackSize = 1
     }

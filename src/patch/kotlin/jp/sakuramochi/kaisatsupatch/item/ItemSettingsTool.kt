@@ -9,7 +9,7 @@ import net.minecraft.item.ItemStack
 
 class ItemSettingsTool : Item() {
     init {
-        unlocalizedName = "settings_tool"
+        (this as net.minecraft.item.Item).setUnlocalizedName("settings_tool")
         setTextureName("rtmkaisatsupatch:settings_tool")
         creativeTab = CreativeTabs.tabTransport
         maxStackSize = 1

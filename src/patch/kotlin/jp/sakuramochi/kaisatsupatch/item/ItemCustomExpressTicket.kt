@@ -54,7 +54,7 @@ class ItemCustomExpressTicket : Item() {
     }
 
     init {
-        unlocalizedName = "express_ticket"
+        (this as net.minecraft.item.Item).setUnlocalizedName("express_ticket")
         setTextureName("rtm:ticket")
         maxStackSize = 1
     }
