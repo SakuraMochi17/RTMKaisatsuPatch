@@ -16,7 +16,7 @@ import net.minecraft.world.World
 
 class ItemBlockCustomTicketVendor(block: Block) : ItemBlock(block) {
 
-    init { setTextureName("rtm:item_ticket_vendor") }
+    init { (this as net.minecraft.item.Item).setTextureName("rtm:item_ticket_vendor") }
 
     override fun onItemRightClick(itemStack: ItemStack, world: World, player: EntityPlayer): ItemStack {
         if (world.isRemote) {

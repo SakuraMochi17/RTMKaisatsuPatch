@@ -4,5 +4,5 @@ import net.minecraft.block.Block
 import net.minecraft.item.ItemBlock
 
 class ItemBlockDepartureBoard(block: Block) : ItemBlock(block) {
-    init { setMaxStackSize(16) }
+    init { (this as net.minecraft.item.Item).setMaxStackSize(16) }
 }

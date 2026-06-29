@@ -143,7 +143,13 @@ tasks.register('patchJar', Jar) {
 }
 // patchJar を reobf（MCP名→SRG名変換）にも登録する
 afterEvaluate {
-    reobf.reobf(patchJar)
+    // classpath に patch の compileClasspath（Forge/MC のクラス）を渡さないと、
+    // SpecialSource が継承階層を解決できず CommandBase 等の abstract メソッド
+    // override（getCommandName/processCommand など）が MCP 名のまま残り、
+    // 実行時に AbstractMethodError でワールドに入れなくなる。
+    reobf.reobf(patchJar) { spec ->
+        spec.classpath = sourceSets.patch.compileClasspath
+    }
     patchJar.finalizedBy reobf
 }
 
