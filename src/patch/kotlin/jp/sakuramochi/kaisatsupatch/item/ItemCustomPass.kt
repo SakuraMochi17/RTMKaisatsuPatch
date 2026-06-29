@@ -1,7 +1,10 @@
 package jp.sakuramochi.kaisatsupatch.item
 
 import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
+import jp.sakuramochi.kaisatsupatch.util.initCreativeTab
+import jp.sakuramochi.kaisatsupatch.util.initMaxStackSize
 import jp.sakuramochi.kaisatsupatch.util.initName
+import jp.sakuramochi.kaisatsupatch.util.initTexture
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.Item
@@ -85,9 +88,9 @@ class ItemCustomPass : Item() {
 
     init {
         initName("custom_pass")
-        setTextureName("rtm:ticket")
-        creativeTab = CreativeTabs.tabTransport
-        maxStackSize = 1
+        initTexture("rtm:ticket")
+        initCreativeTab(CreativeTabs.tabTransport)
+        initMaxStackSize(1)
     }
 
     override fun getItemStackDisplayName(stack: ItemStack): String {
