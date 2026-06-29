@@ -5,3 +5,7 @@ updates:
   schedule:
     interval: daily
   open-pull-requests-limit: 10
+  ignore:
+  # ForgeGradle 1.2 (MC 1.7.10 用) は Gradle 7.x が上限で、Gradle 8/9 では
+  # ビルドが壊れるため Gradle Wrapper の自動更新を無効化する。
+  - dependency-name: "gradle"
