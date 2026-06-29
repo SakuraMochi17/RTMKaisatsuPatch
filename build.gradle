@@ -120,6 +120,14 @@ tasks.register('patchJar', Jar) {
     //patchのフォルダにあるコンパイル後のクラスとリソースを入れる
     from(sourceSets.patch.output) {
         exclude 'mcmod.info'
+        // KaizPatchX/RTM/NGTLib/MCTE 由来のリソースを再配布しない。
+        // これらを同梱すると vanilla RTM では未対応フォーマットの
+        // モデル(例: ModelNPC_AttendantNGT02)読み込みで NPE クラッシュする。
+        // パッチ自身のリソースは assets/rtmkaisatsupatch と assets/kaizpatch のみ。
+        exclude 'assets/minecraft/**'
+        exclude 'assets/rtm/**'
+        exclude 'assets/ngtlib/**'
+        exclude 'assets/mcte/**'
     }
     from("$buildDir/patchMcmodInfo") {
         include 'mcmod.info'
