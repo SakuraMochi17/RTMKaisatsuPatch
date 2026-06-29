@@ -2,40 +2,12 @@ package jp.sakuramochi.kaisatsupatch.util
 
 import cpw.mods.fml.common.network.ByteBufUtils
 import io.netty.buffer.ByteBuf
-import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.entity.player.EntityPlayerMP
-import net.minecraft.item.Item
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.nbt.NBTTagList
 import net.minecraft.nbt.NBTTagString
 import net.minecraft.util.ChatComponentText
 import net.minecraftforge.common.util.Constants
-
-// ── Item ─────────────────────────────────────────────────────────
-//
-// 本番 Minecraft では MCP 名が SRG 名（func_XXXXX_x）のままになる。
-// KaizPatchX では戻り値型が void に変更されており通常呼び出しで NoSuchMethodError になる。
-// 影響を受けるメソッドをすべてリフレクション経由で呼び出す。
-//   setUnlocalizedName → func_77655_b
-//   setTextureName     → func_111206_d
-//   setCreativeTab     → func_77637_a
-//   setMaxStackSize    → func_77631_c
-
-private fun itemMethod(mcpName: String, srgName: String, paramCount: Int) =
-    Item::class.java.declaredMethods
-        .firstOrNull { it.name in setOf(mcpName, srgName) && it.parameterCount == paramCount }
-        ?.also { it.isAccessible = true }
-        ?: error("Item.$mcpName / $srgName (paramCount=$paramCount) が見つかりません")
-
-private val methodSetName        by lazy { itemMethod("setUnlocalizedName", "func_77655_b", 1) }
-private val methodSetTexture     by lazy { itemMethod("setTextureName",     "func_111206_d", 1) }
-private val methodSetCreativeTab by lazy { itemMethod("setCreativeTab",     "func_77637_a",  1) }
-private val methodSetMaxStack    by lazy { itemMethod("setMaxStackSize",    "func_77631_c",  1) }
-
-fun Item.initName(name: String)               { methodSetName.invoke(this, name) }
-fun Item.initTexture(texture: String)         { methodSetTexture.invoke(this, texture) }
-fun Item.initCreativeTab(tab: CreativeTabs)   { methodSetCreativeTab.invoke(this, tab) }
-fun Item.initMaxStackSize(size: Int)          { methodSetMaxStack.invoke(this, size) }
 
 // ── ByteBuf ─────────────────────────────────────────────────────
 

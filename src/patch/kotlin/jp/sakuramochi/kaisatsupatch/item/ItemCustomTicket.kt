@@ -1,9 +1,5 @@
 package jp.sakuramochi.kaisatsupatch.item
 
-import jp.sakuramochi.kaisatsupatch.util.initCreativeTab
-import jp.sakuramochi.kaisatsupatch.util.initMaxStackSize
-import jp.sakuramochi.kaisatsupatch.util.initName
-import jp.sakuramochi.kaisatsupatch.util.initTexture
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -59,10 +55,10 @@ class ItemCustomTicket : Item() {
     }
 
     init {
-        initName("custom_ticket")
-        initTexture("rtm:ticket")
-        initCreativeTab(CreativeTabs.tabTransport)
-        initMaxStackSize(1)
+        setUnlocalizedName("custom_ticket")
+        setTextureName("rtm:ticket")
+        creativeTab = CreativeTabs.tabTransport
+        maxStackSize = 1
     }
 
     override fun getItemStackDisplayName(stack: ItemStack): String {

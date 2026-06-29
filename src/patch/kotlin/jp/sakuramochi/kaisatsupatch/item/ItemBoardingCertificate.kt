@@ -1,8 +1,5 @@
 package jp.sakuramochi.kaisatsupatch.item
 
-import jp.sakuramochi.kaisatsupatch.util.initMaxStackSize
-import jp.sakuramochi.kaisatsupatch.util.initName
-import jp.sakuramochi.kaisatsupatch.util.initTexture
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
@@ -27,9 +24,9 @@ class ItemBoardingCertificate : Item() {
     }
 
     init {
-        initName("boarding_certificate")
-        initTexture("rtm:ticket")
-        initMaxStackSize(1)
+        setUnlocalizedName("boarding_certificate")
+        setTextureName("rtm:ticket")
+        maxStackSize = 1
     }
 
     override fun getItemStackDisplayName(stack: ItemStack): String {
