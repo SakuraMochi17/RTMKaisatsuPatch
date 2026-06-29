@@ -105,9 +105,12 @@ sourceSets {
     }
 }
 //2.パッチ専用のJarファイルを作成するタスクを定義
-def patchModVersion = "0.1.0-beta4"
+def patchModVersion = "0.1.0-beta5"
 
 tasks.register('processPatchMcmodInfo', Copy) {
+    // patchModVersion を入力として追跡しないと、バージョン変更時に
+    // キャッシュされた古い mcmod.info が使われてしまう。
+    inputs.property 'version', patchModVersion
     from('src/patch/resources') {
         include 'mcmod.info'
         expand version: patchModVersion, mcversion: '1.7.10'
