@@ -105,7 +105,7 @@ sourceSets {
     }
 }
 //2.パッチ専用のJarファイルを作成するタスクを定義
-def patchModVersion = "0.1.0-beta3"
+def patchModVersion = "0.1.0-beta4"
 
 tasks.register('processPatchMcmodInfo', Copy) {
     from('src/patch/resources') {
@@ -141,6 +141,12 @@ tasks.register('patchJar', Jar) {
         )
     }
 }
+// patchJar を reobf（MCP名→SRG名変換）にも登録する
+afterEvaluate {
+    reobf.reobf(patchJar)
+    patchJar.finalizedBy reobf
+}
+
 //buildコマンドを実行したときにパッチ用JARも作成されるようにする
 build.dependsOn patchJar
 
