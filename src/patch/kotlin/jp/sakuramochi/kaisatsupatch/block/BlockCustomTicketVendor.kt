@@ -24,8 +24,8 @@ import net.minecraft.world.World
 class BlockCustomTicketVendor : BlockMachineBase(Material.iron) {
 
     init {
-        setBlockName("custom_ticket_vendor")
-        setLightOpacity(0)
+        (this as net.minecraft.block.Block).setBlockName("custom_ticket_vendor")
+        (this as net.minecraft.block.Block).setLightOpacity(0)
     }
 
     override fun createNewTileEntity(world: World?, meta: Int): TileEntity = TileEntityCustomTicketVendor()

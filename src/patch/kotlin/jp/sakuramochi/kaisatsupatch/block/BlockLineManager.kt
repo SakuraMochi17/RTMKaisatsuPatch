@@ -15,8 +15,8 @@ import net.minecraft.world.World
 class BlockLineManager : BlockContainer(Material.iron) {
 
     init {
-        setBlockName("line_manager")
-        setBlockTextureName("rtmkaisatsupatch:line_manager")
+        (this as net.minecraft.block.Block).setBlockName("line_manager")
+        (this as net.minecraft.block.Block).setBlockTextureName("rtmkaisatsupatch:line_manager")
     }
 
     override fun createNewTileEntity(world: World?, meta: Int): TileEntity = TileEntityLineManager()

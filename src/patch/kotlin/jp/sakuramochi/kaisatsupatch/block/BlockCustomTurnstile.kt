@@ -33,9 +33,9 @@ import net.minecraft.world.World
 class BlockCustomTurnstile : BlockMachineBase(Material.iron) {
 
     init {
-        setBlockName("custom_turnstile")
-        setBlockTextureName("rtmkaisatsupatch:custom_turnstile")
-        setLightOpacity(0)
+        (this as net.minecraft.block.Block).setBlockName("custom_turnstile")
+        (this as net.minecraft.block.Block).setBlockTextureName("rtmkaisatsupatch:custom_turnstile")
+        (this as net.minecraft.block.Block).setLightOpacity(0)
     }
 
     override fun createNewTileEntity(world: World?, meta: Int): TileEntity = TileEntityCustomTurnstile()

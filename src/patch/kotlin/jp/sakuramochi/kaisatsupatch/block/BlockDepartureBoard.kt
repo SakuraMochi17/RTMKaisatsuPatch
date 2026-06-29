@@ -18,8 +18,8 @@ import net.minecraft.world.World
 class BlockDepartureBoard : BlockContainer(Material.iron) {
 
     init {
-        setBlockName("departure_board")
-        setBlockTextureName("rtmkaisatsupatch:departure_board")
+        (this as net.minecraft.block.Block).setBlockName("departure_board")
+        (this as net.minecraft.block.Block).setBlockTextureName("rtmkaisatsupatch:departure_board")
     }
 
     override fun createNewTileEntity(world: World?, meta: Int): TileEntity = TileEntityDepartureBoard()

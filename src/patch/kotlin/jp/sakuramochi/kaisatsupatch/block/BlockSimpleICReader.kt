@@ -23,8 +23,8 @@ class BlockSimpleICReader : BlockContainer(Material.iron) {
     }
 
     init {
-        setBlockName("simple_ic_reader")
-        setBlockTextureName("rtmkaisatsupatch:simple_ic_reader")
+        (this as net.minecraft.block.Block).setBlockName("simple_ic_reader")
+        (this as net.minecraft.block.Block).setBlockTextureName("rtmkaisatsupatch:simple_ic_reader")
     }
 
     override fun createNewTileEntity(world: World?, meta: Int): TileEntity = TileEntitySimpleICReader()

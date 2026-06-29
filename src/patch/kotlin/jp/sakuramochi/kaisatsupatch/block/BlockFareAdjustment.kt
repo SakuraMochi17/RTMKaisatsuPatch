@@ -23,8 +23,8 @@ import net.minecraft.world.World
 class BlockFareAdjustment : BlockContainer(Material.iron) {
 
     init {
-        setBlockName("fare_adjustment")
-        setBlockTextureName("rtmkaisatsupatch:fare_adjustment")
+        (this as net.minecraft.block.Block).setBlockName("fare_adjustment")
+        (this as net.minecraft.block.Block).setBlockTextureName("rtmkaisatsupatch:fare_adjustment")
     }
 
     override fun createNewTileEntity(world: World?, meta: Int): TileEntity = TileEntityFareAdjustment()

@@ -17,8 +17,8 @@ import net.minecraft.world.World
 class BlockStationManager : BlockContainer(Material.iron) {
 
     init {
-        setBlockName("station_manager")
-        setBlockTextureName("rtmkaisatsupatch:station_manager")
+        (this as net.minecraft.block.Block).setBlockName("station_manager")
+        (this as net.minecraft.block.Block).setBlockTextureName("rtmkaisatsupatch:station_manager")
     }
 
     override fun createNewTileEntity(world: World?, meta: Int): TileEntity = TileEntityStationManager()

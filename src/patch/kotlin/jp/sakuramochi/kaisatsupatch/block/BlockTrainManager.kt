@@ -15,8 +15,8 @@ import net.minecraft.world.World
 class BlockTrainManager : BlockContainer(Material.iron) {
 
     init {
-        setBlockName("train_manager")
-        setBlockTextureName("rtmkaisatsupatch:train_manager")
+        (this as net.minecraft.block.Block).setBlockName("train_manager")
+        (this as net.minecraft.block.Block).setBlockTextureName("rtmkaisatsupatch:train_manager")
     }
 
     override fun createNewTileEntity(world: World?, meta: Int): TileEntity = TileEntityTrainManager()

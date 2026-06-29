@@ -18,8 +18,8 @@ import net.minecraft.world.World
 class BlockBoardingCertMachine : BlockContainer(Material.iron) {
 
     init {
-        setBlockName("boarding_cert_machine")
-        setBlockTextureName("rtmkaisatsupatch:boarding_cert_machine")
+        (this as net.minecraft.block.Block).setBlockName("boarding_cert_machine")
+        (this as net.minecraft.block.Block).setBlockTextureName("rtmkaisatsupatch:boarding_cert_machine")
     }
 
     override fun createNewTileEntity(world: World?, meta: Int): TileEntity = TileEntityBoardingCertMachine()
