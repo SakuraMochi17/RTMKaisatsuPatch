@@ -91,7 +91,7 @@ class RTMKaisatsuPatchCore {
         val itemExpressTicket = ItemCustomExpressTicket()
 
         listOf(itemTicket, itemICCard, itemPass, itemSettingsTool, itemExpressTicket, itemCouponTicket, itemBoardingCertificate).forEach { it.creativeTab = myTab }
-        listOf(blockTurnstile, blockVendor, blockStationManager, blockLineManager, blockTrainManager, blockReservedVendor, blockFareAdjustment, blockDepartureBoard, blockBoardingCertMachine, blockSimpleICReader).forEach { it.setCreativeTab(myTab) }
+        listOf(blockTurnstile, blockVendor, blockStationManager, blockLineManager, blockTrainManager, blockReservedVendor, blockFareAdjustment, blockDepartureBoard, blockBoardingCertMachine, blockSimpleICReader).forEach { (it as net.minecraft.block.Block).setCreativeTab(myTab) }
 
         // ── ブロック登録（クリエイティブタブ表示順：有人駅設備 → 無人駅設備 → 情報表示 → 管理）──
         GameRegistry.registerBlock(blockTurnstile,           ItemBlockCustomTurnstile::class.java,     "custom_turnstile")
