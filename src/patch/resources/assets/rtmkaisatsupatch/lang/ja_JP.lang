@@ -10,6 +10,11 @@ tile.departure_board.name=発車標
 tile.departure_settings.name=発車標設定ブロック
 gui.kaisatsu.departure_settings.title=§e発車標 — 設定ブロック
 gui.kaisatsu.departure_settings.lbl.line_color=路線カラー(16進)
+gui.kaisatsu.departure_board.title=§e発車標 — 表示設定
+gui.kaisatsu.departure_board.bound=バインド先
+gui.kaisatsu.departure_board.lbl.line=路線名
+gui.kaisatsu.departure_board.lbl.direction=方面
+gui.kaisatsu.departure_board.lbl.platform=番線
 tile.boarding_cert_machine.name=乗車駅証明書発行機
 tile.simple_ic_reader.name=IC簡易リーダー
 

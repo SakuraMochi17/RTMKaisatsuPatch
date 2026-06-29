@@ -10,6 +10,11 @@ tile.departure_board.name=Departure Board
 tile.departure_settings.name=Departure Board Settings
 gui.kaisatsu.departure_settings.title=§eDeparture Board — Settings
 gui.kaisatsu.departure_settings.lbl.line_color=Line Color (hex)
+gui.kaisatsu.departure_board.title=§eDeparture Board — Display
+gui.kaisatsu.departure_board.bound=Bound to
+gui.kaisatsu.departure_board.lbl.line=Line Name
+gui.kaisatsu.departure_board.lbl.direction=Direction
+gui.kaisatsu.departure_board.lbl.platform=Platform
 tile.boarding_cert_machine.name=Boarding Certificate Machine
 tile.simple_ic_reader.name=Simple IC Reader
 

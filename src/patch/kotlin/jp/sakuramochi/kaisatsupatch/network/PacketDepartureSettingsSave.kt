@@ -19,7 +19,6 @@ class PacketDepartureSettingsSave() : IMessage {
     var displayRows  = 5
     var title        = ""
     var timeMode     = "real"
-    var lineColorHex = 0x1E90FF
 
     override fun toBytes(buf: ByteBuf) {
         buf.writeInt(x); buf.writeInt(y); buf.writeInt(z)
@@ -30,7 +29,6 @@ class PacketDepartureSettingsSave() : IMessage {
         buf.writeInt(displayRows)
         buf.writeStr(title)
         buf.writeStr(timeMode)
-        buf.writeInt(lineColorHex)
     }
 
     override fun fromBytes(buf: ByteBuf) {
@@ -42,7 +40,6 @@ class PacketDepartureSettingsSave() : IMessage {
         displayRows  = buf.readInt()
         title        = buf.readStr()
         timeMode     = buf.readStr()
-        lineColorHex = buf.readInt()
     }
 
     class Handler : IMessageHandler<PacketDepartureSettingsSave, IMessage> {
@@ -57,7 +54,6 @@ class PacketDepartureSettingsSave() : IMessage {
             tile.displayRows  = msg.displayRows
             tile.title        = msg.title
             tile.timeMode     = msg.timeMode
-            tile.lineColorHex = msg.lineColorHex
             tile.markDirty()
             tile.recomputeDepartures()
             return null

@@ -21,7 +21,6 @@ class PacketOpenDepartureSettings() : IMessage {
     var displayRows  = 5
     var title        = ""
     var timeMode     = "real"
-    var lineColorHex = 0x1E90FF
     var availableDias     : List<String>               = emptyList()
     var availableStations : List<String>               = emptyList()
     var availableLines    : List<Pair<String, String>> = emptyList()  // id to name
@@ -35,7 +34,6 @@ class PacketOpenDepartureSettings() : IMessage {
         buf.writeInt(displayRows)
         buf.writeStr(title)
         buf.writeStr(timeMode)
-        buf.writeInt(lineColorHex)
         buf.writeStringList(availableDias)
         buf.writeStringList(availableStations)
         buf.writeInt(availableLines.size)
@@ -51,7 +49,6 @@ class PacketOpenDepartureSettings() : IMessage {
         displayRows  = buf.readInt()
         title        = buf.readStr()
         timeMode     = buf.readStr()
-        lineColorHex = buf.readInt()
         availableDias     = buf.readStringList()
         availableStations = buf.readStringList()
         availableLines    = (0 until buf.readInt()).map { buf.readStr() to buf.readStr() }

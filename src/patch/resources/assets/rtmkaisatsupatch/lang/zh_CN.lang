@@ -10,6 +10,11 @@ tile.departure_board.name=发车信息牌
 tile.departure_settings.name=发车信息牌设置方块
 gui.kaisatsu.departure_settings.title=§e发车信息牌 — 设置
 gui.kaisatsu.departure_settings.lbl.line_color=线路颜色(十六进制)
+gui.kaisatsu.departure_board.title=§e发车信息牌 — 显示设置
+gui.kaisatsu.departure_board.bound=绑定对象
+gui.kaisatsu.departure_board.lbl.line=线路名称
+gui.kaisatsu.departure_board.lbl.direction=方向
+gui.kaisatsu.departure_board.lbl.platform=站台
 tile.boarding_cert_machine.name=乘车站证明书发行机
 tile.simple_ic_reader.name=简易IC读卡器
 

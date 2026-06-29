@@ -31,7 +31,6 @@ class TileEntityDepartureSettings : TileEntity() {
     // ── 表示テンプレート ─────────────────────────────────────────────
     var title        = ""
     var timeMode     = "real"           // "real" = 現実時刻, "game" = ゲーム内時刻
-    var lineColorHex = DEFAULT_LINE_COLOR   // 路線カラー帯（0xRRGGBB）
     var columns: List<String> = DEFAULT_COLUMNS   // 表示する列の並び（HI03 の style 相当）
 
     // ── サーバー計算 → クライアント同期 ─────────────────────────────
@@ -76,7 +75,6 @@ class TileEntityDepartureSettings : TileEntity() {
         tag.setInteger("DisplayRows", displayRows)
         tag.setString("Title",        title)
         tag.setString("TimeMode",     timeMode)
-        tag.setInteger("LineColor",   lineColorHex)
         tag.setStringList("Columns",  columns)
 
         val list = NBTTagList()
@@ -102,7 +100,6 @@ class TileEntityDepartureSettings : TileEntity() {
         displayRows  = tag.getInteger("DisplayRows").let { if (it == 0) 5 else it }
         title        = tag.getString("Title")
         timeMode     = tag.getString("TimeMode").ifEmpty { "real" }
-        lineColorHex = if (tag.hasKey("LineColor")) tag.getInteger("LineColor") else DEFAULT_LINE_COLOR
         columns      = tag.getStringList("Columns").ifEmpty { DEFAULT_COLUMNS }
 
         val list = tag.getTagList("Departures", Constants.NBT.TAG_COMPOUND)
@@ -125,7 +122,6 @@ class TileEntityDepartureSettings : TileEntity() {
     }
 
     companion object {
-        const val DEFAULT_LINE_COLOR = 0x1E90FF   // 既定の路線カラー（青系）
         val DEFAULT_COLUMNS = listOf("time", "destination", "type", "track", "cars")
     }
 }
