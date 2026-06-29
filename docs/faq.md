@@ -13,7 +13,7 @@
 **対処:**
 1. `.minecraft/logs/fml-client-latest.log` を開いてエラー内容を確認する
 2. RTM・NGTLib が `mods/` フォルダに入っているか確認する
-3. バージョン組み合わせが [README の必要環境](../README.md#必要環境) と一致しているか確認する
+3. バージョン組み合わせが [README の必要環境](../README.ja.md#必要環境) と一致しているか確認する
 
 ---
 

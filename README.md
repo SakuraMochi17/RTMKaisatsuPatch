@@ -49,7 +49,7 @@ One of the following setups is required.
 5. Insert coins into the Ticket Vendor, buy a ticket or IC card, and pass through the gate
 ```
 
-For detailed instructions, see the **[Setup Guide](docs/setup.md)**.
+For detailed instructions, see the **[Setup Guide](docs/en/setup.md)**.
 
 ---
 
@@ -57,12 +57,12 @@ For detailed instructions, see the **[Setup Guide](docs/setup.md)**.
 
 | Page | Content |
 |---|---|
-| [Setup Guide](docs/setup.md) | Detailed walkthrough for first-time users |
-| [Block Reference](docs/blocks.md) | Configuration for all blocks (gates, vendors, boards, etc.) |
-| [Item Reference](docs/items.md) | Usage for all items (tickets, IC cards, passes, etc.) |
-| [Company Management](docs/company.md) | Company creation, line assignment, IC interoperability, member management |
-| [Admin Commands](docs/commands.md) | Full `/kaisatsu` command reference |
-| [FAQ](docs/faq.md) | Troubleshooting and Q&A |
+| [Setup Guide](docs/en/setup.md) | Detailed walkthrough for first-time users |
+| [Block Reference](docs/en/blocks.md) | Configuration for all blocks (gates, vendors, boards, etc.) |
+| [Item Reference](docs/en/items.md) | Usage for all items (tickets, IC cards, passes, etc.) |
+| [Company Management](docs/en/company.md) | Company creation, line assignment, IC interoperability, member management |
+| [Admin Commands](docs/en/commands.md) | Full `/kaisatsu` command reference |
+| [FAQ](docs/en/faq.md) | Troubleshooting and Q&A |
 
 ---
 
@@ -101,7 +101,7 @@ For detailed instructions, see the **[Setup Guide](docs/setup.md)**.
 ## FAQ (Excerpt)
 
 **Q. I get an error when trying to pass through the gate**  
-→ Check that the gate has a station name set and that the station is registered on a line. See [FAQ](docs/faq.md).
+→ Check that the gate has a station name set and that the station is registered on a line. See [FAQ](docs/en/faq.md).
 
 **Q. No destinations appear in the Ticket Vendor**  
 → Add the station to a line in the Line Manager block. Destinations are generated from line data.
@@ -112,7 +112,7 @@ For detailed instructions, see the **[Setup Guide](docs/setup.md)**.
 **Q. Where do I renew a commuter pass?**  
 → Ticket Vendor → "Pass" tab → "Renew" sub-mode. Passes with 7 or fewer days remaining are eligible.
 
-See [FAQ](docs/faq.md) for more.
+See [FAQ](docs/en/faq.md) for more.
 
 ---
 
