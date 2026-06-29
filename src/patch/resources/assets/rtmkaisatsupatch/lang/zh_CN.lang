@@ -7,6 +7,9 @@ tile.train_manager.name=列车管理方块
 tile.reserved_seat_vendor.name=指定席售票机
 tile.fare_adjustment.name=补票机
 tile.departure_board.name=发车信息牌
+tile.departure_settings.name=发车信息牌设置方块
+gui.kaisatsu.departure_settings.title=§e发车信息牌 — 设置
+gui.kaisatsu.departure_settings.lbl.line_color=线路颜色(十六进制)
 tile.boarding_cert_machine.name=乘车站证明书发行机
 tile.simple_ic_reader.name=简易IC读卡器
 

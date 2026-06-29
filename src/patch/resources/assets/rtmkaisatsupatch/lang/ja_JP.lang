@@ -7,6 +7,9 @@ tile.train_manager.name=列車管理ブロック
 tile.reserved_seat_vendor.name=指定席券売機
 tile.fare_adjustment.name=乗越精算機
 tile.departure_board.name=発車標
+tile.departure_settings.name=発車標設定ブロック
+gui.kaisatsu.departure_settings.title=§e発車標 — 設定ブロック
+gui.kaisatsu.departure_settings.lbl.line_color=路線カラー(16進)
 tile.boarding_cert_machine.name=乗車駅証明書発行機
 tile.simple_ic_reader.name=IC簡易リーダー
 

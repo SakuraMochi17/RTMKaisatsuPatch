@@ -7,6 +7,9 @@ tile.train_manager.name=Train Manager Block
 tile.reserved_seat_vendor.name=Reserved Seat Vending Machine
 tile.fare_adjustment.name=Fare Adjustment Machine
 tile.departure_board.name=Departure Board
+tile.departure_settings.name=Departure Board Settings
+gui.kaisatsu.departure_settings.title=§eDeparture Board — Settings
+gui.kaisatsu.departure_settings.lbl.line_color=Line Color (hex)
 tile.boarding_cert_machine.name=Boarding Certificate Machine
 tile.simple_ic_reader.name=Simple IC Reader
 

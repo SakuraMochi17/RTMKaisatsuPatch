@@ -7,6 +7,9 @@ tile.train_manager.name=열차 관리 블록
 tile.reserved_seat_vendor.name=지정석 발매기
 tile.fare_adjustment.name=추가 요금 정산기
 tile.departure_board.name=발차 안내판
+tile.departure_settings.name=발차 안내판 설정 블록
+gui.kaisatsu.departure_settings.title=§e발차 안내판 — 설정
+gui.kaisatsu.departure_settings.lbl.line_color=노선 색상(16진)
 tile.boarding_cert_machine.name=승차역 증명서 발행기
 tile.simple_ic_reader.name=간이 IC 리더기
 

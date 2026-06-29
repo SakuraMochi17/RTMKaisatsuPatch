@@ -37,6 +37,9 @@ object KaizPatchNetwork {
         CHANNEL.registerMessage(PacketOpenDepartureBoard.Handler::class.java,      PacketOpenDepartureBoard::class.java,       id++, Side.CLIENT)
         CHANNEL.registerMessage(PacketDepartureBoardSave.Handler::class.java,      PacketDepartureBoardSave::class.java,       id++, Side.SERVER)
         // OuDia テンプレート出力
-        CHANNEL.registerMessage(PacketExportTemplate.Handler::class.java,          PacketExportTemplate::class.java,           id,   Side.SERVER)
+        CHANNEL.registerMessage(PacketExportTemplate.Handler::class.java,          PacketExportTemplate::class.java,           id++, Side.SERVER)
+        // 発車標 設定ブロック
+        CHANNEL.registerMessage(PacketOpenDepartureSettings.Handler::class.java,   PacketOpenDepartureSettings::class.java,    id++, Side.CLIENT)
+        CHANNEL.registerMessage(PacketDepartureSettingsSave.Handler::class.java,   PacketDepartureSettingsSave::class.java,    id,   Side.SERVER)
     }
 }
