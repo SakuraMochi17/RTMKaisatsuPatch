@@ -35,8 +35,8 @@ class BlockReservedVendor : BlockMachineBase(Material.iron) {
         if (heldItem?.item is ItemSettingsTool) {
             if (player.isSneaking) {
                 if (world.isRemote) {
-                    // TileEntityReservedVendor は BlockMachineBase のベースを持つが
-                    // TileEntityMachineBase (IModelSelector) は継承していないためモデル選択不可
+                    // モデルの選択はアイテムを手に持って空中で右クリック
+                    // (ItemBlockReservedVendor#onItemRightClick) で行う。
                 }
             } else {
                 if (!world.isRemote) {

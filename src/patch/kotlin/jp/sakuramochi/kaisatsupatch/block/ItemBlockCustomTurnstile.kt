@@ -4,6 +4,7 @@ import jp.ngt.rtm.electric.MachineType
 import jp.ngt.rtm.gui.GuiSelectModel
 import jp.ngt.rtm.modelpack.IModelSelectorWithType
 import jp.ngt.rtm.modelpack.ModelPackManager
+import jp.ngt.rtm.modelpack.cfg.IConfigWithType
 import jp.ngt.rtm.modelpack.modelset.ModelSetBase
 import jp.ngt.rtm.modelpack.state.ResourceState
 import cpw.mods.fml.relauncher.Side
@@ -20,13 +21,18 @@ import net.minecraft.world.World
 
 class ItemBlockCustomTurnstile(block: Block) : ItemBlock(block) {
 
+    companion object {
+        // RTM のモデル登録 type キー（改札機・券売機等はすべて "ModelMachine"）。
+        private const val RTM_MODEL_TYPE = "ModelMachine"
+    }
+
     // ItemBlock は通常ブロック側のテクスチャを使うため、インベントリ用に
     // RTM のアイテムアイコンを明示的に登録して使う。
     private var inventoryIcon: IIcon? = null
 
     @SideOnly(Side.CLIENT)
     override fun registerIcons(reg: IIconRegister) {
-        inventoryIcon = reg.registerIcon("rtm:itemTurnstile")
+        inventoryIcon = reg.registerIcon("rtmkaisatsupatch:turnstile")
     }
 
     override fun getIconFromDamage(meta: Int): IIcon =
@@ -37,18 +43,27 @@ class ItemBlockCustomTurnstile(block: Block) : ItemBlock(block) {
     override fun getSpriteNumber(): Int = 1
 
     override fun onItemRightClick(itemStack: ItemStack, world: World, player: EntityPlayer): ItemStack {
-        if (world.isRemote) {
-            // モデルリストが存在するときだけ開く（null チェックでクラッシュを防ぐ）
-            val modelList = ModelPackManager.INSTANCE.getModelList(MachineType.Turnstile.name)
-            if (modelList != null && !modelList.isEmpty()) {
-                Minecraft.getMinecraft().displayGuiScreen(GuiSelectModel(world, buildSelector(itemStack)))
-            }
+        // 該当サブタイプ(Turnstile)のモデルが存在する時だけ選択 GUI を開く。
+        // vanilla RTM に Vendor モデルが無い等の環境で空 GUI を開かないため。
+        if (world.isRemote && hasModelOfSubType(MachineType.Turnstile.name)) {
+            Minecraft.getMinecraft().displayGuiScreen(GuiSelectModel(world, buildSelector(itemStack)))
         }
         return itemStack
     }
 
+    /** 指定サブタイプ(machineType)の ModelMachine モデルが 1 つ以上あるか。 */
+    private fun hasModelOfSubType(subType: String): Boolean = try {
+        ModelPackManager.INSTANCE.getModelList(RTM_MODEL_TYPE)
+            .any { (it.config as? IConfigWithType)?.subType == subType }
+    } catch (e: Throwable) {
+        // RTM の版差で config API が異なる場合は従来通り開く（クラッシュ回避を優先）。
+        true
+    }
+
     private fun buildSelector(itemStack: ItemStack) = object : IModelSelectorWithType {
-        override fun getModelType(): String = MachineType.Turnstile.name
+        // モデル登録 type キーは "ModelMachine"。Turnstile/Vendor は
+        // machineType(サブタイプ)であり type キーではない点に注意。
+        override fun getModelType(): String = RTM_MODEL_TYPE
         override fun getSubType(): String  = MachineType.Turnstile.name
         override fun getModelName(): String =
             if (itemStack.hasTagCompound() && itemStack.tagCompound.hasKey("ModelName"))
@@ -62,6 +77,8 @@ class ItemBlockCustomTurnstile(block: Block) : ItemBlock(block) {
         override fun getResourceState(): ResourceState = ResourceState(this)
         override fun getPos(): IntArray = intArrayOf(0, 0, 0)
         override fun closeGui(name: String, state: ResourceState): Boolean = true
+        // vanilla RTM の IModelSelector は closeGui(String) の1引数版を要求するため両対応する。
+        fun closeGui(name: String): Boolean = true
         override fun getModelSet(): ModelSetBase<*>? {
             val n = modelName; return if (n.isEmpty()) null else ModelPackManager.INSTANCE.getModelSet(modelType, n)
         }
