@@ -15,7 +15,6 @@ import cpw.mods.fml.relauncher.Side
 import cpw.mods.fml.relauncher.SideOnly
 import jp.ngt.rtm.block.tileentity.RenderMachine
 import jp.sakuramochi.kaisatsupatch.client.KaizPatchClientEvents
-import jp.sakuramochi.kaisatsupatch.client.RenderICCard
 import jp.sakuramochi.kaisatsupatch.block.*
 import jp.sakuramochi.kaisatsupatch.block.tileentity.*
 import jp.sakuramochi.kaisatsupatch.client.RenderBoardingCertMachine
@@ -165,9 +164,8 @@ class RTMKaisatsuPatchCore {
             TileEntityCustomTurnstile::class.java,
             RenderMachine.INSTANCE
         )
-        net.minecraftforge.client.MinecraftForgeClient.registerItemRenderer(
-            registeredItems["custom_ic_card"]!!, RenderICCard()
-        )
+        // IC カードは標準アイテムアイコン (rtm:icCard) + getColorFromItemStack で
+        // 着色する方式に変更したため、カスタム IItemRenderer は登録しない。
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(KaizPatchClientEvents)
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityDepartureBoard::class.java, RenderDepartureBoard())
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityBoardingCertMachine::class.java, RenderBoardingCertMachine())

@@ -6,17 +6,35 @@ import jp.ngt.rtm.modelpack.IModelSelectorWithType
 import jp.ngt.rtm.modelpack.ModelPackManager
 import jp.ngt.rtm.modelpack.modelset.ModelSetBase
 import jp.ngt.rtm.modelpack.state.ResourceState
+import cpw.mods.fml.relauncher.Side
+import cpw.mods.fml.relauncher.SideOnly
 import net.minecraft.block.Block
 import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
+import net.minecraft.util.IIcon
 import net.minecraft.world.World
 
 class ItemBlockCustomTicketVendor(block: Block) : ItemBlock(block) {
 
-    init { (this as net.minecraft.item.Item).setTextureName("rtm:item_ticket_vendor") }
+    // ItemBlock は通常ブロック側のテクスチャを使うため、インベントリ用に
+    // RTM のアイテムアイコンを明示的に登録して使う。
+    private var inventoryIcon: IIcon? = null
+
+    @SideOnly(Side.CLIENT)
+    override fun registerIcons(reg: IIconRegister) {
+        inventoryIcon = reg.registerIcon("rtm:item_ticket_vendor")
+    }
+
+    override fun getIconFromDamage(meta: Int): IIcon =
+        inventoryIcon ?: super.getIconFromDamage(meta)
+
+    // ItemBlock は既定でブロックアトラス(0)を使うが、上で登録したアイコンは
+    // アイテムアトラスにあるため 1 を返してアイテムアトラスを参照させる。
+    override fun getSpriteNumber(): Int = 1
 
     override fun onItemRightClick(itemStack: ItemStack, world: World, player: EntityPlayer): ItemStack {
         if (world.isRemote) {

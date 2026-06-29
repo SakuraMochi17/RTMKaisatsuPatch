@@ -133,6 +133,14 @@ class ItemCustomICCard : Item() {
         maxStackSize = 1
     }
 
+    /**
+     * rtm:icCard アイコンを会社カラーで着色する。
+     * 旧 RenderICCard（カスタム IItemRenderer）はインベントリで描画されず
+     * アイコンが消えていたため、標準アイコン + 色付けに置き換えた。
+     */
+    override fun getColorFromItemStack(stack: ItemStack, renderPass: Int): Int =
+        getCompanyColor(stack)
+
     override fun onItemRightClick(stack: ItemStack, world: World, player: EntityPlayer): ItemStack {
         if (!world.isRemote) {
             val balance = getBalance(stack)
