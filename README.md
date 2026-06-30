@@ -88,7 +88,8 @@ For detailed instructions, see the **[Setup Guide](docs/en/setup.md)**.
 | Ticket Gate | Supports tickets, IC cards, and passes. Configurable entry/exit modes and pass-through message |
 | Ticket Vending Machine | Sells tickets, IC charge, passes (including renewals), and coupon tickets |
 | Fare Adjustment Machine | Collects additional fare for IC cards and tickets when riding beyond the paid zone |
-| Departure Board | Displays departure information linked to timetables. Supports real-world and in-game time |
+| Departure Board | GUI-configured board that renders departures on an HI03-style model. Line name, direction text, platform, line color (hex), direction filter, and row count are set on the board; it binds to a Settings Block for its data. Includes a sample mode |
+| Departure Settings Block | The data source for departure boards (station, line, timetable, time mode). One settings block can drive multiple boards (e.g. different platforms/directions) |
 | Boarding Certificate Machine | Issues boarding certificates for unmanned stations |
 | IC Simple Reader | Compact terminal to check IC balance and boarding status |
 | Station Manager Block | Manages station name, coordinates, and sales totals |

@@ -87,9 +87,10 @@ If the intermediate station is part of the pass's zone, you should be able to bo
 
 ### Nothing is displayed on the Departure Board
 
-- Right-click with the Settings Tool and check that a station name is set
-- Confirm that timetable data has been registered
+- Make sure the board is **bound to a settings block** (hold the Settings Tool and sneak-right-click the settings block, then the board)
+- Check that the bound **settings block has a station and timetable** set
 - If no departures are scheduled for the current time, "No departure information" is displayed
+- To check the appearance only, turn on **Sample Mode** in the board's GUI
 
 ### Departure times are off
 

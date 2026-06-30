@@ -80,20 +80,39 @@ Place in a single vertical column at the gate entrance. Place multiple side by s
 
 ## Departure Board
 
-**Purpose:** Displays upcoming departure information in real time when placed on a platform or near the gate.
+A GUI-configured departure board made of two blocks: the **Departure Settings Block** (data source) and the **Departure Board** (display). It uses the model from hi03's EditableDepartureBoard as the frame and renders departures in an LED-display style. One settings block can be bound to multiple boards with different directions or platforms (e.g. inbound/outbound platforms).
 
-### Configuration (right-click with Settings Tool)
+### 1. Departure Settings Block (data source)
+
+Right-click with the Settings Tool to configure the data source for the departures.
 
 | Setting | Description |
 |---|---|
-| Title | Display name (blank = station name) |
-| Station | The station whose departures are shown |
+| Station | Target station |
 | Line | Filter (blank = all lines) |
 | Timetable | The timetable dataset to use |
-| Direction | Both / Outbound / Inbound |
-| Platform | Platform number to display |
-| Rows | Up to 8 rows |
 | **Time Mode** | **Real-world time** or **In-game time** |
+
+### 2. Departure Board (display)
+
+Right-click with the Settings Tool to configure this board's own display info.
+
+| Setting | Description |
+|---|---|
+| Line Name | Line name shown in the header (e.g. Jōban Line (Rapid)) |
+| Direction Text | Destination/direction text in the header (e.g. for Ueno, Tokyo & Shinagawa) |
+| Platform | Platform number |
+| Line Color (hex) | Color of the header stripe (e.g. `1E90FF`) |
+| Direction | Both / Outbound / Inbound |
+| Rows | Up to 8 rows |
+| Sample Mode | When ON, shows sample data even without a station configured (for adjusting the look; updates with real time) |
+
+### 3. Binding (linking to a settings block)
+
+Hold the Settings Tool and:
+
+1. **Sneak + right-click the settings block** → remembers that block
+2. **Sneak + right-click the board** → binds it to the remembered settings block
 
 ### Time Mode
 
@@ -107,7 +126,6 @@ Place in a single vertical column at the gate entrance. Place multiple side by s
 | Time | Departure time (HH:MM) |
 | Destination | Terminal station name |
 | Type | Local / Express / Limited Express, etc. |
-| Train No. | Train identifier set in the timetable |
 
 ---
 

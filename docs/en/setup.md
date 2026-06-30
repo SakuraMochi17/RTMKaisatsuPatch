@@ -101,7 +101,7 @@ If you see an error message, see [FAQ](../en/faq.md).
 
 ### Departure Board
 
-If timetable data exists, a **Departure Board** block can display real-time departure information.  
+If timetable data exists, a **Departure Settings Block** (data source) and a **Departure Board** (display) can show real-time departure information. Bind them together with the Settings Tool.  
 See [Block Reference › Departure Board](../en/blocks.md#departure-board).
 
 ### Fare Adjustment Machine
