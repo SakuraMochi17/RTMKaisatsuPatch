@@ -120,3 +120,9 @@
 
 源代码仅允许用于学习和参考目的查阅。禁止再分发、修改及商业使用。  
 RTM 和 NGTLib 为 JP-MOD 的著作物。
+
+---
+
+## 鸣谢
+
+- 发车信息牌的模型(`.mqo`)和材质改编自 **hi03** 的「自定义发车信息牌改造包 (EditableDepartureBoard)」并随附于本模组。改造与再分发已根据该包的 readme 获得许可。(C) 2019 hi03 — Twitter: [@hi03_s](https://twitter.com/hi03_s)

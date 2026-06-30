@@ -120,3 +120,9 @@ See [FAQ](docs/en/faq.md) for more.
 
 Source code may be viewed for learning and reference purposes. Redistribution, modification, and commercial use are not permitted.  
 RTM and NGTLib are the intellectual property of JP-MOD.
+
+---
+
+## Credits
+
+- The departure board model (`.mqo`) and its texture are adapted from **hi03**'s "Custom Departure Board Pack (EditableDepartureBoard)". Modification and redistribution are permitted under the pack's readme. (C) 2019 hi03 — Twitter: [@hi03_s](https://twitter.com/hi03_s)

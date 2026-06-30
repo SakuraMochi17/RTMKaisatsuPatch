@@ -1,7 +1,6 @@
 package jp.sakuramochi.kaisatsupatch.block
 
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityDepartureBoard
-import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
 import jp.sakuramochi.kaisatsupatch.item.ItemSettingsTool
 import jp.sakuramochi.kaisatsupatch.network.KaizPatchNetwork
 import jp.sakuramochi.kaisatsupatch.network.PacketOpenDepartureBoard
@@ -15,6 +14,12 @@ import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.MathHelper
 import net.minecraft.world.World
 
+/**
+ * 発車標（表示体）ブロック。
+ *
+ * - Settings Tool + 通常右クリック … 路線名/方面/番線/路線カラーの設定 GUI を開く
+ * - Settings Tool + スニーク右クリック … 直前に記憶した設定ブロックへバインドする
+ */
 class BlockDepartureBoard : BlockContainer(Material.iron) {
 
     init {
@@ -37,63 +42,29 @@ class BlockDepartureBoard : BlockContainer(Material.iron) {
         if (world.isRemote) return true
         val tile = world.getTileEntity(x, y, z) as? TileEntityDepartureBoard ?: return true
         val mp = player as? EntityPlayerMP ?: return true
-        val data = KaisatsuNetworkData.get(world) ?: return true
+        // 通常右クリックのみ設定 GUI を開く（スニーク時のバインドは ItemSettingsTool 側で処理）
+        if (player.currentEquippedItem?.item !is ItemSettingsTool) return true
 
-        if (player.currentEquippedItem?.item is ItemSettingsTool) {
-            // 設定GUI
-            val dias     = data.timetable?.diaNames ?: emptyList()
-            val stations = data.globalStations.keys.sorted()
-            val lines    = data.companyLines.values.sortedBy { it.lineID }
-                .map { it.lineID to it.lineName }
-            KaizPatchNetwork.CHANNEL.sendTo(PacketOpenDepartureBoard().also { pkt ->
-                pkt.x = x; pkt.y = y; pkt.z = z
-                pkt.isConfigMode       = true
-                pkt.stationName        = tile.stationName
-                pkt.lineID             = tile.lineID
-                pkt.platform           = tile.platform
-                pkt.diaName            = tile.diaName
-                pkt.direction          = tile.direction
-                pkt.displayRows        = tile.displayRows
-                pkt.title              = tile.title
-                pkt.timeMode           = tile.timeMode
-                pkt.availableDias      = dias
-                pkt.availableStations  = stations
-                pkt.availableLines     = lines
-            }, mp)
-        } else {
-            // 表示GUI（発車情報をサーバーで計算して送る）
-            val nowMin: Int
-            val currentTimeStr: String
-            if (tile.timeMode == "game") {
-                val gameMin = ((world.worldTime % 24000L) * 1440L / 24000L + 360L).toInt() % 1440
-                nowMin = gameMin
-                currentTimeStr = "%02d:%02d".format(gameMin / 60, gameMin % 60)
-            } else {
-                val now = java.time.LocalTime.now()
-                nowMin = now.hour * 60 + now.minute
-                currentTimeStr = "%02d:%02d".format(now.hour, now.minute)
-            }
-            val lineStations = if (tile.lineID.isNotEmpty())
-                data.companyLines[tile.lineID]?.stationOrder?.toSet() else null
-            val rows = data.timetable
-                ?.getNextDepartures(tile.stationName, tile.diaName, tile.direction, nowMin, 10, lineStations)
-                ?: emptyList()
-            KaizPatchNetwork.CHANNEL.sendTo(PacketOpenDepartureBoard().also { pkt ->
-                pkt.x = x; pkt.y = y; pkt.z = z
-                pkt.isConfigMode  = false
-                pkt.stationName   = tile.stationName
-                pkt.lineID        = tile.lineID
-                pkt.platform      = tile.platform
-                pkt.diaName       = tile.diaName
-                pkt.direction     = tile.direction
-                pkt.timeMode      = tile.timeMode
-                pkt.currentTime   = currentTimeStr
-                pkt.departures    = rows
-            }, mp)
-        }
+        // 表示情報の設定 GUI
+        val boundInfo = tile.boundSettings()?.let { s -> s.stationName.ifEmpty { "(駅未設定)" } }
+            ?: "未バインド"
+        KaizPatchNetwork.CHANNEL.sendTo(PacketOpenDepartureBoard().also { pkt ->
+            pkt.x = x; pkt.y = y; pkt.z = z
+            pkt.headerLine      = tile.headerLine
+            pkt.headerDirection = tile.headerDirection
+            pkt.platform        = tile.platform
+            pkt.lineColorHex    = tile.lineColorHex
+            pkt.sampleMode      = tile.sampleMode
+            pkt.direction       = tile.direction
+            pkt.displayRows     = tile.displayRows
+            pkt.boundInfo       = boundInfo
+        }, mp)
         return true
     }
 
     override fun isOpaqueCube() = false
     override fun renderAsNormalBlock() = false
+    // ブロック自体は描画しない（TESR で HI03 モデルのみ描く）。
+    // これを -1 にしないとブロックのキューブも描画され MQO と二重になる。
+    override fun getRenderType() = -1
 }

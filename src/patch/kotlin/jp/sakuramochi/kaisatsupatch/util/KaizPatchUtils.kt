@@ -3,6 +3,7 @@ package jp.sakuramochi.kaisatsupatch.util
 import cpw.mods.fml.common.network.ByteBufUtils
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayerMP
+import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.nbt.NBTTagList
 import net.minecraft.nbt.NBTTagString
@@ -49,3 +50,17 @@ fun EntityPlayerMP.isOp(): Boolean =
 fun EntityPlayerMP.sendSuccess(msg: String) = addChatMessage(ChatComponentText("§a$msg"))
 fun EntityPlayerMP.sendError(msg: String)   = addChatMessage(ChatComponentText("§c$msg"))
 fun EntityPlayerMP.sendWarn(msg: String)    = addChatMessage(ChatComponentText("§e$msg"))
+
+// ── Settings Tool のバインド用クリップボード（ItemStack NBT に座標を記憶） ──
+
+fun ItemStack.rememberCoords(x: Int, y: Int, z: Int) {
+    val tag = tagCompound ?: NBTTagCompound().also { tagCompound = it }
+    tag.setInteger("BindX", x); tag.setInteger("BindY", y); tag.setInteger("BindZ", z)
+    tag.setBoolean("BindSet", true)
+}
+
+fun ItemStack.rememberedCoords(): BlockCoords? {
+    val tag = tagCompound ?: return null
+    if (!tag.getBoolean("BindSet")) return null
+    return BlockCoords(tag.getInteger("BindX"), tag.getInteger("BindY"), tag.getInteger("BindZ"))
+}

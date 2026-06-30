@@ -11,123 +11,98 @@ import net.minecraft.client.gui.GuiTextField
 import net.minecraft.util.StatCollector
 import org.lwjgl.input.Keyboard
 
+/**
+ * 発車標（表示体）の設定 GUI。この板に常時表示する静的情報（路線名・方面・番線・
+ * 路線カラー）と、表示の絞り込み（方向・表示行数）、サンプル表示を編集する。
+ * 発車情報のデータ源（駅・ダイヤ等）はバインドした設定ブロック側で設定する。
+ */
 @SideOnly(Side.CLIENT)
 class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen() {
 
-    private var page = if (data.isConfigMode) 1 else 0
-
-    // 設定ページの状態
-    private var selStation = data.availableStations.indexOfFirst { it == data.stationName }.coerceAtLeast(0)
-    private var selTimeMode = if (data.timeMode == "game") 1 else 0  // 0=現実, 1=ゲーム
-    // 路線: index 0 = フィルターなし、1以降 = availableLines[i-1]
-    private var selLine    = run {
-        val idx = data.availableLines.indexOfFirst { it.first == data.lineID }
-        if (idx < 0) 0 else idx + 1
-    }
-    private var selDia     = data.availableDias.indexOfFirst { it == data.diaName }.coerceAtLeast(0)
-    private var selDir     = DIRS.indexOfFirst { it == data.direction }.coerceAtLeast(0)
-    private var selRows    = (data.displayRows - 1).coerceIn(0, 7)
-
-    private lateinit var fldTitle:    GuiTextField
-    private lateinit var fldPlatform: GuiTextField
+    private lateinit var fldLine:      GuiTextField
+    private lateinit var fldDirection: GuiTextField
+    private lateinit var fldPlatform:  GuiTextField
+    private lateinit var fldColor:     GuiTextField
+    private var sampleMode = data.sampleMode
+    private var selDir  = DIRS.indexOf(data.direction).coerceAtLeast(0)
+    private var selRows = (data.displayRows - 1).coerceIn(0, 7)
 
     override fun initGui() {
         Keyboard.enableRepeatEvents(true)
         @Suppress("UNCHECKED_CAST") (buttonList as MutableList<GuiButton>).clear()
         val cx = width / 2; val cy = height / 2
 
-        when (page) {
-            0 -> {
-                add(GuiButton(99, cx - 30, cy + 90, 60, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.close")))
-            }
-            1 -> {
-                fldTitle    = GuiTextField(fontRendererObj, cx - 80, cy - 90, 160, 14)
-                fldPlatform = GuiTextField(fontRendererObj, cx - 30, cy + 18, 80,  14)
-                fldTitle.text    = data.title
-                fldPlatform.text = data.platform
-                fldPlatform.setMaxStringLength(8)
+        fldLine      = GuiTextField(fontRendererObj, cx - 40, cy - 78, 150, 14)
+        fldDirection = GuiTextField(fontRendererObj, cx - 40, cy - 58, 150, 14)
+        fldPlatform  = GuiTextField(fontRendererObj, cx - 40, cy - 38, 50,  14)
+        fldColor     = GuiTextField(fontRendererObj, cx - 40, cy - 18, 60,  14)
+        fldLine.text      = data.headerLine
+        fldDirection.text = data.headerDirection
+        fldPlatform.text  = data.platform
+        fldPlatform.setMaxStringLength(8)
+        fldColor.setMaxStringLength(7)
+        fldColor.text = "%06X".format(data.lineColorHex and 0xFFFFFF)
 
-                // 駅
-                add(GuiButton(10, cx - 80, cy - 54, 18, 14, "<"))
-                add(GuiButton(11, cx + 62, cy - 54, 18, 14, ">"))
-                // 路線
-                add(GuiButton(18, cx - 80, cy - 34, 18, 14, "<"))
-                add(GuiButton(19, cx + 62, cy - 34, 18, 14, ">"))
-                // ダイヤ
-                add(GuiButton(12, cx - 80, cy - 14, 18, 14, "<"))
-                add(GuiButton(13, cx + 62, cy - 14, 18, 14, ">"))
-                // 方向
-                add(GuiButton(14, cx - 80, cy + 6,  18, 14, "<"))
-                add(GuiButton(15, cx + 62, cy + 6,  18, 14, ">"))
-                // 表示行数
-                add(GuiButton(16, cx - 50,  cy + 38, 18, 14, "-"))
-                add(GuiButton(17, cx + 32,  cy + 38, 18, 14, "+"))
-                // 時刻モード切り替え
-                add(GuiButton(20, cx - 80, cy + 58, 18, 14, "<"))
-                add(GuiButton(21, cx + 62, cy + 58, 18, 14, ">"))
+        // 方向 < >
+        add(GuiButton(30, cx - 40, cy + 2, 16, 14, "<"))
+        add(GuiButton(31, cx + 60, cy + 2, 16, 14, ">"))
+        // 表示行数 - +
+        add(GuiButton(32, cx - 40, cy + 20, 16, 14, "-"))
+        add(GuiButton(33, cx + 24, cy + 20, 16, 14, "+"))
 
-                add(GuiButton(0,  cx - 35, cy + 76, 70, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.save")))
-                add(GuiButton(99, cx - 35, cy + 98, 70, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.cancel")))
-            }
-        }
+        val sampleLabel = StatCollector.translateToLocal("gui.kaisatsu.departure_board.btn.sample") +
+            ": " + StatCollector.translateToLocal(if (sampleMode) "gui.kaisatsu.on" else "gui.kaisatsu.off")
+        add(GuiButton(1,  cx - 60, cy + 40, 160, 16, sampleLabel))
+        add(GuiButton(0,  cx - 35, cy + 62, 70, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.save")))
+        add(GuiButton(99, cx - 35, cy + 84, 70, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.cancel")))
     }
 
     override fun actionPerformed(button: GuiButton) {
-        val nStations = data.availableStations.size
-        val nLines    = data.availableLines.size + 1  // +1 for "なし"
-        val nDias     = data.availableDias.size + 1   // +1 for "すべて"
-
-        when (page) {
-            0 -> if (button.id == 99) mc.thePlayer.closeScreen()
-            1 -> when (button.id) {
-                10 -> { selStation = cycle(selStation - 1, nStations); initGui() }
-                11 -> { selStation = cycle(selStation + 1, nStations); initGui() }
-                18 -> { selLine = cycle(selLine - 1, nLines); initGui() }
-                19 -> { selLine = cycle(selLine + 1, nLines); initGui() }
-                12 -> { selDia = cycle(selDia - 1, nDias); initGui() }
-                13 -> { selDia = cycle(selDia + 1, nDias); initGui() }
-                14 -> { selDir = cycle(selDir - 1, DIRS.size); initGui() }
-                15 -> { selDir = cycle(selDir + 1, DIRS.size); initGui() }
-                16 -> { selRows = (selRows - 1).coerceAtLeast(0); initGui() }
-                17 -> { selRows = (selRows + 1).coerceAtMost(7); initGui() }
-                20 -> { selTimeMode = (selTimeMode - 1 + TIME_MODES.size) % TIME_MODES.size; initGui() }
-                21 -> { selTimeMode = (selTimeMode + 1) % TIME_MODES.size; initGui() }
-                0 -> {
-                    val station = data.availableStations.getOrElse(selStation) { "" }
-                    val lineID  = if (selLine == 0) "" else data.availableLines.getOrElse(selLine - 1) { "" to "" }.first
-                    val dia     = if (selDia == 0)  "" else data.availableDias.getOrElse(selDia - 1) { "" }
-                    KaizPatchNetwork.CHANNEL.sendToServer(PacketDepartureBoardSave().also { pkt ->
-                        pkt.x = data.x; pkt.y = data.y; pkt.z = data.z
-                        pkt.stationName  = station
-                        pkt.lineID       = lineID
-                        pkt.platform     = if (::fldPlatform.isInitialized) fldPlatform.text.trim() else ""
-                        pkt.diaName      = dia
-                        pkt.direction    = DIRS[selDir]
-                        pkt.displayRows  = selRows + 1
-                        pkt.title        = if (::fldTitle.isInitialized) fldTitle.text.trim() else ""
-                        pkt.timeMode     = TIME_MODES[selTimeMode].first
-                    })
-                    mc.thePlayer.closeScreen()
-                }
-                99 -> mc.thePlayer.closeScreen()
+        when (button.id) {
+            30 -> { selDir = (selDir - 1 + DIRS.size) % DIRS.size; keepInit() }
+            31 -> { selDir = (selDir + 1) % DIRS.size; keepInit() }
+            32 -> { selRows = (selRows - 1).coerceAtLeast(0); keepInit() }
+            33 -> { selRows = (selRows + 1).coerceAtMost(7); keepInit() }
+            1  -> { sampleMode = !sampleMode; keepInit() }
+            0 -> {
+                val color = parseColor(fldColor.text) ?: data.lineColorHex
+                KaizPatchNetwork.CHANNEL.sendToServer(PacketDepartureBoardSave().also { pkt ->
+                    pkt.x = data.x; pkt.y = data.y; pkt.z = data.z
+                    pkt.headerLine      = fldLine.text.trim()
+                    pkt.headerDirection = fldDirection.text.trim()
+                    pkt.platform        = fldPlatform.text.trim()
+                    pkt.lineColorHex    = color
+                    pkt.sampleMode      = sampleMode
+                    pkt.direction       = DIRS[selDir]
+                    pkt.displayRows     = selRows + 1
+                })
+                mc.thePlayer.closeScreen()
             }
+            99 -> mc.thePlayer.closeScreen()
         }
     }
 
+    /** テキスト欄の内容を保持したまま再構築 */
+    private fun keepInit() {
+        val l = fldLine.text; val d = fldDirection.text; val p = fldPlatform.text; val c = fldColor.text
+        initGui()
+        fldLine.text = l; fldDirection.text = d; fldPlatform.text = p; fldColor.text = c
+    }
+
     override fun keyTyped(typedChar: Char, keyCode: Int) {
-        if (page == 1) {
-            if (::fldTitle.isInitialized    && fldTitle.textboxKeyTyped(typedChar, keyCode)) return
-            if (::fldPlatform.isInitialized && fldPlatform.textboxKeyTyped(typedChar, keyCode)) return
-        }
+        if (fldLine.textboxKeyTyped(typedChar, keyCode)) return
+        if (fldDirection.textboxKeyTyped(typedChar, keyCode)) return
+        if (fldPlatform.textboxKeyTyped(typedChar, keyCode)) return
+        if (fldColor.textboxKeyTyped(typedChar, keyCode)) return
         super.keyTyped(typedChar, keyCode)
     }
 
     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) {
         super.mouseClicked(mouseX, mouseY, mouseButton)
-        if (page == 1) {
-            if (::fldTitle.isInitialized)    fldTitle.mouseClicked(mouseX, mouseY, mouseButton)
-            if (::fldPlatform.isInitialized) fldPlatform.mouseClicked(mouseX, mouseY, mouseButton)
-        }
+        fldLine.mouseClicked(mouseX, mouseY, mouseButton)
+        fldDirection.mouseClicked(mouseX, mouseY, mouseButton)
+        fldPlatform.mouseClicked(mouseX, mouseY, mouseButton)
+        fldColor.mouseClicked(mouseX, mouseY, mouseButton)
     }
 
     override fun onGuiClosed() { Keyboard.enableRepeatEvents(false) }
@@ -135,82 +110,32 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawDefaultBackground()
         val cx = width / 2; val cy = height / 2
-        if (page == 1) drawRect(cx - 140, cy - 118, cx + 140, cy + 106, 0xF0202030.toInt())
+        drawRect(cx - 140, cy - 100, cx + 140, cy + 108, 0xF0202030.toInt())
         super.drawScreen(mouseX, mouseY, partialTicks)
-        when (page) {
-            0 -> drawDisplayPage(cx, cy)
-            1 -> drawConfigPage(cx, cy)
-        }
-    }
 
-    // ── 表示ページ ───────────────────────────────────────────────────
-
-    private fun drawDisplayPage(cx: Int, cy: Int) {
-        val titleBase  = data.title.ifEmpty { data.stationName }
-        val platSuffix = if (data.platform.isNotEmpty()) " §7${data.platform}番線" else ""
-        drawCenteredString(fontRendererObj, "§e$titleBase$platSuffix  §7${data.currentTime}", cx, cy - 95, 0xFFFFFF)
-
-        val diaLabel = if (data.diaName.isEmpty()) "" else "§7[${data.diaName}]  "
-        val dirLabel = if (data.direction == "両方") "" else "§7${data.direction}  "
-        val lineLabel = if (data.lineID.isNotEmpty()) "§8[${data.lineID}]" else ""
-        drawCenteredString(fontRendererObj, "$diaLabel$dirLabel$lineLabel", cx, cy - 82, 0xAAAAAA)
-
-        val colX0 = cx - 140
         val tlc = StatCollector::translateToLocal
-        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.col.time"),        colX0,       cy - 66, 0xAAAAAA)
-        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.col.destination"), colX0 + 50,  cy - 66, 0xAAAAAA)
-        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.col.type"),        colX0 + 160, cy - 66, 0xAAAAAA)
-        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.col.number"),      colX0 + 220, cy - 66, 0xAAAAAA)
-
-        if (data.departures.isEmpty()) {
-            drawCenteredString(fontRendererObj,
-                if (data.stationName.isEmpty()) tlc("gui.kaisatsu.departure.msg.no_config")
-                else tlc("gui.kaisatsu.departure.msg.no_data"), cx, cy, 0xAAAAAA)
-        } else {
-            data.departures.forEachIndexed { i, row ->
-                val y = cy - 50 + i * 16
-                drawString(fontRendererObj, "§f${row.time}",        colX0,       y, 0xFFFFFF)
-                drawString(fontRendererObj, "§b${row.destination}",  colX0 + 50,  y, 0xFFFFFF)
-                drawString(fontRendererObj, "§e${row.typeName}",     colX0 + 160, y, 0xFFFFFF)
-                drawString(fontRendererObj, "§7${row.trainNumber}",   colX0 + 220, y, 0xAAAAAA)
-            }
-        }
-    }
-
-    // ── 設定ページ ───────────────────────────────────────────────────
-
-    private fun drawConfigPage(cx: Int, cy: Int) {
-        val tlc = StatCollector::translateToLocal
-        drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.departure.config.title"), cx, cy - 108, 0xFFFFFF)
-        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.title_field"), cx - 60, cy - 102, 0xAAAAAA)
-        if (::fldTitle.isInitialized) fldTitle.drawTextBox()
-
-        val stLabel   = data.availableStations.getOrElse(selStation) { tlc("gui.kaisatsu.departure.no_station") }
-        val lineLabel = if (selLine == 0) tlc("gui.kaisatsu.departure.no_line")
-                        else data.availableLines.getOrElse(selLine - 1) { "" to "" }
-                            .let { (id, name) -> "$name §8($id)" }
-        val diaLabel  = if (selDia == 0) tlc("gui.kaisatsu.departure.all_dia") else data.availableDias.getOrElse(selDia - 1) { "" }
-        val dirLabel  = DIRS[selDir]
-        val rowsLabel = "${selRows + 1}${tlc("gui.kaisatsu.departure.rows_suffix")}"
+        drawCenteredString(fontRendererObj, tlc("gui.kaisatsu.departure_board.title"), cx, cy - 94, 0xFFFFFF)
+        drawCenteredString(fontRendererObj,
+            "${tlc("gui.kaisatsu.departure_board.bound")}: §e${data.boundInfo}", cx, cy - 84, 0xAAAAAA)
 
         val labelX = cx - 130
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure_board.lbl.line"),      labelX, cy - 75, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure_board.lbl.direction"), labelX, cy - 55, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure_board.lbl.platform"),  labelX, cy - 35, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure_settings.lbl.line_color"), labelX, cy - 15, 0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.direction"),       labelX, cy + 5,  0xAAAAAA)
+        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.rows"),            labelX, cy + 23, 0xAAAAAA)
 
-        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.station"),   labelX,  cy - 66, 0xAAAAAA)
-        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.line"),      labelX,  cy - 46, 0xAAAAAA)
-        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.dia"),       labelX,  cy - 26, 0xAAAAAA)
-        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.direction"), labelX,  cy - 6,  0xAAAAAA)
-        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.platform"),  cx - 60, cy + 6,  0xAAAAAA)
-        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.rows"),      labelX,  cy + 26, 0xAAAAAA)
-        drawString(fontRendererObj, tlc("gui.kaisatsu.departure.lbl.timemode"),  labelX,  cy + 46, 0xAAAAAA)
+        fldLine.drawTextBox()
+        fldDirection.drawTextBox()
+        fldPlatform.drawTextBox()
+        fldColor.drawTextBox()
 
-        drawCenteredString(fontRendererObj, stLabel,   cx, cy - 58, 0xFFFF55)
-        drawCenteredString(fontRendererObj, lineLabel, cx, cy - 38, 0xFFFF55)
-        drawCenteredString(fontRendererObj, diaLabel,  cx, cy - 18, 0xFFFF55)
-        drawCenteredString(fontRendererObj, dirLabel,  cx, cy + 2,  0xFFFF55)
-        drawCenteredString(fontRendererObj, rowsLabel, cx, cy + 34, 0xFFFF55)
-        drawCenteredString(fontRendererObj, StatCollector.translateToLocal(TIME_MODES[selTimeMode].second), cx, cy + 54, 0xFFFF55)
+        val preview = parseColor(fldColor.text)
+        if (preview != null) drawRect(cx + 28, cy - 18, cx + 48, cy - 5, 0xFF000000.toInt() or preview)
 
-        if (::fldPlatform.isInitialized) fldPlatform.drawTextBox()
+        drawCenteredString(fontRendererObj, DIRS[selDir], cx + 10, cy + 5, 0xFFFF55)
+        drawCenteredString(fontRendererObj, "${selRows + 1}${tlc("gui.kaisatsu.departure.rows_suffix")}", cx - 5, cy + 23, 0xFFFF55)
     }
 
     override fun doesGuiPauseGame() = false
@@ -218,10 +143,10 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
     @Suppress("UNCHECKED_CAST")
     private fun add(btn: GuiButton) = (buttonList as MutableList<GuiButton>).add(btn)
 
-    private fun cycle(v: Int, size: Int) = if (size == 0) 0 else ((v % size) + size) % size
+    private fun parseColor(s: String): Int? =
+        s.trim().removePrefix("#").let { if (it.isEmpty()) null else it.toIntOrNull(16)?.and(0xFFFFFF) }
 
     companion object {
         val DIRS = listOf("両方", "下り", "上り")
-        val TIME_MODES = listOf("real" to "gui.kaisatsu.departure.time.real", "game" to "gui.kaisatsu.departure.time.game")
     }
 }
