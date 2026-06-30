@@ -28,6 +28,7 @@ class TileEntityDepartureBoard : TileEntity() {
     var headerDirection = ""        // 方面（例: 上野・東京・品川方面）
     var platform        = ""        // 番線
     var lineColorHex    = DEFAULT_LINE_COLOR   // 路線カラー帯（0xRRGGBB）
+    var sampleMode      = false     // サンプル表示（駅管理不要で見え方を確認するため）
 
     fun bindTo(x: Int, y: Int, z: Int) {
         boundX = x; boundY = y; boundZ = z
@@ -44,11 +45,10 @@ class TileEntityDepartureBoard : TileEntity() {
     /** 表示する発車情報（バインド先から取得） */
     fun departures(): List<DepartureRow> = boundSettings()?.cachedDepartures ?: emptyList()
 
-    /** ヘッダーに出すタイトル: 路線名 > 設定ブロックのタイトル > 駅名 */
+    /** ヘッダーに出す路線名: 板の路線名 > バインド先の駅名 */
     fun headerTitle(): String {
         if (headerLine.isNotEmpty()) return headerLine
-        val s = boundSettings() ?: return ""
-        return s.title.ifEmpty { s.stationName }
+        return boundSettings()?.stationName ?: ""
     }
 
     fun timeMode(): String = boundSettings()?.timeMode ?: "real"
@@ -64,6 +64,7 @@ class TileEntityDepartureBoard : TileEntity() {
         tag.setString("HeaderDirection", headerDirection)
         tag.setString("Platform",        platform)
         tag.setInteger("LineColor",      lineColorHex)
+        tag.setBoolean("SampleMode",     sampleMode)
     }
 
     override fun readFromNBT(tag: NBTTagCompound) {
@@ -75,6 +76,7 @@ class TileEntityDepartureBoard : TileEntity() {
         headerDirection = tag.getString("HeaderDirection")
         platform        = tag.getString("Platform")
         lineColorHex    = if (tag.hasKey("LineColor")) tag.getInteger("LineColor") else DEFAULT_LINE_COLOR
+        sampleMode      = tag.getBoolean("SampleMode")
     }
 
     // ── クライアント同期 ──────────────────────────────────────────────

@@ -257,3 +257,6 @@ gui.kaisatsu.vendor.expired=만료됨
 gui.kaisatsu.vendor.ic.deposit=보증금 500円
 gui.kaisatsu.vendor.ic.deposit_detail=잔액%s-수수료220+보증금500
 gui.kaisatsu.vendor.ic.return_amount=환급:
+gui.kaisatsu.departure_board.btn.sample=샘플 표시
+gui.kaisatsu.on=ON
+gui.kaisatsu.off=OFF

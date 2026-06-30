@@ -6,6 +6,7 @@ import jp.ngt.ngtlib.renderer.model.ModelLoader
 import jp.ngt.ngtlib.renderer.model.PolygonModel
 import jp.ngt.ngtlib.renderer.model.VecAccuracy
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityDepartureBoard
+import jp.sakuramochi.kaisatsupatch.core.DepartureRow
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer
@@ -33,10 +34,13 @@ class RenderDepartureBoard : TileEntitySpecialRenderer() {
     private val POS_X = -1.2518; private val POS_Y = 0.5679; private val POS_Z = 0.1742
     private val GLYPH_H = 0.2363   // 1 行（グリフ）の高さ[m]
 
-    // 画面レイアウト（フォントpx 単位。0,0 = 黒画面の左上）
-    private val HEADER_Y = -11    // 路線名ヘッダーの y（マイナス = 黒画面の上＝「今度の列車は」帯）
-    private val ROW_Y0   = 1      // 1 行目の y
-    private val ROW_STEP = 11     // 行間
+    // 画面レイアウト（フォントpx 単位。0,0 = 黒画面の左上。マイナス y = グレー帯）
+    private val HEADER_SCALE = 0.7f   // ヘッダー（路線名・方面）の文字縮小率
+    private val HEADER1_Y = -17f      // 路線名の y（グレー帯の上段）
+    private val HEADER2_Y = -9f       // 方面の y（グレー帯の下段）
+    private val STRIPE_TOP = -18f; private val STRIPE_BOT = -1f
+    private val ROW_Y0   = 2      // 1 行目の y（黒画面）
+    private val ROW_STEP = 10     // 行間
     private val MAX_ROWS = 3      // 黒画面に収まる行数
     private val COL_TIME = 2      // 各列の x
     private val COL_DEST = 34
@@ -95,17 +99,17 @@ class RenderDepartureBoard : TileEntitySpecialRenderer() {
 
         val color = 0xFF000000.toInt() or (tile.lineColorHex and 0xFFFFFF)
 
-        // ── ヘッダー（「今度の列車は」帯の位置）: 路線カラー帯 + 路線名 + 番線 ──
-        drawBar(0f, (HEADER_Y - 1).toFloat(), 4f, (HEADER_Y + 8).toFloat(), color)
+        // ── ヘッダー（グレー帯）: 路線カラー帯 + 路線名 + 番線 + 方面（小さめ・上段） ──
+        drawBar(0f, STRIPE_TOP, 4f, STRIPE_BOT, color)
         val titleText = tile.headerTitle().ifEmpty { "発車標" }
         val platText  = if (tile.platform.isNotEmpty()) " ${tile.platform}番線" else ""
-        fr.drawString("$titleText$platText", 7, HEADER_Y, 0xFFFFFF, false)
+        drawSmall(fr, "$titleText$platText", 7f, HEADER1_Y, HEADER_SCALE, 0xFFFFFF)
         if (tile.headerDirection.isNotEmpty())
-            fr.drawString(tile.headerDirection, 7, HEADER_Y + 9, 0xCCCCCC, false)
+            drawSmall(fr, tile.headerDirection, 7f, HEADER2_Y, HEADER_SCALE, 0xCCCCCC)
 
         // ── 発車情報行（黒画面内・板幅 約95px に収める） ──
-        val rows = tile.departures()
-        if (!tile.isBound) {
+        val rows = if (tile.sampleMode) sampleRows() else tile.departures()
+        if (!tile.sampleMode && !tile.isBound) {
             fr.drawString("未バインド", 4, ROW_Y0, 0x888888, false)
         } else if (rows.isEmpty()) {
             fr.drawString("発車情報なし", 4, ROW_Y0, 0x888888, false)
@@ -120,6 +124,33 @@ class RenderDepartureBoard : TileEntitySpecialRenderer() {
 
         GL11.glEnable(GL11.GL_LIGHTING)
         GL11.glPopMatrix()
+    }
+
+    /** (x,y) を左上として scale 倍の小さい文字を描画（外側のフォントpx空間内） */
+    private fun drawSmall(fr: net.minecraft.client.gui.FontRenderer, text: String, x: Float, y: Float, scale: Float, color: Int) {
+        GL11.glPushMatrix()
+        GL11.glTranslatef(x, y, 0f)
+        GL11.glScalef(scale, scale, 1f)
+        fr.drawString(text, 0, 0, color, false)
+        GL11.glPopMatrix()
+    }
+
+    /** サンプル表示用の発車データ（現実時刻に追従し、数秒ごとに内容が変わる） */
+    private fun sampleRows(): List<DepartureRow> {
+        val now = LocalTime.now()
+        val base = now.hour * 60 + now.minute
+        val sec  = now.toSecondOfDay()
+        val dests = listOf("品川", "東京", "上野", "取手", "成田", "土浦", "水戸")
+        val types = listOf("普通", "快速", "特急", "特別快速", "通勤快速")
+        return (0 until MAX_ROWS).map { i ->
+            val m = (base + 2 + i * 5) % 1440
+            DepartureRow(
+                "%02d:%02d".format(m / 60, m % 60),
+                dests[((sec / 10) + i) % dests.size],
+                types[((sec / 13) + i) % types.size],
+                "", ""
+            )
+        }
     }
 
     /** 単色矩形（路線カラー帯など）。フォントpx 空間で描画 */

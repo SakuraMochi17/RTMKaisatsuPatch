@@ -17,7 +17,6 @@ class PacketDepartureSettingsSave() : IMessage {
     var diaName      = ""
     var direction    = "両方"
     var displayRows  = 5
-    var title        = ""
     var timeMode     = "real"
 
     override fun toBytes(buf: ByteBuf) {
@@ -27,7 +26,6 @@ class PacketDepartureSettingsSave() : IMessage {
         buf.writeStr(diaName)
         buf.writeStr(direction)
         buf.writeInt(displayRows)
-        buf.writeStr(title)
         buf.writeStr(timeMode)
     }
 
@@ -38,7 +36,6 @@ class PacketDepartureSettingsSave() : IMessage {
         diaName      = buf.readStr()
         direction    = buf.readStr()
         displayRows  = buf.readInt()
-        title        = buf.readStr()
         timeMode     = buf.readStr()
     }
 
@@ -52,7 +49,6 @@ class PacketDepartureSettingsSave() : IMessage {
             tile.diaName      = msg.diaName
             tile.direction    = msg.direction
             tile.displayRows  = msg.displayRows
-            tile.title        = msg.title
             tile.timeMode     = msg.timeMode
             tile.markDirty()
             tile.recomputeDepartures()

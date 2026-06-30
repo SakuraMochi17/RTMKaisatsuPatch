@@ -257,3 +257,6 @@ gui.kaisatsu.vendor.expired=已过期
 gui.kaisatsu.vendor.ic.deposit=押金 500円
 gui.kaisatsu.vendor.ic.deposit_detail=余额%s-手续费220+押金500
 gui.kaisatsu.vendor.ic.return_amount=退款:
+gui.kaisatsu.departure_board.btn.sample=示例显示
+gui.kaisatsu.on=ON
+gui.kaisatsu.off=OFF

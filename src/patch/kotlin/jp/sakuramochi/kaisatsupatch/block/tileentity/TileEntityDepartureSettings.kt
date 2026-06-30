@@ -29,7 +29,6 @@ class TileEntityDepartureSettings : TileEntity() {
     var displayRows = 5
 
     // ── 表示テンプレート ─────────────────────────────────────────────
-    var title        = ""
     var timeMode     = "real"           // "real" = 現実時刻, "game" = ゲーム内時刻
     var columns: List<String> = DEFAULT_COLUMNS   // 表示する列の並び（HI03 の style 相当）
 
@@ -73,7 +72,6 @@ class TileEntityDepartureSettings : TileEntity() {
         tag.setString("DiaName",      diaName)
         tag.setString("Direction",    direction)
         tag.setInteger("DisplayRows", displayRows)
-        tag.setString("Title",        title)
         tag.setString("TimeMode",     timeMode)
         tag.setStringList("Columns",  columns)
 
@@ -98,7 +96,6 @@ class TileEntityDepartureSettings : TileEntity() {
         diaName      = tag.getString("DiaName")
         direction    = tag.getString("Direction").ifEmpty { "両方" }
         displayRows  = tag.getInteger("DisplayRows").let { if (it == 0) 5 else it }
-        title        = tag.getString("Title")
         timeMode     = tag.getString("TimeMode").ifEmpty { "real" }
         columns      = tag.getStringList("Columns").ifEmpty { DEFAULT_COLUMNS }
 

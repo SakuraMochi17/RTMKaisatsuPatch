@@ -257,3 +257,6 @@ gui.kaisatsu.vendor.expired=Expired
 gui.kaisatsu.vendor.ic.deposit=Deposit ¥500
 gui.kaisatsu.vendor.ic.deposit_detail=Balance%s - fee220 + deposit500
 gui.kaisatsu.vendor.ic.return_amount=Refund:
+gui.kaisatsu.departure_board.btn.sample=Sample
+gui.kaisatsu.on=ON
+gui.kaisatsu.off=OFF

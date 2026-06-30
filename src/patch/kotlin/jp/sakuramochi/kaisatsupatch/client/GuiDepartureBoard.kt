@@ -23,6 +23,7 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
     private lateinit var fldDirection: GuiTextField
     private lateinit var fldPlatform:  GuiTextField
     private lateinit var fldColor:     GuiTextField
+    private var sampleMode = data.sampleMode
 
     override fun initGui() {
         Keyboard.enableRepeatEvents(true)
@@ -40,12 +41,22 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
         fldColor.setMaxStringLength(7)
         fldColor.text = "%06X".format(data.lineColorHex and 0xFFFFFF)
 
-        add(GuiButton(0,  cx - 35, cy + 48, 70, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.save")))
-        add(GuiButton(99, cx - 35, cy + 70, 70, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.cancel")))
+        val sampleLabel = StatCollector.translateToLocal("gui.kaisatsu.departure_board.btn.sample") +
+            ": " + StatCollector.translateToLocal(if (sampleMode) "gui.kaisatsu.on" else "gui.kaisatsu.off")
+        add(GuiButton(1,  cx - 50, cy + 40, 150, 16, sampleLabel))
+        add(GuiButton(0,  cx - 35, cy + 64, 70, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.save")))
+        add(GuiButton(99, cx - 35, cy + 86, 70, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.cancel")))
     }
 
     override fun actionPerformed(button: GuiButton) {
         when (button.id) {
+            1 -> {
+                // テキスト欄の内容を保持したままトグル
+                val l = fldLine.text; val d = fldDirection.text; val p = fldPlatform.text; val c = fldColor.text
+                sampleMode = !sampleMode
+                initGui()
+                fldLine.text = l; fldDirection.text = d; fldPlatform.text = p; fldColor.text = c
+            }
             0 -> {
                 val color = parseColor(fldColor.text) ?: data.lineColorHex
                 KaizPatchNetwork.CHANNEL.sendToServer(PacketDepartureBoardSave().also { pkt ->
@@ -54,6 +65,7 @@ class GuiDepartureBoard(private val data: PacketOpenDepartureBoard) : GuiScreen(
                     pkt.headerDirection = fldDirection.text.trim()
                     pkt.platform        = fldPlatform.text.trim()
                     pkt.lineColorHex    = color
+                    pkt.sampleMode      = sampleMode
                 })
                 mc.thePlayer.closeScreen()
             }

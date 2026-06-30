@@ -46,7 +46,7 @@ class BlockDepartureBoard : BlockContainer(Material.iron) {
         if (player.currentEquippedItem?.item !is ItemSettingsTool) return true
 
         // 表示情報の設定 GUI
-        val boundInfo = tile.boundSettings()?.let { s -> s.title.ifEmpty { s.stationName }.ifEmpty { "(駅未設定)" } }
+        val boundInfo = tile.boundSettings()?.let { s -> s.stationName.ifEmpty { "(駅未設定)" } }
             ?: "未バインド"
         KaizPatchNetwork.CHANNEL.sendTo(PacketOpenDepartureBoard().also { pkt ->
             pkt.x = x; pkt.y = y; pkt.z = z
@@ -54,6 +54,7 @@ class BlockDepartureBoard : BlockContainer(Material.iron) {
             pkt.headerDirection = tile.headerDirection
             pkt.platform        = tile.platform
             pkt.lineColorHex    = tile.lineColorHex
+            pkt.sampleMode      = tile.sampleMode
             pkt.boundInfo       = boundInfo
         }, mp)
         return true
