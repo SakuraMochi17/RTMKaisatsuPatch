@@ -16,7 +16,6 @@ gui.kaisatsu.departure_board.lbl.line=Line Name
 gui.kaisatsu.departure_board.lbl.direction=Direction
 gui.kaisatsu.departure_board.lbl.platform=Platform
 tile.boarding_cert_machine.name=Boarding Certificate Machine
-tile.simple_ic_reader.name=Simple IC Reader
 
 # Items
 item.custom_ticket.name=Ticket

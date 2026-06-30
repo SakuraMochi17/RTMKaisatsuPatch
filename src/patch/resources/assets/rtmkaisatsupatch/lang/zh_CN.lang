@@ -16,7 +16,6 @@ gui.kaisatsu.departure_board.lbl.line=线路名称
 gui.kaisatsu.departure_board.lbl.direction=方向
 gui.kaisatsu.departure_board.lbl.platform=站台
 tile.boarding_cert_machine.name=乘车站证明书发行机
-tile.simple_ic_reader.name=简易IC读卡器
 
 # 物品
 item.custom_ticket.name=乘车券

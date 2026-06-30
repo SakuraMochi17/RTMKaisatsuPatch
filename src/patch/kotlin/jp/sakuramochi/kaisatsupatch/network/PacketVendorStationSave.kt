@@ -12,7 +12,6 @@ import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityBoardingCertMachi
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityCustomTicketVendor
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityFareAdjustment
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityReservedVendor
-import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntitySimpleICReader
 
 /** C→S: 券売機の設置駅・所属会社を保存する */
 class PacketVendorStationSave() : IMessage {
@@ -51,11 +50,6 @@ class PacketVendorStationSave() : IMessage {
                 is TileEntityReservedVendor -> { tile.stationName = msg.stationName; tile.markDirty() }
                 is TileEntityFareAdjustment -> { tile.stationName = msg.stationName; tile.markDirty() }
                 is TileEntityBoardingCertMachine -> { tile.stationName = msg.stationName; tile.markDirty() }
-                is TileEntitySimpleICReader -> {
-                    tile.stationName = msg.stationName
-                    tile.companyID   = msg.companyID
-                    tile.markDirty()
-                }
             }
             return null
         }

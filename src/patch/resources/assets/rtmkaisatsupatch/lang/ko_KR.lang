@@ -16,7 +16,6 @@ gui.kaisatsu.departure_board.lbl.line=노선명
 gui.kaisatsu.departure_board.lbl.direction=방면
 gui.kaisatsu.departure_board.lbl.platform=승강장
 tile.boarding_cert_machine.name=승차역 증명서 발행기
-tile.simple_ic_reader.name=간이 IC 리더기
 
 # 아이템
 item.custom_ticket.name=승차권

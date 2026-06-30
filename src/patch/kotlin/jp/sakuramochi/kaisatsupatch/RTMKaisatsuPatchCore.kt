@@ -84,14 +84,13 @@ class RTMKaisatsuPatchCore {
         val blockFareAdjustment      = BlockFareAdjustment()
         val blockDepartureBoard      = BlockDepartureBoard()
         val blockBoardingCertMachine = BlockBoardingCertMachine()
-        val blockSimpleICReader      = BlockSimpleICReader()
         val blockDepartureSettings   = BlockDepartureSettings()
 
         // アイテム（指定席）
         val itemExpressTicket = ItemCustomExpressTicket()
 
         listOf(itemTicket, itemICCard, itemPass, itemSettingsTool, itemExpressTicket, itemCouponTicket, itemBoardingCertificate).forEach { it.creativeTab = myTab }
-        listOf(blockTurnstile, blockVendor, blockStationManager, blockLineManager, blockTrainManager, blockReservedVendor, blockFareAdjustment, blockDepartureBoard, blockBoardingCertMachine, blockSimpleICReader, blockDepartureSettings).forEach { (it as net.minecraft.block.Block).setCreativeTab(myTab) }
+        listOf(blockTurnstile, blockVendor, blockStationManager, blockLineManager, blockTrainManager, blockReservedVendor, blockFareAdjustment, blockDepartureBoard, blockBoardingCertMachine, blockDepartureSettings).forEach { (it as net.minecraft.block.Block).setCreativeTab(myTab) }
 
         // ── ブロック登録（クリエイティブタブ表示順：有人駅設備 → 無人駅設備 → 情報表示 → 管理）──
         GameRegistry.registerBlock(blockTurnstile,           ItemBlockCustomTurnstile::class.java,     "custom_turnstile")
@@ -99,7 +98,6 @@ class RTMKaisatsuPatchCore {
         GameRegistry.registerBlock(blockReservedVendor,      ItemBlockReservedVendor::class.java,      "reserved_seat_vendor")
         GameRegistry.registerBlock(blockFareAdjustment,      ItemBlockFareAdjustment::class.java,      "fare_adjustment")
         GameRegistry.registerBlock(blockBoardingCertMachine, ItemBlockBoardingCertMachine::class.java, "boarding_cert_machine")
-        GameRegistry.registerBlock(blockSimpleICReader,      ItemBlockSimpleICReader::class.java,      "simple_ic_reader")
         GameRegistry.registerBlock(blockDepartureBoard,      ItemBlockDepartureBoard::class.java,      "departure_board")
         GameRegistry.registerBlock(blockDepartureSettings,                                            "departure_settings")
         GameRegistry.registerBlock(blockStationManager,      ItemBlockStationManager::class.java,      "station_manager")
@@ -125,7 +123,6 @@ class RTMKaisatsuPatchCore {
         GameRegistry.registerTileEntity(TileEntityDepartureBoard::class.java,     "TileEntityDepartureBoard")
         GameRegistry.registerTileEntity(TileEntityDepartureSettings::class.java,  "TileEntityDepartureSettings")
         GameRegistry.registerTileEntity(TileEntityBoardingCertMachine::class.java,"TileEntityBoardingCertMachine")
-        GameRegistry.registerTileEntity(TileEntitySimpleICReader::class.java,     "TileEntitySimpleICReader")
 
         registeredItems["custom_ticket"]        = itemTicket
         registeredItems["custom_ic_card"]       = itemICCard
