@@ -35,7 +35,7 @@ class RenderDepartureBoard : TileEntitySpecialRenderer() {
     private val GLYPH_H = 0.2363   // 1 行（グリフ）の高さ[m]
 
     // 画面レイアウト（フォントpx 単位。0,0 = 黒画面の左上。マイナス y = グレー帯）
-    private val HEADER_SCALE = 0.7f   // ヘッダー（路線名・方面）の文字縮小率
+    private val HEADER_SCALE = 0.6f   // ヘッダー（路線名・方面）の文字縮小率
     private val HEADER1_Y = -17f      // 路線名の y（グレー帯の上段）
     private val HEADER2_Y = -9f       // 方面の y（グレー帯の下段）
     private val STRIPE_TOP = -16f; private val STRIPE_BOT = -3f   // 路線カラー帯の上下（ヘッダー文字に合わせる）
