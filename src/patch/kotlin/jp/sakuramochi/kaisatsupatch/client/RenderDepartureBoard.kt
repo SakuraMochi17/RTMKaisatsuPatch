@@ -29,8 +29,18 @@ class RenderDepartureBoard : TileEntitySpecialRenderer() {
     private val TEX   = ResourceLocation("rtmkaisatsupatch", "textures/edb/edb_board.png")
 
     // HI03 の表示原点・寸法（モデル空間 = ブロック単位）。位置調整はここで行う。
+    // POS_X/Y/Z = 黒画面の左上。板の横幅は約 95 フォントpx。
     private val POS_X = -1.2518; private val POS_Y = 0.5679; private val POS_Z = 0.1742
     private val GLYPH_H = 0.2363   // 1 行（グリフ）の高さ[m]
+
+    // 画面レイアウト（フォントpx 単位。0,0 = 黒画面の左上）
+    private val HEADER_Y = -11    // 路線名ヘッダーの y（マイナス = 黒画面の上＝「今度の列車は」帯）
+    private val ROW_Y0   = 1      // 1 行目の y
+    private val ROW_STEP = 11     // 行間
+    private val MAX_ROWS = 3      // 黒画面に収まる行数
+    private val COL_TIME = 2      // 各列の x
+    private val COL_DEST = 34
+    private val COL_TYPE = 66
 
     private var model: PolygonModel? = null
     private var modelTried = false
@@ -77,45 +87,37 @@ class RenderDepartureBoard : TileEntitySpecialRenderer() {
 
         GL11.glPushMatrix()
         GL11.glTranslated(POS_X, POS_Y, POS_Z)
-        // フォントは下方向に伸びるので Y 反転。原点(0,0)=表示左上、単位=フォントpx。
+        // フォントは下方向に伸びるので Y 反転。原点(0,0)=黒画面の左上、単位=フォントpx。
+        // 板の横幅は約 95px。ヘッダー(路線名)は黒画面の上の「今度の列車は」帯に出すため
+        // マイナス Y（上方向）に置く。
         GL11.glScalef(s, -s, s)
-        GL11.glDisable(GL11.GL_LIGHTING)
-        GL11.glDisable(GL11.GL_DEPTH_TEST)
+        GL11.glDisable(GL11.GL_LIGHTING)   // 発光表示（深度テストは有効のまま＝裏抜け防止）
 
         val color = 0xFF000000.toInt() or (tile.lineColorHex and 0xFFFFFF)
 
-        // 現在時刻
-        val time = if (tile.timeMode() == "game") {
-            val gm = (((tile.worldObj?.worldTime ?: 0L) % 24000L) * 1440L / 24000L + 360L).toInt() % 1440
-            "%02d:%02d".format(gm / 60, gm % 60)
-        } else {
-            val now = LocalTime.now(); "%02d:%02d".format(now.hour, now.minute)
-        }
-
-        // ヘッダー: 路線カラー帯 + 路線名 + 番線 + 時刻
-        drawBar(0f, 0f, 3f, 9f, color)
+        // ── ヘッダー（「今度の列車は」帯の位置）: 路線カラー帯 + 路線名 + 番線 ──
+        drawBar(0f, (HEADER_Y - 1).toFloat(), 4f, (HEADER_Y + 8).toFloat(), color)
         val titleText = tile.headerTitle().ifEmpty { "発車標" }
         val platText  = if (tile.platform.isNotEmpty()) " ${tile.platform}番線" else ""
-        fr.drawString("$titleText$platText", 5, 0, 0xFFFFFF, false)
-        fr.drawString(time, 240, 0, 0xFFFF55, false)
-        if (tile.headerDirection.isNotEmpty()) fr.drawString(tile.headerDirection, 5, 9, 0xCCCCCC, false)
+        fr.drawString("$titleText$platText", 7, HEADER_Y, 0xFFFFFF, false)
+        if (tile.headerDirection.isNotEmpty())
+            fr.drawString(tile.headerDirection, 7, HEADER_Y + 9, 0xCCCCCC, false)
 
-        // 発車情報行
+        // ── 発車情報行（黒画面内・板幅 約95px に収める） ──
         val rows = tile.departures()
-        if (rows.isEmpty()) {
-            val msg = if (tile.isBound) "発車情報なし" else "未バインド"
-            fr.drawString(msg, 5, 20, 0x888888, false)
+        if (!tile.isBound) {
+            fr.drawString("未バインド", 4, ROW_Y0, 0x888888, false)
+        } else if (rows.isEmpty()) {
+            fr.drawString("発車情報なし", 4, ROW_Y0, 0x888888, false)
         } else {
-            rows.take(5).forEachIndexed { i, row ->
-                val ry = 20 + i * 10
-                fr.drawString(row.time,                5,   ry, 0x55FFFF, false)
-                fr.drawString(row.destination.take(6), 45,  ry, 0xFFFFFF, false)
-                fr.drawString(row.typeName.take(4),    180, ry, 0xFFAA00, false)
-                if (row.trainName.isNotEmpty()) fr.drawString(row.trainName.take(6), 230, ry, 0x55FF55, false)
+            rows.take(MAX_ROWS).forEachIndexed { i, row ->
+                val ry = ROW_Y0 + i * ROW_STEP
+                fr.drawString(row.time,                COL_TIME, ry, 0x55FFFF, false)
+                fr.drawString(row.destination.take(5), COL_DEST, ry, 0xFFFFFF, false)
+                fr.drawString(row.typeName.take(2),    COL_TYPE, ry, 0xFFAA00, false)
             }
         }
 
-        GL11.glEnable(GL11.GL_DEPTH_TEST)
         GL11.glEnable(GL11.GL_LIGHTING)
         GL11.glPopMatrix()
     }
