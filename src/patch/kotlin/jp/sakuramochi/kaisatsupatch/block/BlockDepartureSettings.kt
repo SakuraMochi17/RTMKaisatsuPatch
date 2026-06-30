@@ -5,8 +5,6 @@ import jp.sakuramochi.kaisatsupatch.core.KaisatsuNetworkData
 import jp.sakuramochi.kaisatsupatch.item.ItemSettingsTool
 import jp.sakuramochi.kaisatsupatch.network.KaizPatchNetwork
 import jp.sakuramochi.kaisatsupatch.network.PacketOpenDepartureSettings
-import jp.sakuramochi.kaisatsupatch.util.rememberCoords
-import jp.sakuramochi.kaisatsupatch.util.sendSuccess
 import net.minecraft.block.BlockContainer
 import net.minecraft.block.material.Material
 import net.minecraft.entity.player.EntityPlayer
@@ -36,15 +34,8 @@ class BlockDepartureSettings : BlockContainer(Material.iron) {
         val mp = player as? EntityPlayerMP ?: return true
         val data = KaisatsuNetworkData.get(world) ?: return true
 
-        val held = player.currentEquippedItem
-        if (held?.item !is ItemSettingsTool) return true
-
-        // スニーク + Settings Tool: この設定ブロックを Tool に記憶（発車標へのバインド用）
-        if (player.isSneaking) {
-            held.rememberCoords(x, y, z)
-            mp.sendSuccess("設定ブロックを記憶しました。発車標をスニーク右クリックでバインドできます")
-            return true
-        }
+        // 通常右クリックのみ設定 GUI を開く（スニーク時のバインドは ItemSettingsTool 側で処理）
+        if (player.currentEquippedItem?.item !is ItemSettingsTool) return true
 
         val dias     = data.timetable?.diaNames ?: emptyList()
         val stations = data.globalStations.keys.sorted()

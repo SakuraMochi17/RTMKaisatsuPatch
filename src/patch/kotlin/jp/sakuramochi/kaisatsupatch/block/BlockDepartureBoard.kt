@@ -1,13 +1,9 @@
 package jp.sakuramochi.kaisatsupatch.block
 
 import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityDepartureBoard
-import jp.sakuramochi.kaisatsupatch.block.tileentity.TileEntityDepartureSettings
 import jp.sakuramochi.kaisatsupatch.item.ItemSettingsTool
 import jp.sakuramochi.kaisatsupatch.network.KaizPatchNetwork
 import jp.sakuramochi.kaisatsupatch.network.PacketOpenDepartureBoard
-import jp.sakuramochi.kaisatsupatch.util.rememberedCoords
-import jp.sakuramochi.kaisatsupatch.util.sendError
-import jp.sakuramochi.kaisatsupatch.util.sendSuccess
 import net.minecraft.block.BlockContainer
 import net.minecraft.block.material.Material
 import net.minecraft.entity.EntityLivingBase
@@ -46,27 +42,10 @@ class BlockDepartureBoard : BlockContainer(Material.iron) {
         if (world.isRemote) return true
         val tile = world.getTileEntity(x, y, z) as? TileEntityDepartureBoard ?: return true
         val mp = player as? EntityPlayerMP ?: return true
-        val held = player.currentEquippedItem
-        if (held?.item !is ItemSettingsTool) return true
+        // 通常右クリックのみ設定 GUI を開く（スニーク時のバインドは ItemSettingsTool 側で処理）
+        if (player.currentEquippedItem?.item !is ItemSettingsTool) return true
 
-        // スニーク + Settings Tool: 記憶した設定ブロックへバインド
-        if (player.isSneaking) {
-            val coords = held.rememberedCoords()
-            if (coords == null) {
-                mp.sendError("先に設定ブロックをスニーク右クリックで記憶してください")
-                return true
-            }
-            val target = world.getTileEntity(coords.x, coords.y, coords.z)
-            if (target !is TileEntityDepartureSettings) {
-                mp.sendError("記憶した位置に設定ブロックが見つかりません")
-                return true
-            }
-            tile.bindTo(coords.x, coords.y, coords.z)
-            mp.sendSuccess("設定ブロック (${coords.x}, ${coords.y}, ${coords.z}) にバインドしました")
-            return true
-        }
-
-        // 通常右クリック: 表示情報の設定 GUI
+        // 表示情報の設定 GUI
         val boundInfo = tile.boundSettings()?.let { s -> s.title.ifEmpty { s.stationName }.ifEmpty { "(駅未設定)" } }
             ?: "未バインド"
         KaizPatchNetwork.CHANNEL.sendTo(PacketOpenDepartureBoard().also { pkt ->
