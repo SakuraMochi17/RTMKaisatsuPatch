@@ -17,8 +17,6 @@ class PacketOpenDepartureSettings() : IMessage {
     var stationName  = ""
     var lineID       = ""
     var diaName      = ""
-    var direction    = "両方"
-    var displayRows  = 5
     var timeMode     = "real"
     var availableDias     : List<String>               = emptyList()
     var availableStations : List<String>               = emptyList()
@@ -29,8 +27,6 @@ class PacketOpenDepartureSettings() : IMessage {
         buf.writeStr(stationName)
         buf.writeStr(lineID)
         buf.writeStr(diaName)
-        buf.writeStr(direction)
-        buf.writeInt(displayRows)
         buf.writeStr(timeMode)
         buf.writeStringList(availableDias)
         buf.writeStringList(availableStations)
@@ -43,8 +39,6 @@ class PacketOpenDepartureSettings() : IMessage {
         stationName  = buf.readStr()
         lineID       = buf.readStr()
         diaName      = buf.readStr()
-        direction    = buf.readStr()
-        displayRows  = buf.readInt()
         timeMode     = buf.readStr()
         availableDias     = buf.readStringList()
         availableStations = buf.readStringList()

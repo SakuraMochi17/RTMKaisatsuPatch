@@ -15,8 +15,6 @@ class PacketDepartureSettingsSave() : IMessage {
     var stationName  = ""
     var lineID       = ""
     var diaName      = ""
-    var direction    = "両方"
-    var displayRows  = 5
     var timeMode     = "real"
 
     override fun toBytes(buf: ByteBuf) {
@@ -24,8 +22,6 @@ class PacketDepartureSettingsSave() : IMessage {
         buf.writeStr(stationName)
         buf.writeStr(lineID)
         buf.writeStr(diaName)
-        buf.writeStr(direction)
-        buf.writeInt(displayRows)
         buf.writeStr(timeMode)
     }
 
@@ -34,8 +30,6 @@ class PacketDepartureSettingsSave() : IMessage {
         stationName  = buf.readStr()
         lineID       = buf.readStr()
         diaName      = buf.readStr()
-        direction    = buf.readStr()
-        displayRows  = buf.readInt()
         timeMode     = buf.readStr()
     }
 
@@ -47,11 +41,9 @@ class PacketDepartureSettingsSave() : IMessage {
             tile.stationName  = msg.stationName
             tile.lineID       = msg.lineID
             tile.diaName      = msg.diaName
-            tile.direction    = msg.direction
-            tile.displayRows  = msg.displayRows
             tile.timeMode     = msg.timeMode
             tile.markDirty()
-            tile.recomputeDepartures()
+            tile.worldObj?.markBlockForUpdate(msg.x, msg.y, msg.z)
             return null
         }
     }

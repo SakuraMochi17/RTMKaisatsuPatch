@@ -38,10 +38,9 @@ class RenderDepartureBoard : TileEntitySpecialRenderer() {
     private val HEADER_SCALE = 0.7f   // ヘッダー（路線名・方面）の文字縮小率
     private val HEADER1_Y = -17f      // 路線名の y（グレー帯の上段）
     private val HEADER2_Y = -9f       // 方面の y（グレー帯の下段）
-    private val STRIPE_TOP = -18f; private val STRIPE_BOT = -1f
+    private val STRIPE_TOP = -16f; private val STRIPE_BOT = -3f   // 路線カラー帯の上下（ヘッダー文字に合わせる）
     private val ROW_Y0   = 2      // 1 行目の y（黒画面）
     private val ROW_STEP = 10     // 行間
-    private val MAX_ROWS = 3      // 黒画面に収まる行数
     private val COL_TIME = 2      // 各列の x
     private val COL_DEST = 34
     private val COL_TYPE = 66
@@ -108,13 +107,13 @@ class RenderDepartureBoard : TileEntitySpecialRenderer() {
             drawSmall(fr, tile.headerDirection, 7f, HEADER2_Y, HEADER_SCALE, 0xCCCCCC)
 
         // ── 発車情報行（黒画面内・板幅 約95px に収める） ──
-        val rows = if (tile.sampleMode) sampleRows() else tile.departures()
+        val rows = if (tile.sampleMode) sampleRows(tile.displayRows) else tile.departures()
         if (!tile.sampleMode && !tile.isBound) {
             fr.drawString("未バインド", 4, ROW_Y0, 0x888888, false)
         } else if (rows.isEmpty()) {
             fr.drawString("発車情報なし", 4, ROW_Y0, 0x888888, false)
         } else {
-            rows.take(MAX_ROWS).forEachIndexed { i, row ->
+            rows.take(tile.displayRows).forEachIndexed { i, row ->
                 val ry = ROW_Y0 + i * ROW_STEP
                 fr.drawString(row.time,                COL_TIME, ry, 0x55FFFF, false)
                 fr.drawString(row.destination.take(5), COL_DEST, ry, 0xFFFFFF, false)
@@ -136,13 +135,13 @@ class RenderDepartureBoard : TileEntitySpecialRenderer() {
     }
 
     /** サンプル表示用の発車データ（現実時刻に追従し、数秒ごとに内容が変わる） */
-    private fun sampleRows(): List<DepartureRow> {
+    private fun sampleRows(count: Int): List<DepartureRow> {
         val now = LocalTime.now()
         val base = now.hour * 60 + now.minute
         val sec  = now.toSecondOfDay()
         val dests = listOf("品川", "東京", "上野", "取手", "成田", "土浦", "水戸")
         val types = listOf("普通", "快速", "特急", "特別快速", "通勤快速")
-        return (0 until MAX_ROWS).map { i ->
+        return (0 until count).map { i ->
             val m = (base + 2 + i * 5) % 1440
             DepartureRow(
                 "%02d:%02d".format(m / 60, m % 60),

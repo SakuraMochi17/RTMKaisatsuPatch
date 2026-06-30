@@ -55,6 +55,8 @@ class BlockDepartureBoard : BlockContainer(Material.iron) {
             pkt.platform        = tile.platform
             pkt.lineColorHex    = tile.lineColorHex
             pkt.sampleMode      = tile.sampleMode
+            pkt.direction       = tile.direction
+            pkt.displayRows     = tile.displayRows
             pkt.boundInfo       = boundInfo
         }, mp)
         return true

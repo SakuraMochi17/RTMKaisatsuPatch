@@ -17,6 +17,8 @@ class PacketOpenDepartureBoard() : IMessage {
     var platform        = ""
     var lineColorHex    = 0x1E90FF
     var sampleMode      = false
+    var direction       = "両方"
+    var displayRows     = 3
     var boundInfo       = ""   // バインド先の表示用情報（駅名 or 未バインド）
 
     override fun toBytes(buf: ByteBuf) {
@@ -26,6 +28,8 @@ class PacketOpenDepartureBoard() : IMessage {
         buf.writeStr(platform)
         buf.writeInt(lineColorHex)
         buf.writeBoolean(sampleMode)
+        buf.writeStr(direction)
+        buf.writeInt(displayRows)
         buf.writeStr(boundInfo)
     }
 
@@ -36,6 +40,8 @@ class PacketOpenDepartureBoard() : IMessage {
         platform        = buf.readStr()
         lineColorHex    = buf.readInt()
         sampleMode      = buf.readBoolean()
+        direction       = buf.readStr()
+        displayRows     = buf.readInt()
         boundInfo       = buf.readStr()
     }
 

@@ -17,6 +17,8 @@ class PacketDepartureBoardSave() : IMessage {
     var platform        = ""
     var lineColorHex    = 0x1E90FF
     var sampleMode      = false
+    var direction       = "両方"
+    var displayRows     = 3
 
     override fun toBytes(buf: ByteBuf) {
         buf.writeInt(x); buf.writeInt(y); buf.writeInt(z)
@@ -25,6 +27,8 @@ class PacketDepartureBoardSave() : IMessage {
         buf.writeStr(platform)
         buf.writeInt(lineColorHex)
         buf.writeBoolean(sampleMode)
+        buf.writeStr(direction)
+        buf.writeInt(displayRows)
     }
 
     override fun fromBytes(buf: ByteBuf) {
@@ -34,6 +38,8 @@ class PacketDepartureBoardSave() : IMessage {
         platform        = buf.readStr()
         lineColorHex    = buf.readInt()
         sampleMode      = buf.readBoolean()
+        direction       = buf.readStr()
+        displayRows     = buf.readInt()
     }
 
     class Handler : IMessageHandler<PacketDepartureBoardSave, IMessage> {
@@ -46,7 +52,10 @@ class PacketDepartureBoardSave() : IMessage {
             tile.platform        = msg.platform
             tile.lineColorHex    = msg.lineColorHex
             tile.sampleMode      = msg.sampleMode
+            tile.direction       = msg.direction
+            tile.displayRows     = msg.displayRows
             tile.markDirty()
+            tile.recomputeDepartures()
             tile.worldObj?.markBlockForUpdate(msg.x, msg.y, msg.z)
             return null
         }

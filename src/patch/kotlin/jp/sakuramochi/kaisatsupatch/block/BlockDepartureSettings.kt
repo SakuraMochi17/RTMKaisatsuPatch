@@ -46,8 +46,6 @@ class BlockDepartureSettings : BlockContainer(Material.iron) {
             pkt.stationName       = tile.stationName
             pkt.lineID            = tile.lineID
             pkt.diaName           = tile.diaName
-            pkt.direction         = tile.direction
-            pkt.displayRows       = tile.displayRows
             pkt.timeMode          = tile.timeMode
             pkt.availableDias     = dias
             pkt.availableStations = stations
