@@ -61,4 +61,7 @@ class BlockDepartureBoard : BlockContainer(Material.iron) {
 
     override fun isOpaqueCube() = false
     override fun renderAsNormalBlock() = false
+    // ブロック自体は描画しない（TESR で HI03 モデルのみ描く）。
+    // これを -1 にしないとブロックのキューブも描画され MQO と二重になる。
+    override fun getRenderType() = -1
 }
