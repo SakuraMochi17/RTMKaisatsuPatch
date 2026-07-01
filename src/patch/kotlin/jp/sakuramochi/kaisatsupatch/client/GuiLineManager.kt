@@ -137,22 +137,22 @@ class GuiLineManager(private val data: PacketOpenLineGui) : GuiScreen() {
             Page.MEMBERS -> {
                 fldMember = GuiTextField(fontRendererObj, cx - 80, cy + 30, 130, 15)
                 fldMember.setFocused(true)
+                add(GuiButton(31, cx + 60, cy + 28, 50, 18, tlc("gui.kaisatsu.btn.add")))
+                add(GuiButton(99, cx - 35, cy + 60, 70, 18, tlc("gui.kaisatsu.btn.back")))
                 members.forEachIndexed { i, _ ->
                     add(GuiButton(300 + i, cx + 60, cy - 60 + i * 20, 50, 16, tlc("gui.kaisatsu.line.members.btn.remove")))
                 }
-                add(GuiButton(31, cx + 60, cy + 28, 50, 18, tlc("gui.kaisatsu.btn.add")))
-                add(GuiButton(99, cx - 35, cy + 60, 70, 18, tlc("gui.kaisatsu.btn.back")))
             }
 
             Page.MUTUAL -> {
-                allowedCompanies.forEachIndexed { i, _ ->
-                    add(GuiButton(400 + i, cx + 60, cy - 60 + i * 20, 50, 16, tlc("gui.kaisatsu.line.mutual.btn.revoke")))
-                }
                 val others = otherCandidates()
                 add(GuiButton(40, cx - 120, cy + 30, 20, 18, "<").also { it.enabled = others.isNotEmpty() })
                 add(GuiButton(41, cx - 20,  cy + 30, 20, 18, ">").also { it.enabled = others.isNotEmpty() })
                 add(GuiButton(42, cx + 10,  cy + 30, 50, 18, tlc("gui.kaisatsu.line.mutual.btn.allow")).also  { it.enabled = others.isNotEmpty() })
                 add(GuiButton(99, cx - 35,  cy + 55, 70, 18, tlc("gui.kaisatsu.btn.back")))
+                allowedCompanies.forEachIndexed { i, _ ->
+                    add(GuiButton(400 + i, cx + 60, cy - 60 + i * 20, 50, 16, tlc("gui.kaisatsu.line.mutual.btn.revoke")))
+                }
             }
         }
     }
