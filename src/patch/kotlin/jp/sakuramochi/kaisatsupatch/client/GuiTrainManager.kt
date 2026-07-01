@@ -94,6 +94,14 @@ class GuiTrainManager(private val msg: PacketOpenTrainManager) : GuiScreen() {
     }
 
     private fun initPage2(cx: Int, cy: Int) {
+        // 固定ボタンを先に追加する。号車ごとのボタンを先に追加すると、号車追加/削除の度に
+        // これらのインデックスが後ろへずれ、Forge の mouseClicked ループが同一クリック内で
+        // 同じ画面座標のボタンを再ヒットして無限ループ（フリーズ）する。
+        add(GuiButton(30, cx - 120, cy + 60, 110, 18, StatCollector.translateToLocal("gui.kaisatsu.train.btn.add_car")))
+        add(GuiButton(31, cx + 10,  cy + 60, 110, 18, StatCollector.translateToLocal("gui.kaisatsu.train.btn.remove_car")).also { it.enabled = cars.isNotEmpty() })
+        add(GuiButton(20, cx - 55,  cy + 82, 110, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.back")))
+        add(GuiButton(0,  cx - 55,  cy + 104, 110, 18, StatCollector.translateToLocal("gui.kaisatsu.train.btn.save_exit")))
+
         cars.forEachIndexed { i, (_, _, carClass) ->
             val baseY = cy - 80 + i * 22
             add(GuiButton(300 + i, cx - 120, baseY, 60, 18,
@@ -103,11 +111,6 @@ class GuiTrainManager(private val msg: PacketOpenTrainManager) : GuiScreen() {
             add(GuiButton(400 + i * 2,     cx - 55,  baseY, 24, 18, "+"))
             add(GuiButton(400 + i * 2 + 1, cx - 28,  baseY, 24, 18, "-"))
         }
-
-        add(GuiButton(30, cx - 120, cy + 60, 110, 18, StatCollector.translateToLocal("gui.kaisatsu.train.btn.add_car")))
-        add(GuiButton(31, cx + 10,  cy + 60, 110, 18, StatCollector.translateToLocal("gui.kaisatsu.train.btn.remove_car")).also { it.enabled = cars.isNotEmpty() })
-        add(GuiButton(20, cx - 55,  cy + 82, 110, 18, StatCollector.translateToLocal("gui.kaisatsu.btn.back")))
-        add(GuiButton(0,  cx - 55,  cy + 104, 110, 18, StatCollector.translateToLocal("gui.kaisatsu.train.btn.save_exit")))
     }
 
     override fun onGuiClosed() { Keyboard.enableRepeatEvents(false) }

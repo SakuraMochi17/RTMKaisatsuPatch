@@ -212,6 +212,7 @@ class GuiLineManager(private val data: PacketOpenLineGui) : GuiScreen() {
                     editLineStations.swap(stationIndex, stationIndex + 1); stationIndex++
                 }
                 8 -> {
+                    if (editLineStations.isEmpty()) return
                     editLineStations.removeAt(stationIndex)
                     if (stationIndex >= editLineStations.size) stationIndex = maxOf(0, editLineStations.size - 1)
                 }
